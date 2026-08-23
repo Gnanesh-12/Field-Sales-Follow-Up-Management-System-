@@ -51,12 +51,19 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
                     1.0 + cos(_controller.value * 2 * pi) * 0.3,
                     1.0 + sin(_controller.value * 2 * pi) * 0.3,
                   ),
-                  colors: const [
-                    Color(0xFF0A0E21),
-                    Color(0xFF1A1A2E),
-                    Color(0xFF16213E),
-                    Color(0xFF0F3460),
-                  ],
+                  colors: context.isDarkMode
+                      ? const [
+                          Color(0xFF0A0E21),
+                          Color(0xFF1A1A2E),
+                          Color(0xFF16213E),
+                          Color(0xFF0F3460),
+                        ]
+                      : const [
+                          Color(0xFFF8F9FA),
+                          Color(0xFFE9ECEF),
+                          Color(0xFFDEE2E6),
+                          Color(0xFFCED4DA),
+                        ],
                   stops: const [0.0, 0.3, 0.6, 1.0],
                 ),
               ),
@@ -82,7 +89,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppTheme.accentCoral.withValues(alpha: 0.08 + sin(_controller.value * 2 * pi) * 0.03),
+                      AppTheme.accentCoral.withValues(alpha: (context.isDarkMode ? 0.08 : 0.04) + sin(_controller.value * 2 * pi) * 0.03),
                       Colors.transparent,
                     ],
                   ),
@@ -104,7 +111,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      AppTheme.accentTeal.withValues(alpha: 0.06 + cos(_controller.value * 2 * pi) * 0.03),
+                      AppTheme.accentTeal.withValues(alpha: (context.isDarkMode ? 0.06 : 0.03) + cos(_controller.value * 2 * pi) * 0.03),
                       Colors.transparent,
                     ],
                   ),

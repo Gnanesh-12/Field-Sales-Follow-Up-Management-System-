@@ -129,10 +129,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
                         gradient: AppTheme.tealGradient,
                         boxShadow: AppTheme.glowShadow(AppTheme.accentTeal),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.person_add_rounded,
                         size: 44,
-                        color: Colors.white,
+                        color: context.surfaceColor,
                       ),
                     ),
                   ),
@@ -162,13 +162,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
                             child: Text(
                               'Create Account',
                               style: AppTheme.headingLarge
-                                  .copyWith(color: Colors.white),
+                                  .copyWith(color: context.textPrimaryColor),
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Join the Field Sales team',
-                            style: AppTheme.bodyMedium,
+                            style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor),
                           ),
                         ],
                       ),
@@ -353,7 +353,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage>
                       children: [
                         Text(
                           'Already have an account? ',
-                          style: AppTheme.bodyMedium,
+                          style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor),
                         ),
                         GestureDetector(
                           onTap: () {

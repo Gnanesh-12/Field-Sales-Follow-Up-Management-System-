@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'app_theme.dart';
 import 'login_page.dart';
 import 'providers/dashboard_provider.dart';
+import 'providers/theme_provider.dart';
 import 'pages/new_visit_page.dart';
 import '../../data/models/models.dart';
 
@@ -38,12 +39,12 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     final dashboardAsyncValue = ref.watch(dashboardProvider);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundDark,
+      backgroundColor: context.backgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async => ref.refresh(dashboardProvider),
           color: AppTheme.accentCoral,
-          backgroundColor: AppTheme.surfaceDark,
+          backgroundColor: context.surfaceColor,
           child: CustomScrollView(
             slivers: [
               // ─── Custom App Bar ─────────────────────────────────────
@@ -80,8 +81,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
                       children: [
                         const Icon(Icons.error_outline, color: AppTheme.accentPink, size: 48),
                         const SizedBox(height: 16),
-                        Text('Failed to load dashboard', style: AppTheme.bodyLarge),
-                        Text(error.toString(), style: AppTheme.bodySmall),
+                        Text('Failed to load dashboard', style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
+                        Text(error.toString(), style: AppTheme.bodySmall.copyWith(color: context.textMutedColor)),
                         const SizedBox(height: 24),
                         ElevatedButton(
                           onPressed: () => ref.refresh(dashboardProvider),
@@ -207,13 +208,21 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
               children: [
                 Text('Good Morning 👋',
                     style: AppTheme.bodySmall
-                        .copyWith(fontSize: 13, color: AppTheme.textMuted)),
+                        .copyWith(fontSize: 13, color: context.textMutedColor)),
                 const SizedBox(height: 2),
                 Text('Field Sales Rep',
-                    style: AppTheme.headingSmall.copyWith(fontSize: 17)),
+                    style: AppTheme.headingSmall.copyWith(fontSize: 17, color: context.textPrimaryColor)),
               ],
             ),
           ),
+          // Theme Toggle
+          _buildIconButton(
+            context.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+            onTap: () {
+              ref.read(themeProvider.notifier).toggleTheme(context);
+            },
+          ),
+          const SizedBox(width: 8),
           // Logout
           _buildIconButton(Icons.logout_rounded, onTap: () {
             Navigator.of(context, rootNavigator: true).pushReplacement(
@@ -232,13 +241,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
         width: 42,
         height: 42,
         decoration: BoxDecoration(
-          color: AppTheme.surfaceDark.withValues(alpha: 0.8),
+          color: context.surfaceColor.withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.borderSubtle),
+          border: Border.all(color: context.borderSubtleColor),
         ),
         child: Stack(
           children: [
-            Center(child: Icon(icon, color: AppTheme.textSecondary, size: 22)),
+            Center(child: Icon(icon, color: context.textSecondaryColor, size: 22)),
             if (badge != null && badge > 0)
               Positioned(
                 top: 6,
@@ -378,13 +387,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Recent Activity', style: AppTheme.headingSmall),
+          Text('Recent Activity', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
           const SizedBox(height: 14),
           if (visits.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Center(
-                child: Text("No recent activity", style: AppTheme.bodyMedium),
+                child: Text("No recent activity", style: AppTheme.bodyMedium.copyWith(color: context.textMutedColor)),
               ),
             ),
           ...visits.map((v) => _buildActivityTile(v)),
@@ -401,9 +410,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceDark.withValues(alpha: 0.6),
+        color: context.surfaceColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.borderSubtle),
+        border: Border.all(color: context.borderSubtleColor),
       ),
       child: Row(
         children: [
@@ -423,7 +432,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
               children: [
                 Text('Visited ${visit.site?.name ?? 'Unknown Site'}',
                     style: AppTheme.bodyLarge
-                        .copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+                        .copyWith(fontWeight: FontWeight.w600, fontSize: 14, color: context.textPrimaryColor),
                     maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 3),
                 Text(followUpPending ? 'Follow-up pending' : 'Completed', 
@@ -434,7 +443,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
             ),
           ),
           Text(timeStr,
-              style: AppTheme.bodySmall.copyWith(color: AppTheme.textMuted, fontSize: 11)),
+              style: AppTheme.bodySmall.copyWith(color: context.textMutedColor, fontSize: 11)),
         ],
       ),
     );
@@ -446,7 +455,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Quick Actions', style: AppTheme.headingSmall),
+          Text('Quick Actions', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
           const SizedBox(height: 14),
           Row(
             children: [
@@ -474,7 +483,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceDark.withValues(alpha: 0.6),
+        color: context.surfaceColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
@@ -493,7 +502,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
           Text(label,
               style: AppTheme.bodySmall.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textSecondary,
+                  color: context.textSecondaryColor,
                   fontSize: 12)),
         ],
       ),
@@ -519,9 +528,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceDark.withValues(alpha: 0.6),
+        color: context.surfaceColor.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppTheme.borderSubtle),
+        border: Border.all(color: context.borderSubtleColor),
       ),
       child: Column(
         children: [
@@ -544,12 +553,12 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(value,
               style: AppTheme.headingMedium
-                  .copyWith(fontSize: 26, letterSpacing: -0.5)),
+                  .copyWith(fontSize: 26, letterSpacing: -0.5, color: context.textPrimaryColor)),
           const SizedBox(height: 4),
           Text(title,
               textAlign: TextAlign.center,
               style: AppTheme.bodySmall.copyWith(
-                  fontSize: 11, height: 1.3, color: AppTheme.textMuted)),
+                  fontSize: 11, height: 1.3, color: context.textMutedColor)),
         ],
       ),
     );

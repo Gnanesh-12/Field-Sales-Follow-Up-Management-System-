@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../app_theme.dart';
 import '../providers/follow_ups_provider.dart';
+import '../providers/theme_provider.dart';
 
 class FollowUpsPage extends ConsumerStatefulWidget {
   const FollowUpsPage({super.key});
@@ -19,21 +20,29 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
     final followUpsAsyncValue = ref.watch(followUpsProvider(_filter));
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundDark,
+      backgroundColor: context.backgroundColor,
       appBar: AppBar(
-        backgroundColor: AppTheme.surfaceDark,
-        title: Text('Follow-ups', style: AppTheme.headingSmall),
+        backgroundColor: context.surfaceColor,
+        title: Text('Follow-ups', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
         centerTitle: true,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(context.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            onPressed: () {
+              ref.read(themeProvider.notifier).toggleTheme(context);
+            },
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                _buildFilterChip('pending', 'Pending'),
+                _buildFilterChip(context, 'pending', 'Pending'),
                 const SizedBox(width: 12),
-                _buildFilterChip('completed', 'Completed'),
+                _buildFilterChip(context, 'completed', 'Completed'),
               ],
             ),
           ),
@@ -42,12 +51,12 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(followUpsProvider(_filter)),
         color: AppTheme.accentCoral,
-        backgroundColor: AppTheme.surfaceDark,
+        backgroundColor: context.surfaceColor,
         child: followUpsAsyncValue.when(
           data: (followUps) {
             if (followUps.isEmpty) {
               return Center(
-                child: Text('No follow-ups found.', style: AppTheme.bodyLarge),
+                child: Text('No follow-ups found.', style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
               );
             }
             return ListView.builder(
@@ -62,9 +71,9 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceDark.withValues(alpha: 0.8),
+                    color: context.surfaceColor.withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: isOverdue ? AppTheme.accentPink : AppTheme.borderSubtle),
+                    border: Border.all(color: isOverdue ? AppTheme.accentPink : context.borderSubtleColor),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +84,7 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                           Expanded(
                             child: Text(
                               followUp.visit?.site?.name ?? 'Unknown Site',
-                              style: AppTheme.headingSmall.late().copyWith(fontSize: 16),
+                              style: AppTheme.headingSmall.late().copyWith(fontSize: 16, color: context.textPrimaryColor),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -104,10 +113,10 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          Icon(Icons.event_rounded, size: 16, color: isOverdue ? AppTheme.accentPink : AppTheme.textMuted),
+                          Icon(Icons.event_rounded, size: 16, color: isOverdue ? AppTheme.accentPink : context.textMutedColor),
                           const SizedBox(width: 6),
                           Text('Due: $dateStr', style: AppTheme.bodySmall.copyWith(
-                            color: isOverdue ? AppTheme.accentPink : AppTheme.textPrimary,
+                            color: isOverdue ? AppTheme.accentPink : context.textPrimaryColor,
                           )),
                         ],
                       ),
@@ -120,7 +129,7 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                             color: Colors.black.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(followUp.notes!, style: AppTheme.bodySmall.copyWith(fontStyle: FontStyle.italic)),
+                          child: Text(followUp.notes!, style: AppTheme.bodySmall.copyWith(fontStyle: FontStyle.italic, color: context.textSecondaryColor)),
                         ),
                       ],
                       if (followUp.status == 'pending') ...[
@@ -153,21 +162,21 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
     );
   }
 
-  Widget _buildFilterChip(String value, String label) {
+  Widget _buildFilterChip(BuildContext context, String value, String label) {
     final isSelected = _filter == value;
     return GestureDetector(
       onTap: () => setState(() => _filter = value),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.accentCoral : AppTheme.surfaceDark,
+          color: isSelected ? AppTheme.accentCoral : context.surfaceColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? AppTheme.accentCoral : AppTheme.borderSubtle),
+          border: Border.all(color: isSelected ? AppTheme.accentCoral : context.borderSubtleColor),
         ),
         child: Text(
           label,
           style: AppTheme.bodySmall.copyWith(
-            color: isSelected ? Colors.white : AppTheme.textMuted,
+            color: isSelected ? Colors.white : context.textMutedColor,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),

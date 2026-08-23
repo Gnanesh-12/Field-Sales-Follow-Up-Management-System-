@@ -1,6 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+extension ThemeExtension on BuildContext {
+  bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
+  Color get surfaceColor => isDarkMode ? AppTheme.surfaceDark : AppTheme.surfaceLight;
+  Color get backgroundColor => isDarkMode ? AppTheme.backgroundDark : AppTheme.backgroundLight;
+  Color get cardColor => isDarkMode ? AppTheme.cardDark : AppTheme.cardLight;
+  Color get textPrimaryColor => isDarkMode ? AppTheme.textPrimary : AppTheme.textPrimaryLight;
+  Color get textSecondaryColor => isDarkMode ? AppTheme.textSecondary : AppTheme.textSecondaryLight;
+  Color get textMutedColor => isDarkMode ? AppTheme.textMuted : AppTheme.textMutedLight;
+  Color get borderSubtleColor => isDarkMode ? AppTheme.borderSubtle : AppTheme.borderSubtleLight;
+}
+
 /// Centralized design system for the Field Sales app.
 /// Premium dark theme with vibrant coral/teal accents.
 class AppTheme {
@@ -21,6 +32,16 @@ class AppTheme {
   static const Color textPrimary = Color(0xFFFFFFFF);
   static const Color textSecondary = Color(0xB3FFFFFF); // 70% white
   static const Color textMuted = Color(0x80FFFFFF); // 50% white
+
+  // ─── Light Mode Colors ─────────────────────────────────────────
+  static const Color backgroundLight = Color(0xFFF8F9FA); // Off-white
+  static const Color surfaceLight = Color(0xFFFFFFFF);
+  static const Color cardLight = Color(0xFFF1F3F5);
+  static const Color borderSubtleLight = Color(0x1A000000); // 10% black
+
+  static const Color textPrimaryLight = Color(0xFF212529);
+  static const Color textSecondaryLight = Color(0xFF495057);
+  static const Color textMutedLight = Color(0xFF868E96);
 
   // ─── Gradients ────────────────────────────────────────────────
   static const LinearGradient backgroundGradient = LinearGradient(
@@ -208,6 +229,42 @@ class AppTheme {
       snackBarTheme: SnackBarThemeData(
         backgroundColor: cardDark,
         contentTextStyle: bodyMedium.copyWith(color: textPrimary),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  static ThemeData get lightTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: backgroundLight,
+      colorScheme: const ColorScheme.light(
+        primary: accentCoral,
+        secondary: accentTeal,
+        surface: surfaceLight,
+        error: accentPink,
+      ),
+      textTheme: TextTheme(
+        headlineLarge: headingLarge.copyWith(color: textPrimaryLight),
+        headlineMedium: headingMedium.copyWith(color: textPrimaryLight),
+        headlineSmall: headingSmall.copyWith(color: textPrimaryLight),
+        bodyLarge: bodyLarge.copyWith(color: textPrimaryLight),
+        bodyMedium: bodyMedium.copyWith(color: textSecondaryLight),
+        bodySmall: bodySmall.copyWith(color: textMutedLight),
+        labelLarge: labelLarge.copyWith(color: textPrimaryLight),
+      ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: headingSmall.copyWith(color: textPrimaryLight),
+        iconTheme: const IconThemeData(color: textPrimaryLight),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: cardLight,
+        contentTextStyle: bodyMedium.copyWith(color: textPrimaryLight),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         behavior: SnackBarBehavior.floating,
       ),

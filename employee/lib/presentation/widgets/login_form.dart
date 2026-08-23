@@ -108,7 +108,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                   _obscurePin
                       ? Icons.visibility_off_rounded
                       : Icons.visibility_rounded,
-                  color: AppTheme.textMuted,
+                  color: context.textMutedColor,
                   size: 20,
                 ),
               ),

@@ -14,6 +14,7 @@ export declare class AuthService {
         updatedAt: Date;
         name: string;
         phone: string | null;
+        profilePicture: string | null;
         role: string;
     } | null>;
     login(user: any): Promise<{

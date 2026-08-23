@@ -4,6 +4,7 @@ class Employee {
   final String? phone;
   final String role;
   final String status;
+  final String? profilePicture;
   final DateTime createdAt;
 
   Employee({
@@ -12,6 +13,7 @@ class Employee {
     this.phone,
     required this.role,
     required this.status,
+    this.profilePicture,
     required this.createdAt,
   });
 
@@ -22,6 +24,7 @@ class Employee {
       phone: json['phone'],
       role: json['role'] ?? 'employee-role',
       status: json['status'] ?? 'active',
+      profilePicture: json['profilePicture'],
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']).toLocal() : DateTime.now(),
     );
   }

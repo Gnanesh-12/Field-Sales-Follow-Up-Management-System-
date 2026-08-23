@@ -26,7 +26,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundDark,
+      backgroundColor: context.backgroundColor,
       body: IndexedStack(
         index: _selectedIndex,
         children: _pages,
@@ -45,9 +45,9 @@ class _HomeShellState extends State<HomeShell> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surfaceDark,
-        border: const Border(
-          top: BorderSide(color: AppTheme.borderSubtle),
+        color: context.surfaceColor,
+        border: Border(
+          top: BorderSide(color: context.borderSubtleColor),
         ),
         boxShadow: [
           BoxShadow(
@@ -82,7 +82,7 @@ class _HomeShellState extends State<HomeShell> {
                     children: [
                       Icon(
                         item.icon,
-                        color: isActive ? AppTheme.accentCoral : AppTheme.textMuted,
+                        color: isActive ? AppTheme.accentCoral : context.textMutedColor,
                         size: 22,
                       ),
                       if (isActive) ...[

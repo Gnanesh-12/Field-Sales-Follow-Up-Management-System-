@@ -5,6 +5,7 @@ import { FieldVisitsModule } from './field-visits/field-visits.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
+import { EmployeeModule } from './employee/employee.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
     FieldVisitsModule,
     JwtModule.register({ secret: 'secret' }),
     AuthModule,
+    EmployeeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

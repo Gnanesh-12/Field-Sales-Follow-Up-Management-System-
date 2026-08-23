@@ -59,6 +59,26 @@ class ApiRepository {
     }
   }
 
+  Future<Employee> uploadProfilePicture(String filePath) async {
+    final token = await storage.read(key: 'jwt_token');
+    
+    var request = http.MultipartRequest('PUT', Uri.parse('$baseUrl/employees/me/profile-picture'));
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+    
+    request.files.add(await http.MultipartFile.fromPath('file', filePath));
+    
+    final streamedResponse = await client.send(request);
+    final response = await http.Response.fromStream(streamedResponse);
+    
+    if (response.statusCode == 200) {
+      return Employee.fromJson(jsonDecode(response.body));
+    } else {
+      throw ApiException('Failed to upload profile picture');
+    }
+  }
+
   // ─── Field Visits ───────────────────────────────────────
   Future<Map<String, dynamic>> getVisits({int page = 1, int limit = 20}) async {
     final response = await client.get(

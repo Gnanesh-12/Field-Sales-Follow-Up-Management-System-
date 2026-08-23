@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_theme.dart';
 import 'providers/auth_provider.dart';
+import 'providers/theme_provider.dart';
 import 'widgets/animated_background.dart';
 import 'widgets/glass_card.dart';
 import 'widgets/login_form.dart';
@@ -55,8 +56,10 @@ class _LoginPageState extends ConsumerState<LoginPage>
     return Scaffold(
       body: AnimatedBackground(
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
+          child: Stack(
+            children: [
+              Center(
+                child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -76,10 +79,10 @@ class _LoginPageState extends ConsumerState<LoginPage>
                         gradient: AppTheme.accentGradient,
                         boxShadow: AppTheme.glowShadow(AppTheme.accentCoral),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.storefront_rounded,
                         size: 44,
-                        color: Colors.white,
+                        color: context.surfaceColor,
                       ),
                     ),
                   ),
@@ -109,13 +112,13 @@ class _LoginPageState extends ConsumerState<LoginPage>
                             child: Text(
                               'Welcome Back',
                               style: AppTheme.headingLarge
-                                  .copyWith(color: Colors.white),
+                                  .copyWith(color: context.textPrimaryColor),
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Sign in to continue',
-                            style: AppTheme.bodyMedium,
+                            style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor),
                           ),
                         ],
                       ),
@@ -156,7 +159,7 @@ class _LoginPageState extends ConsumerState<LoginPage>
                       children: [
                         Text(
                           "Don't have an account? ",
-                          style: AppTheme.bodyMedium,
+                          style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor),
                         ),
                         GestureDetector(
                           onTap: () {
@@ -193,8 +196,21 @@ class _LoginPageState extends ConsumerState<LoginPage>
               ),
             ),
           ),
-        ),
+          Positioned(
+            top: 8,
+            right: 16,
+            child: IconButton(
+              icon: Icon(context.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+              color: context.textPrimaryColor,
+              onPressed: () {
+                ref.read(themeProvider.notifier).toggleTheme(context);
+              },
+            ),
+          ),
+        ],
       ),
-    );
+    ),
+  ),
+);
   }
 }

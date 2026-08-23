@@ -11,9 +11,10 @@ datasource db {
 
 model Employee {
   id          String       @id // Employee ID like SE-FS-001
-  name        String
-  phone       String?
-  password    String       // For basic auth (PIN)
+  name           String
+  phone          String?
+  profilePicture String?
+  password       String       // For basic auth (PIN)
   role        String       @default("employee-role")
   status      String       @default("active") // 'active' | 'deactivated'
   fieldVisits FieldVisit[]
