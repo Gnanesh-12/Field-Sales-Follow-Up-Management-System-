@@ -9,7 +9,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.FieldVisitsModule = void 0;
 const common_1 = require("@nestjs/common");
 const field_visits_controller_1 = require("./field-visits.controller");
+const customer_sites_controller_1 = require("./customer-sites.controller");
+const materials_controller_1 = require("./materials.controller");
+const uploads_controller_1 = require("./uploads.controller");
 const dashboard_service_1 = require("./dashboard.service");
+const field_visits_service_1 = require("./field-visits.service");
+const follow_ups_service_1 = require("./follow-ups.service");
 const jwt_1 = require("@nestjs/jwt");
 let FieldVisitsModule = class FieldVisitsModule {
 };
@@ -17,8 +22,17 @@ exports.FieldVisitsModule = FieldVisitsModule;
 exports.FieldVisitsModule = FieldVisitsModule = __decorate([
     (0, common_1.Module)({
         imports: [jwt_1.JwtModule.register({ secret: 'secret' })],
-        controllers: [field_visits_controller_1.FieldVisitsController],
-        providers: [dashboard_service_1.DashboardService]
+        controllers: [
+            field_visits_controller_1.FieldVisitsController,
+            customer_sites_controller_1.CustomerSitesController,
+            materials_controller_1.MaterialsController,
+            uploads_controller_1.UploadsController,
+        ],
+        providers: [
+            dashboard_service_1.DashboardService,
+            field_visits_service_1.FieldVisitsService,
+            follow_ups_service_1.FollowUpsService,
+        ],
     })
 ], FieldVisitsModule);
 //# sourceMappingURL=field-visits.module.js.map

@@ -8,10 +8,12 @@ export declare class AuthService {
         message: string;
     }>;
     validateUser(employeeId: string, pin: string): Promise<{
+        status: string;
         id: string;
         createdAt: Date;
         updatedAt: Date;
         name: string;
+        phone: string | null;
         role: string;
     } | null>;
     login(user: any): Promise<{

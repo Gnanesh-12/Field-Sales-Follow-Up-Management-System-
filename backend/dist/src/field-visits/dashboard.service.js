@@ -18,22 +18,71 @@ let DashboardService = class DashboardService {
         this.prisma = prisma;
     }
     async getDashboardSummary(employeeId) {
-        const recentVisits = await this.prisma.fieldVisit.findMany({
-            where: { employeeId },
-            take: 10,
-            orderBy: { timestamp: 'desc' },
-            include: { site: true },
-        });
-        const pendingFollowUps = await this.prisma.followUp.findMany({
-            where: {
-                visit: { employeeId },
-                status: { not: 'completed' },
-            },
-            orderBy: { dueDate: 'asc' },
-        });
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const startOfWeek = new Date(startOfToday);
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        const [todayVisits, weekVisits, pendingFollowUps, completedThisWeek, recentVisits, recentFollowUps, totalVisits,] = await Promise.all([
+            this.prisma.fieldVisit.count({
+                where: {
+                    employeeId,
+                    timestamp: { gte: startOfToday },
+                },
+            }),
+            this.prisma.fieldVisit.count({
+                where: {
+                    employeeId,
+                    timestamp: { gte: startOfWeek },
+                },
+            }),
+            this.prisma.followUp.count({
+                where: {
+                    visit: { employeeId },
+                    status: 'pending',
+                },
+            }),
+            this.prisma.followUp.count({
+                where: {
+                    visit: { employeeId },
+                    status: 'completed',
+                    updatedAt: { gte: startOfWeek },
+                },
+            }),
+            this.prisma.fieldVisit.findMany({
+                where: { employeeId },
+                take: 5,
+                orderBy: { timestamp: 'desc' },
+                include: {
+                    site: true,
+                    followUps: true,
+                    materials: { include: { material: true } },
+                },
+            }),
+            this.prisma.followUp.findMany({
+                where: {
+                    visit: { employeeId },
+                    status: 'pending',
+                },
+                take: 5,
+                orderBy: { dueDate: 'asc' },
+                include: {
+                    visit: { include: { site: true } },
+                },
+            }),
+            this.prisma.fieldVisit.count({
+                where: { employeeId },
+            }),
+        ]);
         return {
+            stats: {
+                todayVisits,
+                weekVisits,
+                pendingFollowUps,
+                completedThisWeek,
+                totalVisits,
+            },
             recentVisits,
-            pendingFollowUps,
+            recentFollowUps,
         };
     }
 };

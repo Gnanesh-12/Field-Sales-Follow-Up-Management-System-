@@ -10,10 +10,12 @@ datasource db {
 }
 
 model Employee {
-  id          String       @id @default(uuid())
+  id          String       @id // Employee ID like SE-FS-001
   name        String
-  password    String       // For basic auth, though plan says mock
+  phone       String?
+  password    String       // For basic auth (PIN)
   role        String       @default("employee-role")
+  status      String       @default("active") // 'active' | 'deactivated'
   fieldVisits FieldVisit[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
@@ -23,22 +25,35 @@ model CustomerSite {
   id          String       @id @default(uuid())
   name        String
   address     String
+  geoTag      String?
   fieldVisits FieldVisit[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
 
+model Material {
+  id       String           @id @default(uuid())
+  name     String
+  unit     String           // e.g. 'kg', 'units', 'litres'
+  supplies MaterialSupply[]
+  createdAt DateTime        @default(now())
+}
+
 model FieldVisit {
-  id             String       @id @default(uuid())
-  timestamp      DateTime     @default(now())
+  id             String           @id @default(uuid())
+  timestamp      DateTime         @default(now())
   notes          String?
+  remarks        String?
   employeeId     String
-  employee       Employee     @relation(fields: [employeeId], references: [id])
+  employee       Employee         @relation(fields: [employeeId], references: [id])
   customerSiteId String
-  site           CustomerSite @relation(fields: [customerSiteId], references: [id])
+  site           CustomerSite     @relation(fields: [customerSiteId], references: [id])
   followUps      FollowUp[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  location       Location?
+  attachments    Attachment[]
+  materials      MaterialSupply[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 }
 
 model FollowUp {
@@ -50,4 +65,31 @@ model FollowUp {
   visit        FieldVisit @relation(fields: [fieldVisitId], references: [id])
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+}
+
+model Location {
+  id           String     @id @default(uuid())
+  lat          Float
+  lng          Float
+  accuracy     Float?
+  fieldVisitId String     @unique
+  visit        FieldVisit @relation(fields: [fieldVisitId], references: [id])
+}
+
+model Attachment {
+  id           String     @id @default(uuid())
+  fileUrl      String
+  type         String     @default("image") // 'image'
+  fieldVisitId String
+  visit        FieldVisit @relation(fields: [fieldVisitId], references: [id])
+  createdAt    DateTime   @default(now())
+}
+
+model MaterialSupply {
+  id           String     @id @default(uuid())
+  quantity     Float
+  materialId   String
+  material     Material   @relation(fields: [materialId], references: [id])
+  fieldVisitId String
+  visit        FieldVisit @relation(fields: [fieldVisitId], references: [id])
 }
