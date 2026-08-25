@@ -36,6 +36,21 @@ let AuthController = class AuthController {
         }
         return this.authService.login(user);
     }
+    async adminRegister(body) {
+        if (!body.email || !body.password) {
+            throw new common_1.BadRequestException('Email and password are required.');
+        }
+        if (body.confirmPassword && body.password !== body.confirmPassword) {
+            throw new common_1.BadRequestException('Passwords do not match.');
+        }
+        return this.authService.adminRegister(body.email, body.password, body.name);
+    }
+    async adminLogin(body) {
+        if (!body.email || !body.password) {
+            throw new common_1.BadRequestException('Email and password are required.');
+        }
+        return this.authService.adminLogin(body.email, body.password);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -53,6 +68,21 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('admin/register'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "adminRegister", null);
+__decorate([
+    (0, common_1.Post)('admin/login'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "adminLogin", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])
