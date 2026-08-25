@@ -4,21 +4,41 @@ export declare class AuthService {
     private readonly prisma;
     private readonly jwtService;
     constructor(prisma: PrismaService, jwtService: JwtService);
-    register(employeeId: string, pin: string, name: string): Promise<{
-        message: string;
-    }>;
-    validateUser(employeeId: string, pin: string): Promise<{
-        status: string;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        name: string;
-        phone: string | null;
-        profilePicture: string | null;
-        role: string;
-    } | null>;
+    validateUser(employeeId: string, pin: string): Promise<any>;
+    register(employeeId: string, pin: string, name: string): Promise<any>;
     login(user: any): Promise<{
+        access_token: string;
+        user: {
+            id: any;
+            name: any;
+            role: any;
+        };
+    }>;
+    adminRegister(email: string, password: string, name?: string): Promise<{
+        message: string;
         token: string;
-        role: any;
+        user: {
+            id: any;
+            email: any;
+            name: any;
+            role: any;
+        };
+    }>;
+    adminLogin(email: string, password: string): Promise<{
+        message: string;
+        token: string;
+        user: {
+            id: any;
+            email: any;
+            name: any;
+            role: any;
+        };
+    }>;
+    changePassword(data: {
+        email: string;
+        oldPassword: string;
+        newPassword: string;
+    }): Promise<{
+        message: string;
     }>;
 }

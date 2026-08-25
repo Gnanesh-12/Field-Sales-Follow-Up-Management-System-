@@ -15,6 +15,7 @@ const prisma_module_1 = require("./prisma/prisma.module");
 const jwt_1 = require("@nestjs/jwt");
 const auth_module_1 = require("./auth/auth.module");
 const employee_module_1 = require("./employee/employee.module");
+const admin_module_1 = require("./admin/admin.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -26,6 +27,7 @@ exports.AppModule = AppModule = __decorate([
             jwt_1.JwtModule.register({ secret: 'secret' }),
             auth_module_1.AuthModule,
             employee_module_1.EmployeeModule,
+            admin_module_1.AdminModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

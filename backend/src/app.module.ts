@@ -7,6 +7,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { EmployeeModule } from './employee/employee.module';
 
+import { AdminModule } from './admin/admin.module'; //change made
+
 @Module({
   imports: [
     PrismaModule,
@@ -14,6 +16,7 @@ import { EmployeeModule } from './employee/employee.module';
     JwtModule.register({ secret: 'secret' }),
     AuthModule,
     EmployeeModule,
+    AdminModule, //change made
   ],
   controllers: [AppController],
   providers: [AppService],
