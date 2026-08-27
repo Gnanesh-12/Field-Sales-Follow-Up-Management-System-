@@ -169,7 +169,7 @@ export const FieldEntryDetailModal: React.FC<FieldEntryDetailModalProps> = ({
             <button
               type="button"
               onClick={() => onUpdateStatus(entry.id, 'APPROVED')}
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium text-xs shadow-sm transition"
+              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-[var(--text-main)] rounded-xl font-medium text-xs shadow-sm transition"
             >
               <CheckCircle size={16} /> Approve
             </button>

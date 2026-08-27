@@ -72,47 +72,49 @@ export const EmployeesPage: React.FC = () => {
   });
 
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h2 className="text-2xl font-bold">Employee Roster</h2>
-          <p className="text-sm text-slate-500">Manage field sales personnel credentials & access</p>
+          <h2 className="text-3xl font-extrabold heading-gradient tracking-tight">Employee Roster</h2>
+          <p className="text-sm subtitle-text mt-1 font-medium">Manage field sales personnel credentials & access</p>
         </div>
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition"
+          className="glass-button flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all"
         >
-          <UserPlus size={18} /> Add Employee
+          <UserPlus size={18} /> <span>Add Employee</span>
         </button>
       </div>
 
       {/* Search & Status Filter Controls */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+      <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
+        <div className="relative flex-1 w-full group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-indigo-300 group-focus-within:text-indigo-400 transition-colors">
+            <Search size={18} />
+          </div>
           <input
             type="text"
             placeholder="Search by Employee Name or EMP ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition shadow-sm"
+            className="glass-input w-full pl-12 pr-4 py-3"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative w-full sm:w-48">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'ACTIVE' | 'INACTIVE')}
-              className="w-full pl-9 pr-8 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm cursor-pointer"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="ACTIVE">Active Only</option>
-              <option value="INACTIVE">Inactive Only</option>
-            </select>
+        <div className="flex items-center gap-2 w-full sm:w-auto relative group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-indigo-300 group-focus-within:text-indigo-400 transition-colors">
+            <Filter size={16} />
           </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'ACTIVE' | 'INACTIVE')}
+            className="glass-input w-full sm:w-48 pl-10 pr-8 py-3 appearance-none cursor-pointer"
+          >
+            <option value="ALL" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">All Statuses</option>
+            <option value="ACTIVE" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Active Only</option>
+            <option value="INACTIVE" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Inactive Only</option>
+          </select>
         </div>
       </div>
 

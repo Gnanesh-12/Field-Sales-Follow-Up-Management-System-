@@ -17,6 +17,7 @@ model Employee {
   phone          String?
   profilePicture String?
   password       String       // For basic auth (PIN)
+  isFirstLogin   Boolean      @default(true)
   role        String       @default("employee-role")
   status      String       @default("active") // 'active' | 'deactivated'
   fieldVisits FieldVisit[]

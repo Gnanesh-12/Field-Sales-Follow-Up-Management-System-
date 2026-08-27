@@ -222,47 +222,47 @@ export const FieldEntriesPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header with Live Sync Indicator */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold text-gray-900">Field Visit Entries</h2>
+            <h2 className="text-3xl font-extrabold heading-gradient-purple tracking-tight">Field Visit Entries</h2>
             {isAutoSync ? (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                Live DB Sync
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-lg shadow-emerald-500/20">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                Live Sync
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[var(--glass-bg-primary)] text-[var(--text-main)] opacity-70 border border-[var(--glass-border)]">
                 <Radio size={12} /> Sync Paused
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm subtitle-text mt-1 font-medium">
             Real-time feed of field visits, materials, and approvals
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Toggle Auto Sync */}
           <button
             type="button"
             onClick={() => setIsAutoSync(!isAutoSync)}
-            className={`flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg font-medium border transition cursor-pointer ${
+            className={`flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl font-bold border transition-all cursor-pointer shadow-lg ${
               isAutoSync
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
-                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-white shadow-emerald-500/10'
+                : 'glass-input border-[var(--glass-border)] text-[var(--text-main)] opacity-80 hover:bg-slate-800'
             }`}
           >
-            <RefreshCw size={13} className={isAutoSync ? 'animate-spin' : ''} />
+            <RefreshCw size={14} className={isAutoSync ? 'animate-spin' : ''} />
             {isAutoSync ? 'Auto-Sync ON' : 'Auto-Sync OFF'}
           </button>
 
           {(selectedMonth !== 'ALL' || selectedYear !== 'ALL' || statusFilter !== 'ALL' || searchQuery) && (
             <button
               onClick={resetFilters}
-              className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-2 rounded-lg font-medium transition cursor-pointer"
+              className="flex items-center gap-2 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500 hover:text-white px-4 py-2.5 rounded-xl font-bold transition-all cursor-pointer shadow-lg"
             >
               <RotateCcw size={14} /> Reset
             </button>
@@ -270,7 +270,7 @@ export const FieldEntriesPage: React.FC = () => {
 
           <button
             onClick={exportToCSV}
-            className="flex items-center gap-1.5 text-xs text-white bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-lg font-semibold shadow-sm transition cursor-pointer"
+            className="glass-button flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all cursor-pointer shadow-lg"
           >
             <Download size={15} /> Export CSV
           </button>
@@ -278,30 +278,34 @@ export const FieldEntriesPage: React.FC = () => {
       </div>
 
       {/* Filter and Sort Toolbar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 glass-panel p-5 shadow-2xl border-none">
         {/* Search Bar */}
-        <div className="relative w-full lg:col-span-2">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+        <div className="relative w-full lg:col-span-2 group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none accent-icon group-focus-within:text-indigo-400 transition-colors">
+            <Search size={16} />
+          </div>
           <input
             type="text"
             placeholder="Search EMP ID, Name, Site..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3.5 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            className="glass-input w-full pl-10 pr-4 py-2.5 text-sm"
           />
         </div>
 
         {/* Month Picker */}
-        <div className="relative w-full">
-          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+        <div className="relative w-full group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none accent-icon group-focus-within:text-indigo-400 transition-colors">
+            <Calendar size={14} />
+          </div>
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="w-full pl-8 pr-6 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            className="glass-input w-full pl-10 pr-8 py-2.5 text-sm appearance-none cursor-pointer"
           >
-            <option value="ALL">All Months</option>
+            <option value="ALL" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">All Months</option>
             {months.map((m) => (
-              <option key={m.value} value={m.value}>
+              <option key={m.value} value={m.value} className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">
                 {m.label}
               </option>
             ))}
@@ -313,11 +317,11 @@ export const FieldEntriesPage: React.FC = () => {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            className="glass-input w-full px-4 py-2.5 text-sm appearance-none cursor-pointer"
           >
-            <option value="ALL">All Years</option>
+            <option value="ALL" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">All Years</option>
             {availableYears.map((yr) => (
-              <option key={yr} value={yr}>
+              <option key={yr} value={yr} className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">
                 {yr}
               </option>
             ))}
@@ -325,62 +329,64 @@ export const FieldEntriesPage: React.FC = () => {
         </div>
 
         {/* Status Filter */}
-        <div className="relative w-full">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+        <div className="relative w-full group">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none accent-icon group-focus-within:text-indigo-400 transition-colors">
+            <Filter size={14} />
+          </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="w-full pl-8 pr-6 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            className="glass-input w-full pl-10 pr-8 py-2.5 text-sm appearance-none cursor-pointer"
           >
-            <option value="ALL">All Statuses</option>
-            <option value="PENDING">Pending Only</option>
-            <option value="APPROVED">Approved Only</option>
-            <option value="REJECTED">Declined Only</option>
+            <option value="ALL" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">All Statuses</option>
+            <option value="PENDING" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Pending Only</option>
+            <option value="APPROVED" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Approved Only</option>
+            <option value="REJECTED" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Declined Only</option>
           </select>
         </div>
 
         {/* Sort Field & Order Toggle */}
-        <div className="flex items-center gap-1.5 w-full">
+        <div className="flex items-center gap-3 w-full">
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortField)}
-            className="flex-1 py-2 px-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            className="glass-input flex-1 py-2.5 px-4 text-sm appearance-none cursor-pointer"
           >
-            <option value="date">Date</option>
-            <option value="empId">EMP ID</option>
-            <option value="name">Name</option>
-            <option value="location">Location</option>
-            <option value="status">Status</option>
+            <option value="date" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Date</option>
+            <option value="empId" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">EMP ID</option>
+            <option value="name" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Name</option>
+            <option value="location" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Location</option>
+            <option value="status" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Status</option>
           </select>
 
           <button
             type="button"
             title={`Toggle Sort Order (${sortOrder === 'asc' ? 'Ascending' : 'Descending'})`}
             onClick={toggleSortOrder}
-            className="p-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-600 transition flex items-center justify-center shrink-0 cursor-pointer"
+            className="p-3 bg-[var(--glass-bg-primary)]/50 hover:bg-indigo-500 hover:text-white border border-[var(--glass-border)]/50 hover:border-indigo-500 rounded-xl text-indigo-300 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-lg"
           >
-            <ArrowUpDown size={15} />
+            <ArrowUpDown size={16} />
           </button>
         </div>
       </div>
 
       {/* Structured Single-Line Table */}
-      <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-gray-200">
+      <div className="overflow-x-auto glass-panel border-none shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] mb-6">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/75 text-xs uppercase tracking-wider text-gray-500 font-semibold">
+            <tr className="border-b border-[var(--glass-border)] bg-[var(--glass-bg-primary)] text-xs uppercase tracking-wider text-[var(--text-main)] opacity-80 font-bold">
               <th
                 onClick={() => {
                   setSortBy('empId');
                   toggleSortOrder();
                 }}
-                className="p-4 cursor-pointer hover:text-blue-600"
+                className="p-5 cursor-pointer hover:text-indigo-400 hover:bg-white/5 transition-colors font-bold tracking-widest column-header"
               >
-                <div className="flex items-center gap-1">
-                  <User size={13} />
+                <div className="flex items-center gap-2">
+                  <User size={14} />
                   <span>EMP ID</span>
                   {sortBy === 'empId' && (
-                    <span className="text-blue-600 text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                    <span className="text-indigo-400 text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>
                   )}
                 </div>
               </th>
@@ -389,12 +395,12 @@ export const FieldEntriesPage: React.FC = () => {
                   setSortBy('name');
                   toggleSortOrder();
                 }}
-                className="p-4 cursor-pointer hover:text-blue-600"
+                className="p-5 cursor-pointer hover:text-indigo-400 hover:bg-white/5 transition-colors font-bold tracking-widest column-header"
               >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   <span>Employee Name</span>
                   {sortBy === 'name' && (
-                    <span className="text-blue-600 text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                    <span className="text-indigo-400 text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>
                   )}
                 </div>
               </th>
@@ -403,13 +409,13 @@ export const FieldEntriesPage: React.FC = () => {
                   setSortBy('date');
                   toggleSortOrder();
                 }}
-                className="p-4 cursor-pointer hover:text-blue-600"
+                className="p-5 cursor-pointer hover:text-indigo-400 hover:bg-white/5 transition-colors font-bold tracking-widest column-header"
               >
-                <div className="flex items-center gap-1">
-                  <Calendar size={13} />
+                <div className="flex items-center gap-2">
+                  <Calendar size={14} />
                   <span>Date & Time</span>
                   {sortBy === 'date' && (
-                    <span className="text-blue-600 text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                    <span className="text-indigo-400 text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>
                   )}
                 </div>
               </th>
@@ -418,17 +424,17 @@ export const FieldEntriesPage: React.FC = () => {
                   setSortBy('status');
                   toggleSortOrder();
                 }}
-                className="p-4 cursor-pointer hover:text-blue-600"
+                className="p-5 cursor-pointer hover:text-indigo-400 hover:bg-white/5 transition-colors font-bold tracking-widest column-header"
               >
-                <div className="flex items-center gap-1">
-                  <ShieldCheck size={13} />
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={14} />
                   <span>Status</span>
                   {sortBy === 'status' && (
-                    <span className="text-blue-600 text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>
+                    <span className="text-indigo-400 text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>
                   )}
                 </div>
               </th>
-              <th className="p-4 text-right">Action</th>
+              <th className="p-5 text-right font-bold tracking-widest column-header">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 text-sm">

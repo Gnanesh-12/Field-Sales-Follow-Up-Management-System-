@@ -21,17 +21,18 @@ export class FieldVisitsController {
 
   // ─── Dashboard ──────────────────────────────────────────
   @Get('dashboard')
-  @Roles('employee-role')
+  @Roles('employee-role', 'EMPLOYEE')
   async getDashboardSummary(@Req() req) {
-    const employeeId = req.user.employeeId;
+    const employeeId = req.user.sub || req.user.employeeId;
     return this.dashboardService.getDashboardSummary(employeeId);
   }
 
   // ─── Profile ────────────────────────────────────────────
   @Get('profile')
-  @Roles('employee-role')
+  @Roles('employee-role', 'EMPLOYEE')
   async getProfile(@Req() req) {
-    const employeeId = req.user.employeeId;
+    const employeeId = req.user.sub || req.user.employeeId;
+    console.log(`getProfile called for employeeId: ${employeeId}, req.user: ${JSON.stringify(req.user)}`);
     const employee = await this.prisma.employee.findUnique({
       where: { id: employeeId },
       select: {
@@ -40,6 +41,7 @@ export class FieldVisitsController {
         phone: true,
         role: true,
         status: true,
+        profilePicture: true,
         createdAt: true,
       },
     });
@@ -49,9 +51,9 @@ export class FieldVisitsController {
 
   // ─── Field Visits ───────────────────────────────────────
   @Post('visits')
-  @Roles('employee-role')
+  @Roles('employee-role', 'EMPLOYEE')
   async createVisit(@Req() req, @Body() body: any) {
-    const employeeId = req.user.employeeId;
+    const employeeId = req.user.sub || req.user.employeeId;
     if (!body.customerSiteId) {
       throw new BadRequestException('customerSiteId is required');
     }
@@ -59,9 +61,9 @@ export class FieldVisitsController {
   }
 
   @Get('visits')
-  @Roles('employee-role')
+  @Roles('employee-role', 'EMPLOYEE')
   async listVisits(@Req() req, @Query('page') page?: string, @Query('limit') limit?: string) {
-    const employeeId = req.user.employeeId;
+    const employeeId = req.user.sub || req.user.employeeId;
     return this.fieldVisitsService.listVisits(
       employeeId,
       page ? parseInt(page) : 1,
@@ -70,18 +72,18 @@ export class FieldVisitsController {
   }
 
   @Get('visits/:id')
-  @Roles('employee-role')
+  @Roles('employee-role', 'EMPLOYEE')
   async getVisit(@Req() req, @Param('id') id: string) {
-    const employeeId = req.user.employeeId;
+    const employeeId = req.user.sub || req.user.employeeId;
     const visit = await this.fieldVisitsService.getVisit(employeeId, id);
     if (!visit) throw new NotFoundException('Visit not found');
     return visit;
   }
 
   @Delete('visits/:id')
-  @Roles('employee-role')
+  @Roles('employee-role', 'EMPLOYEE')
   async deleteVisit(@Req() req, @Param('id') id: string) {
-    const employeeId = req.user.employeeId;
+    const employeeId = req.user.sub || req.user.employeeId;
     const result = await this.fieldVisitsService.deleteVisit(employeeId, id);
     if (result.count === 0) throw new NotFoundException('Visit not found');
     return { success: true };
@@ -89,16 +91,16 @@ export class FieldVisitsController {
 
   // ─── Follow-ups ─────────────────────────────────────────
   @Get('follow-ups')
-  @Roles('employee-role')
+  @Roles('employee-role', 'EMPLOYEE')
   async listFollowUps(@Req() req, @Query('status') status?: string) {
-    const employeeId = req.user.employeeId;
+    const employeeId = req.user.sub || req.user.employeeId;
     return this.followUpsService.listFollowUps(employeeId, status);
   }
 
   @Patch('follow-ups/:id')
-  @Roles('employee-role')
+  @Roles('employee-role', 'EMPLOYEE')
   async updateFollowUp(@Req() req, @Param('id') id: string, @Body() body: any) {
-    const employeeId = req.user.employeeId;
+    const employeeId = req.user.sub || req.user.employeeId;
     if (!body.status) throw new BadRequestException('status is required');
     const result = await this.followUpsService.updateFollowUpStatus(employeeId, id, body.status);
     if (!result) throw new NotFoundException('Follow-up not found');

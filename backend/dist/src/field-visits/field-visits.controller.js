@@ -35,11 +35,12 @@ let FieldVisitsController = class FieldVisitsController {
         this.prisma = prisma;
     }
     async getDashboardSummary(req) {
-        const employeeId = req.user.employeeId;
+        const employeeId = req.user.sub || req.user.employeeId;
         return this.dashboardService.getDashboardSummary(employeeId);
     }
     async getProfile(req) {
-        const employeeId = req.user.employeeId;
+        const employeeId = req.user.sub || req.user.employeeId;
+        console.log(`getProfile called for employeeId: ${employeeId}, req.user: ${JSON.stringify(req.user)}`);
         const employee = await this.prisma.employee.findUnique({
             where: { id: employeeId },
             select: {
@@ -48,6 +49,7 @@ let FieldVisitsController = class FieldVisitsController {
                 phone: true,
                 role: true,
                 status: true,
+                profilePicture: true,
                 createdAt: true,
             },
         });
@@ -56,36 +58,36 @@ let FieldVisitsController = class FieldVisitsController {
         return employee;
     }
     async createVisit(req, body) {
-        const employeeId = req.user.employeeId;
+        const employeeId = req.user.sub || req.user.employeeId;
         if (!body.customerSiteId) {
             throw new common_1.BadRequestException('customerSiteId is required');
         }
         return this.fieldVisitsService.createVisit(employeeId, body);
     }
     async listVisits(req, page, limit) {
-        const employeeId = req.user.employeeId;
+        const employeeId = req.user.sub || req.user.employeeId;
         return this.fieldVisitsService.listVisits(employeeId, page ? parseInt(page) : 1, limit ? parseInt(limit) : 20);
     }
     async getVisit(req, id) {
-        const employeeId = req.user.employeeId;
+        const employeeId = req.user.sub || req.user.employeeId;
         const visit = await this.fieldVisitsService.getVisit(employeeId, id);
         if (!visit)
             throw new common_1.NotFoundException('Visit not found');
         return visit;
     }
     async deleteVisit(req, id) {
-        const employeeId = req.user.employeeId;
+        const employeeId = req.user.sub || req.user.employeeId;
         const result = await this.fieldVisitsService.deleteVisit(employeeId, id);
         if (result.count === 0)
             throw new common_1.NotFoundException('Visit not found');
         return { success: true };
     }
     async listFollowUps(req, status) {
-        const employeeId = req.user.employeeId;
+        const employeeId = req.user.sub || req.user.employeeId;
         return this.followUpsService.listFollowUps(employeeId, status);
     }
     async updateFollowUp(req, id, body) {
-        const employeeId = req.user.employeeId;
+        const employeeId = req.user.sub || req.user.employeeId;
         if (!body.status)
             throw new common_1.BadRequestException('status is required');
         const result = await this.followUpsService.updateFollowUpStatus(employeeId, id, body.status);
@@ -97,7 +99,7 @@ let FieldVisitsController = class FieldVisitsController {
 exports.FieldVisitsController = FieldVisitsController;
 __decorate([
     (0, common_1.Get)('dashboard'),
-    (0, exports.Roles)('employee-role'),
+    (0, exports.Roles)('employee-role', 'EMPLOYEE'),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -105,7 +107,7 @@ __decorate([
 ], FieldVisitsController.prototype, "getDashboardSummary", null);
 __decorate([
     (0, common_1.Get)('profile'),
-    (0, exports.Roles)('employee-role'),
+    (0, exports.Roles)('employee-role', 'EMPLOYEE'),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -113,7 +115,7 @@ __decorate([
 ], FieldVisitsController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.Post)('visits'),
-    (0, exports.Roles)('employee-role'),
+    (0, exports.Roles)('employee-role', 'EMPLOYEE'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -122,7 +124,7 @@ __decorate([
 ], FieldVisitsController.prototype, "createVisit", null);
 __decorate([
     (0, common_1.Get)('visits'),
-    (0, exports.Roles)('employee-role'),
+    (0, exports.Roles)('employee-role', 'EMPLOYEE'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)('page')),
     __param(2, (0, common_1.Query)('limit')),
@@ -132,7 +134,7 @@ __decorate([
 ], FieldVisitsController.prototype, "listVisits", null);
 __decorate([
     (0, common_1.Get)('visits/:id'),
-    (0, exports.Roles)('employee-role'),
+    (0, exports.Roles)('employee-role', 'EMPLOYEE'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -141,7 +143,7 @@ __decorate([
 ], FieldVisitsController.prototype, "getVisit", null);
 __decorate([
     (0, common_1.Delete)('visits/:id'),
-    (0, exports.Roles)('employee-role'),
+    (0, exports.Roles)('employee-role', 'EMPLOYEE'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -150,7 +152,7 @@ __decorate([
 ], FieldVisitsController.prototype, "deleteVisit", null);
 __decorate([
     (0, common_1.Get)('follow-ups'),
-    (0, exports.Roles)('employee-role'),
+    (0, exports.Roles)('employee-role', 'EMPLOYEE'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)('status')),
     __metadata("design:type", Function),
@@ -159,7 +161,7 @@ __decorate([
 ], FieldVisitsController.prototype, "listFollowUps", null);
 __decorate([
     (0, common_1.Patch)('follow-ups/:id'),
-    (0, exports.Roles)('employee-role'),
+    (0, exports.Roles)('employee-role', 'EMPLOYEE'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),

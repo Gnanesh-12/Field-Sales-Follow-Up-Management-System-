@@ -14,23 +14,27 @@ class AuthState {
   final bool isLoading;
   final AuthException? error;
   final bool isAuthenticated;
+  final bool isFirstLogin;
 
   AuthState({
     this.isLoading = false,
     this.error,
     this.isAuthenticated = false,
+    this.isFirstLogin = false,
   });
 
   AuthState copyWith({
     bool? isLoading,
     AuthException? error,
     bool? isAuthenticated,
+    bool? isFirstLogin,
     bool clearError = false,
   }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      isFirstLogin: isFirstLogin ?? this.isFirstLogin,
     );
   }
 }
@@ -53,15 +57,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
       
       final token = result['token'] as String;
       final role = result['role'] as String;
+      final isFirstLogin = result['isFirstLogin'] as bool;
 
       await _storage.write(key: 'jwt_token', value: token);
       await _storage.write(key: 'user_role', value: role);
+      await _storage.write(key: 'employee_id', value: employeeId); // Need this for reset
 
-      state = AuthState(isLoading: false, isAuthenticated: true, error: null);
+      state = AuthState(isLoading: false, isAuthenticated: true, isFirstLogin: isFirstLogin, error: null);
     } on AuthException catch (e) {
       state = AuthState(isLoading: false, isAuthenticated: false, error: e);
     } catch (e) {
       state = AuthState(isLoading: false, isAuthenticated: false, error: NetworkException());
+    }
+  }
+
+  Future<bool> resetPassword(String employeeId, String oldPin, String newPin) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      await _repository.resetPassword(employeeId, oldPin, newPin);
+      state = state.copyWith(isLoading: false, isFirstLogin: false);
+      return true;
+    } on AuthException catch (e) {
+      state = state.copyWith(isLoading: false, error: e);
+      return false;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: NetworkException());
+      return false;
     }
   }
 }

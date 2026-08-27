@@ -33,7 +33,7 @@ import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   // ===============================
   // EMPLOYEE AUTH (UNCHANGED)
@@ -57,6 +57,14 @@ export class AuthController {
       throw new UnauthorizedException('Invalid Employee ID or PIN');
     }
     return this.authService.login(user);
+  }
+
+  @Post('employee/reset-password')
+  async employeeResetPassword(@Body() body: any) {
+    if (!body.employeeId || !body.oldPin || !body.newPin) {
+      throw new BadRequestException('Employee ID, old PIN, and new PIN are required');
+    }
+    return this.authService.employeeResetPassword(body.employeeId, body.oldPin, body.newPin);
   }
 
   // ===============================

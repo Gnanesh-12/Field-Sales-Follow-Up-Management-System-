@@ -78,15 +78,37 @@ let AuthService = class AuthService {
         });
     }
     async login(user) {
-        const payload = { sub: user.id, name: user.name, role: user.role };
+        const payload = { sub: user.id, name: user.name, role: user.role, isFirstLogin: user.isFirstLogin };
         return {
             access_token: this.jwtService.sign(payload),
             user: {
                 id: user.id,
                 name: user.name,
                 role: user.role,
+                isFirstLogin: user.isFirstLogin,
             },
         };
+    }
+    async employeeResetPassword(employeeId, oldPin, newPin) {
+        if (!employeeId || !oldPin || !newPin) {
+            throw new common_1.BadRequestException('Employee ID, current PIN, and new PIN are required.');
+        }
+        const user = await this.prisma.employee.findUnique({
+            where: { id: employeeId },
+        });
+        if (!user || !user.password) {
+            throw new common_1.UnauthorizedException('Invalid Employee ID or account does not exist.');
+        }
+        const isMatch = await bcrypt.compare(oldPin, user.password).catch(() => false) || user.password === oldPin;
+        if (!isMatch) {
+            throw new common_1.UnauthorizedException('Current PIN is incorrect.');
+        }
+        const hashedNewPin = await bcrypt.hash(newPin, 10);
+        await this.prisma.employee.update({
+            where: { id: employeeId },
+            data: { password: hashedNewPin, isFirstLogin: false },
+        });
+        return { message: 'Password updated successfully! You can now access the full app.' };
     }
     async adminRegister(email, password, name) {
         const cleanEmail = email.trim().toLowerCase();

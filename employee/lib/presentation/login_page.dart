@@ -7,6 +7,7 @@ import 'widgets/animated_background.dart';
 import 'widgets/glass_card.dart';
 import 'widgets/login_form.dart';
 import 'register_page.dart';
+import 'reset_password_page.dart';
 import 'home_shell.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -39,10 +40,10 @@ class _LoginPageState extends ConsumerState<LoginPage>
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.isAuthenticated) {
+        Widget nextPage = next.isFirstLogin ? const ResetPasswordPage() : const HomeShell();
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const HomeShell(),
+            pageBuilder: (context, animation, secondaryAnimation) => nextPage,
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);

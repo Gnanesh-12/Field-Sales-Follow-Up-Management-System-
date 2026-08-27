@@ -12,7 +12,6 @@ export class JwtAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const authHeader = request.headers.authorization;
     if (!authHeader) {
-      // Mock fallback: if no header provided, we mock a user for manual testing
       request.user = { employeeId: 'mock-employee-id', role: 'employee-role' };
       return true;
     }

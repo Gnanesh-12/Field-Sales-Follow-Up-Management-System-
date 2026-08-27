@@ -39,8 +39,9 @@ class AuthRepository {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return {
-          'token': data['token'] ?? 'mock_jwt_token',
-          'role': data['role'] ?? 'mock_role',
+          'token': data['access_token'] ?? data['token'] ?? 'mock_jwt_token',
+          'role': data['user']?['role'] ?? data['role'] ?? 'mock_role',
+          'isFirstLogin': data['user']?['isFirstLogin'] ?? false,
         };
       } else if (response.statusCode == 401) {
         throw InvalidCredentialsException();
@@ -80,6 +81,30 @@ class AuthRepository {
     } catch (e) {
       if (e is AuthException) rethrow;
       throw AuthException('Failed to register. Please try again.');
+    }
+  }
+
+  Future<void> resetPassword(String employeeId, String oldPin, String newPin) async {
+    try {
+      final response = await client.post(
+        Uri.parse('$_baseUrl/auth/employee/reset-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'employeeId': employeeId,
+          'oldPin': oldPin,
+          'newPin': newPin,
+        }),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        final body = jsonDecode(response.body);
+        throw AuthException(body['message'] ?? 'Failed to reset password');
+      }
+    } on SocketException {
+      throw NetworkException();
+    } catch (e) {
+      if (e is AuthException) rethrow;
+      throw AuthException('Failed to reset password. Please try again.');
     }
   }
 }

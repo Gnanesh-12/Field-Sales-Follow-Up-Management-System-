@@ -9,7 +9,11 @@ export declare class AuthController {
             id: any;
             name: any;
             role: any;
+            isFirstLogin: any;
         };
+    }>;
+    employeeResetPassword(body: any): Promise<{
+        message: string;
     }>;
     adminRegister(body: any): Promise<{
         message: string;

@@ -94,6 +94,7 @@ export declare class FieldVisitsController {
         createdAt: Date;
         name: string;
         phone: string | null;
+        profilePicture: string | null;
         role: string;
     }>;
     createVisit(req: any, body: any): Promise<{

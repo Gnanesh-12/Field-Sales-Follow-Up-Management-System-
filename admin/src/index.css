@@ -1,75 +1,629 @@
 @import "tailwindcss";
-html, body, #root {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.9);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Default Dark Mode */
+  --bg-gradient-start: #0f172a;
+  --bg-gradient-end: #1e1b4b;
+  --text-main: #f8fafc;
+  --glass-bg-primary: #1e293b;
+  --glass-bg-primary-opacity: 0.7;
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --accent-color: #6366f1;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* Light Mode Override */
+.light {
+  color-scheme: light;
+  color: #1e293b;
+
+  --bg-gradient-start: #f8fafc;
+  --bg-gradient-end: #eef2ff;
+  --text-main: #0f172a;
+  --glass-bg-primary: #ffffff;
+  --glass-bg-primary-opacity: 0.92;
+  --glass-border: rgba(99, 102, 241, 0.12);
+  --accent-color: #4f46e5;
 }
 
-body {
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  padding: 0;
+  background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+  background-attachment: fixed;
+  color: var(--text-main);
+  overflow: hidden;
+  transition: background 0.5s ease-in-out, color 0.5s ease-in-out;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.5);
+}
+
+/* Premium Glassmorphism Utilities */
+@layer utilities {
+  .glass-panel {
+    background-color: color-mix(in srgb, var(--glass-bg-primary) calc(var(--glass-bg-primary-opacity) * 100%), transparent);
+    @apply backdrop-blur-xl rounded-2xl;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--glass-border);
+    transition: background-color 0.5s ease, border-color 0.5s ease;
   }
-  a:hover {
-    color: #747bff;
+
+  .glass-button {
+    @apply relative overflow-hidden bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/30 transition-all duration-300;
   }
-  button {
-    background-color: #f9f9f9;
+
+  .glass-input {
+    background-color: color-mix(in srgb, var(--glass-bg-primary) 50%, transparent);
+    border: 1px solid var(--glass-border);
+    @apply focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 backdrop-blur-md transition-all duration-300 rounded-xl placeholder-slate-400;
+    color: var(--text-main);
   }
+
+  .glass-input:focus {
+    background-color: color-mix(in srgb, var(--glass-bg-primary) 80%, transparent);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-cyan-500;
+  }
+}
+
+/* Dynamic Animated Background Blob */
+.bg-blob {
+  position: absolute;
+  filter: blur(80px);
+  z-index: -1;
+  opacity: 0.3;
+  animation: float 10s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px) scale(1);
+  }
+
+  50% {
+    transform: translateY(-20px) scale(1.05);
+  }
+
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+}
+
+/* ===================================================================
+   THEME-SAFE CUSTOM CLASSES
+   Bypass Tailwind's gradient system for reliable light/dark switching
+   =================================================================== */
+
+/* Title gradient — Dark: white→indigo | Light: navy→indigo */
+.heading-gradient {
+  background-image: linear-gradient(to right, #ffffff, #c7d2fe);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.light .heading-gradient {
+  background-image: linear-gradient(to right, #1e1b4b, #4f46e5) !important;
+}
+
+/* Title gradient purple variant — Dark: white→purple | Light: navy→purple */
+.heading-gradient-purple {
+  background-image: linear-gradient(to right, #ffffff, #e9d5ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.light .heading-gradient-purple {
+  background-image: linear-gradient(to right, #1e1b4b, #7c3aed) !important;
+}
+
+/* Subtitle text — Dark: light indigo | Light: deep indigo */
+.subtitle-text {
+  color: rgba(165, 180, 252, 0.8);
+}
+.light .subtitle-text {
+  color: rgba(67, 56, 202, 0.9) !important;
+}
+
+/* Table/column header text — Dark: light indigo | Light: deep indigo */
+.column-header {
+  color: #a5b4fc;
+}
+.light .column-header {
+  color: #4338ca !important;
+}
+
+/* Nav brand gradient text — works in both modes */
+.brand-gradient {
+  background-image: linear-gradient(to right, #6366f1, #06b6d4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.light .brand-gradient {
+  background-image: linear-gradient(to right, #4f46e5, #0891b2) !important;
+}
+
+/* Icon/accent text for search icons, sort buttons etc. */
+.accent-icon {
+  color: #a5b4fc;
+}
+.light .accent-icon {
+  color: #4338ca !important;
+}
+
+/* Secondary info text (email, hints) */
+.secondary-text {
+  color: rgba(165, 180, 252, 0.7);
+}
+.light .secondary-text {
+  color: rgba(67, 56, 202, 0.75) !important;
+}
+
+/* Nav label text */
+.nav-label {
+  color: #a5b4fc;
+}
+.light .nav-label {
+  color: #6366f1 !important;
+}
+
+/* =================================================================
+   LIGHT MODE — Comprehensive Professional Override System
+   ================================================================= */
+
+/* --- 1. TEXT COLORS: Readable on white/light backgrounds --- */
+
+/* Indigo shades → deep indigo for contrast */
+.light .text-indigo-200 {
+  color: #3730a3 !important;
+}
+
+.light .text-indigo-300 {
+  color: #4338ca !important;
+}
+
+.light .text-indigo-400 {
+  color: #4f46e5 !important;
+}
+
+/* Indigo with opacity modifiers (Tailwind text-indigo-300/80 etc.) */
+.light .text-indigo-300\/80 {
+  color: rgba(67, 56, 202, 0.9) !important;
+}
+
+.light .text-indigo-300\/70 {
+  color: rgba(67, 56, 202, 0.8) !important;
+}
+
+/* Slate shades */
+.light .text-slate-400 {
+  color: #475569 !important;
+}
+
+.light .text-slate-500 {
+  color: #334155 !important;
+}
+
+/* Gray shades */
+.light .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+.light .text-gray-500 {
+  color: #4b5563 !important;
+}
+
+/* Semantic / status text — boosted for light backgrounds */
+.light .text-rose-400 {
+  color: #e11d48 !important;
+}
+
+.light .text-emerald-400 {
+  color: #059669 !important;
+}
+
+.light .text-amber-400 {
+  color: #d97706 !important;
+}
+
+.light .text-blue-400 {
+  color: #2563eb !important;
+}
+
+.light .text-purple-400 {
+  color: #7c3aed !important;
+}
+
+.light .text-cyan-400 {
+  color: #0891b2 !important;
+}
+
+.light .text-cyan-500 {
+  color: #0891b2 !important;
+}
+
+/* Amber/Sun icon for theme toggle */
+.light .text-amber-400 {
+  color: #b45309 !important;
+}
+
+/* --- 2. GRADIENT TEXT OVERRIDES --- */
+
+/* 🔑 CRITICAL FIX: Page titles use from-white gradient which is invisible on light backgrounds.
+   We remap from-white → deep navy/indigo and to-indigo-200/to-purple-200 → vivid indigo/purple */
+.light .from-white {
+  --tw-gradient-from: #1e1b4b var(--tw-gradient-from-position) !important;
+}
+
+.light .to-indigo-200 {
+  --tw-gradient-to: #4f46e5 var(--tw-gradient-to-position) !important;
+}
+
+.light .to-purple-200 {
+  --tw-gradient-to: #7c3aed var(--tw-gradient-to-position) !important;
+}
+
+.light .from-indigo-400,
+.light .from-indigo-500 {
+  --tw-gradient-from: #4f46e5 var(--tw-gradient-from-position) !important;
+}
+
+.light .to-purple-400 {
+  --tw-gradient-to: #7c3aed var(--tw-gradient-to-position) !important;
+}
+
+.light .to-cyan-500 {
+  --tw-gradient-to: #0891b2 var(--tw-gradient-to-position) !important;
+}
+
+/* Navigation brand gradient text override */
+.light .text-gradient {
+  background-image: linear-gradient(to right, #4f46e5, #0891b2) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* --- 3. BACKGROUND & HOVER OVERRIDES --- */
+
+/* Translucent white overlays → subtle indigo-tinted fill */
+.light .bg-white\/5,
+.light .bg-white\/10 {
+  background-color: rgba(79, 70, 229, 0.04) !important;
+}
+
+.light .hover\:bg-white\/5:hover {
+  background-color: rgba(79, 70, 229, 0.07) !important;
+}
+
+.light .hover\:bg-white\/10:hover {
+  background-color: rgba(79, 70, 229, 0.10) !important;
+}
+
+/* Dark hover backgrounds → professional light hover */
+.light .hover\:bg-slate-800:hover,
+.light .hover\:bg-slate-700\/50:hover {
+  background-color: rgba(79, 70, 229, 0.06) !important;
+}
+
+/* Table row hover for light mode: indigo tinted instead of white/10 */
+.light tr.hover\:bg-white\/10:hover {
+  background-color: rgba(79, 70, 229, 0.04) !important;
+}
+
+/* Text hover fixes — keep dark readable colors on hover */
+.light .hover\:text-white:hover {
+  color: var(--accent-color) !important;
+}
+
+.light .hover\:text-indigo-300:hover {
+  color: #3730a3 !important;
+}
+
+.light .hover\:text-indigo-400:hover {
+  color: #4338ca !important;
+}
+
+/* Group-hover text overrides */
+.light .group:hover .group-hover\:text-indigo-300 {
+  color: #4f46e5 !important;
+}
+
+.light .group:hover .group-hover\:text-indigo-400 {
+  color: #4338ca !important;
+}
+
+.light .group:hover .group-hover\:text-purple-400 {
+  color: #7c3aed !important;
+}
+
+/* Solid-bg hover buttons keep white text */
+.light .hover\:bg-indigo-500:hover,
+.light .hover\:bg-rose-500:hover,
+.light .hover\:bg-emerald-500:hover {
+  color: #ffffff !important;
+}
+
+/* Status badge backgrounds — polished for light mode */
+.light .bg-emerald-500\/20 {
+  background-color: rgba(5, 150, 105, 0.12) !important;
+}
+
+.light .bg-emerald-500\/10 {
+  background-color: rgba(5, 150, 105, 0.06) !important;
+}
+
+.light .bg-rose-500\/20 {
+  background-color: rgba(225, 29, 72, 0.12) !important;
+}
+
+.light .bg-rose-500\/10 {
+  background-color: rgba(225, 29, 72, 0.06) !important;
+}
+
+.light .bg-amber-500\/20 {
+  background-color: rgba(217, 119, 6, 0.12) !important;
+}
+
+.light .bg-amber-500\/10 {
+  background-color: rgba(217, 119, 6, 0.06) !important;
+}
+
+.light .bg-indigo-500\/20 {
+  background-color: rgba(79, 70, 229, 0.10) !important;
+}
+
+.light .bg-indigo-500\/10 {
+  background-color: rgba(79, 70, 229, 0.06) !important;
+}
+
+.light .bg-purple-500\/20 {
+  background-color: rgba(124, 58, 237, 0.10) !important;
+}
+
+.light .bg-blue-500\/20 {
+  background-color: rgba(37, 99, 235, 0.10) !important;
+}
+
+/* Hover bg for status action buttons */
+.light .hover\:bg-rose-500\/10:hover {
+  background-color: rgba(225, 29, 72, 0.1) !important;
+}
+
+.light .hover\:bg-emerald-500\/10:hover {
+  background-color: rgba(5, 150, 105, 0.1) !important;
+}
+
+.light .hover\:bg-indigo-500\/10:hover {
+  background-color: rgba(79, 70, 229, 0.1) !important;
+}
+
+/* Background blobs — reduce intensity for light mode */
+.light .bg-blob {
+  opacity: 0.06;
+}
+
+.light .bg-indigo-600\/30 {
+  background-color: rgba(79, 70, 229, 0.06) !important;
+}
+
+.light .bg-purple-600\/30 {
+  background-color: rgba(124, 58, 237, 0.06) !important;
+}
+
+.light .bg-cyan-600\/20 {
+  background-color: rgba(8, 145, 178, 0.04) !important;
+}
+
+/* --- 4. DIVIDERS & BORDERS --- */
+
+.light .divide-white\/5> :not([hidden])~ :not([hidden]) {
+  border-color: rgba(99, 102, 241, 0.1) !important;
+}
+
+.light .divide-gray-100> :not([hidden])~ :not([hidden]) {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.light .border-white\/10,
+.light .hover\:border-white\/10:hover {
+  border-color: rgba(99, 102, 241, 0.12) !important;
+}
+
+/* Status border shades */
+.light .border-emerald-500\/30 {
+  border-color: rgba(5, 150, 105, 0.25) !important;
+}
+
+.light .border-rose-500\/30 {
+  border-color: rgba(225, 29, 72, 0.25) !important;
+}
+
+.light .border-amber-500\/30 {
+  border-color: rgba(217, 119, 6, 0.25) !important;
+}
+
+.light .border-indigo-500\/30 {
+  border-color: rgba(79, 70, 229, 0.25) !important;
+}
+
+.light .border-purple-500\/30 {
+  border-color: rgba(124, 58, 237, 0.25) !important;
+}
+
+/* --- 5. COMPONENT-LEVEL REFINEMENTS --- */
+
+/* Glass Input */
+.light .glass-input {
+  background-color: #ffffff;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+
+.light .glass-input:focus {
+  background-color: #ffffff;
+  border-color: rgba(79, 70, 229, 0.45);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.10), 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.light .glass-input::placeholder {
+  color: #94a3b8;
+}
+
+/* Glass Panel */
+.light .glass-panel {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 24px rgba(99, 102, 241, 0.08) !important;
+  border-color: rgba(99, 102, 241, 0.12);
+}
+
+/* Select dropdown options */
+.light select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+/* --- 6. SHADOW & AMBIENT POLISH --- */
+
+/* Indigo-tinted shadows for light mode */
+.light .shadow-indigo-500\/20 {
+  --tw-shadow-color: rgba(79, 70, 229, 0.08) !important;
+}
+
+.light .shadow-indigo-500\/30 {
+  --tw-shadow-color: rgba(79, 70, 229, 0.12) !important;
+}
+
+.light .shadow-emerald-500\/20 {
+  --tw-shadow-color: rgba(5, 150, 105, 0.08) !important;
+}
+
+.light .shadow-rose-500\/20 {
+  --tw-shadow-color: rgba(225, 29, 72, 0.08) !important;
+}
+
+.light .shadow-purple-500\/20 {
+  --tw-shadow-color: rgba(124, 58, 237, 0.08) !important;
+}
+
+/* Professional scrollbar for light mode */
+.light ::-webkit-scrollbar-track {
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.15);
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.25);
+}
+
+/* --- 7. NAVIGATION SIDEBAR — Light Mode Specifics --- */
+
+/* Sidebar panel shadow & border refinement */
+.light aside.glass-panel {
+  box-shadow: -4px 0 24px rgba(99, 102, 241, 0.06), 0 0 0 1px rgba(99, 102, 241, 0.08) !important;
+}
+
+/* Navigation subtitle (FIELD MANAGEMENT) */
+.light .text-indigo-300.tracking-wide {
+  color: #6366f1 !important;
+}
+
+/* --- 8. AUTH PAGE — Light Mode Specifics --- */
+
+/* Auth page subtitle and footer links */
+.light .text-indigo-400.hover\:text-indigo-300:hover {
+  color: #3730a3 !important;
+}
+
+/* Auth header area — ensure visible background */
+.light .bg-\[var\(--glass-bg-primary\)\] {
+  background-color: rgba(248, 250, 252, 0.95) !important;
+}
+
+/* --- 9. MODAL OVERLAY — Light Mode --- */
+.light .bg-black\/60 {
+  background-color: rgba(15, 23, 42, 0.5) !important;
+}
+
+/* Modal header EMP ID badge */
+.light .text-indigo-300.border.border-indigo-500\/30 {
+  color: #4338ca !important;
+}
+
+/* --- 10. SORT TOGGLE BUTTON --- */
+.light button.text-indigo-300 {
+  color: #4338ca !important;
+}
+
+/* --- 11. LIVE SYNC BADGE --- */
+.light .bg-emerald-400.animate-ping {
+  background-color: #059669 !important;
+}
+
+/* --- 12. OPACITY-BASED TEXT — Ensure readability --- */
+
+/* Elements using opacity-70 / opacity-80 with var(--text-main) are fine
+   because --text-main is already set to dark in light mode.
+   But the gradient text-transparent elements need specific help: */
+.light .text-transparent.bg-clip-text {
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* --- 13. ACTIVE NAV ITEM PULSE — Soften for light mode --- */
+.light .from-indigo-500\/20 {
+  --tw-gradient-from: rgba(79, 70, 229, 0.06) var(--tw-gradient-from-position) !important;
+}
+
+.light .to-purple-500\/20 {
+  --tw-gradient-to: rgba(124, 58, 237, 0.06) var(--tw-gradient-to-position) !important;
+}
+
+.light .from-purple-500\/20 {
+  --tw-gradient-from: rgba(124, 58, 237, 0.06) var(--tw-gradient-from-position) !important;
+}
+
+.light .to-pink-500\/20 {
+  --tw-gradient-to: rgba(236, 72, 153, 0.06) var(--tw-gradient-to-position) !important;
 }

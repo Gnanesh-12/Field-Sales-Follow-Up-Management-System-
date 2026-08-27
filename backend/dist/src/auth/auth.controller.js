@@ -36,6 +36,12 @@ let AuthController = class AuthController {
         }
         return this.authService.login(user);
     }
+    async employeeResetPassword(body) {
+        if (!body.employeeId || !body.oldPin || !body.newPin) {
+            throw new common_1.BadRequestException('Employee ID, old PIN, and new PIN are required');
+        }
+        return this.authService.employeeResetPassword(body.employeeId, body.oldPin, body.newPin);
+    }
     async adminRegister(body) {
         if (!body.email || !body.password) {
             throw new common_1.BadRequestException('Email and password are required.');
@@ -68,6 +74,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('employee/reset-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "employeeResetPassword", null);
 __decorate([
     (0, common_1.Post)('admin/register'),
     __param(0, (0, common_1.Body)()),

@@ -12,7 +12,11 @@ export declare class AuthService {
             id: any;
             name: any;
             role: any;
+            isFirstLogin: any;
         };
+    }>;
+    employeeResetPassword(employeeId: string, oldPin: string, newPin: string): Promise<{
+        message: string;
     }>;
     adminRegister(email: string, password: string, name?: string): Promise<{
         message: string;

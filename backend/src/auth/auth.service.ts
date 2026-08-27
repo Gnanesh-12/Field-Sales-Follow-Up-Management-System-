@@ -60,7 +60,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   // ==========================================
   // EXISTING EMPLOYEE METHODS (LEAVE AS IS)
@@ -70,7 +70,7 @@ export class AuthService {
       where: { id: employeeId },
     });
     if (!employee) return null;
-    
+
     // Check pin / password
     const isMatch = await bcrypt.compare(pin, employee.password).catch(() => false) || employee.password === pin;
     if (isMatch) return employee;
@@ -91,15 +91,44 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { sub: user.id, name: user.name, role: user.role };
+    const payload = { sub: user.id, name: user.name, role: user.role, isFirstLogin: user.isFirstLogin };
     return {
       access_token: this.jwtService.sign(payload),
       user: {
         id: user.id,
         name: user.name,
         role: user.role,
+        isFirstLogin: user.isFirstLogin,
       },
     };
+  }
+
+  async employeeResetPassword(employeeId: string, oldPin: string, newPin: string) {
+    if (!employeeId || !oldPin || !newPin) {
+      throw new BadRequestException('Employee ID, current PIN, and new PIN are required.');
+    }
+
+    const user = await (this.prisma as any).employee.findUnique({
+      where: { id: employeeId },
+    });
+
+    if (!user || !user.password) {
+      throw new UnauthorizedException('Invalid Employee ID or account does not exist.');
+    }
+
+    const isMatch = await bcrypt.compare(oldPin, user.password).catch(() => false) || user.password === oldPin;
+    if (!isMatch) {
+      throw new UnauthorizedException('Current PIN is incorrect.');
+    }
+
+    const hashedNewPin = await bcrypt.hash(newPin, 10);
+
+    await (this.prisma as any).employee.update({
+      where: { id: employeeId },
+      data: { password: hashedNewPin, isFirstLogin: false },
+    });
+
+    return { message: 'Password updated successfully! You can now access the full app.' };
   }
 
   // ==========================================

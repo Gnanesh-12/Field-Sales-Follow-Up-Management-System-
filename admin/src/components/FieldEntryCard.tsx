@@ -79,30 +79,30 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
   return (
     <>
       {/* 1-Line Table Row */}
-      <tr className="hover:bg-gray-50/80 transition border-b border-gray-100 text-sm">
-        <td className="p-4 font-mono font-bold text-gray-900">{empId}</td>
-        <td className="p-4 font-medium text-gray-800">{empName}</td>
-        <td className="p-4 text-gray-500 font-medium">
-          {dateStr} at {timeStr}
+      <tr className="hover:bg-white/10 transition-all duration-200 group border-b border-[var(--glass-border)] text-sm cursor-pointer" onClick={() => setIsOpen(true)}>
+        <td className="p-5 font-mono font-bold text-[var(--text-main)] group-hover:text-indigo-300 transition-colors">{empId}</td>
+        <td className="p-5 font-bold text-[var(--text-main)] opacity-90">{empName}</td>
+        <td className="p-5 text-[var(--text-main)] opacity-70 font-medium">
+          {dateStr} <span className="opacity-50 mx-1">at</span> {timeStr}
         </td>
-        <td className="p-4">
+        <td className="p-5">
           <span
-            className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+            className={`inline-flex px-3 py-1 rounded-full text-xs font-bold shadow-lg ${
               status === 'APPROVED'
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-emerald-500/20'
                 : status === 'REJECTED'
-                ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                : 'bg-amber-50 text-amber-700 border border-amber-200'
+                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 shadow-rose-500/20'
+                : 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-amber-500/20'
             }`}
           >
             {status === 'REJECTED' ? 'DECLINED' : status}
           </span>
         </td>
-        <td className="p-4 text-right">
+        <td className="p-5 text-right">
           <button
             type="button"
-            onClick={() => setIsOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium text-xs rounded-lg transition cursor-pointer"
+            onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500 hover:text-white font-bold text-xs rounded-xl transition-all shadow-lg"
           >
             <Eye size={15} /> View
           </button>
@@ -111,55 +111,61 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
 
       {/* Detail Pop-up Card Modal */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass-panel w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200 shadow-[0_0_50px_0_rgba(99,102,241,0.2)]">
             {/* Modal Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-xs px-2.5 py-1 bg-blue-100 text-blue-800 rounded-md font-bold">
+            <div className="flex justify-between items-center px-6 py-5 border-b border-[var(--glass-border)] bg-[var(--glass-bg-primary)]">
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-xs px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-lg font-bold shadow-sm">
                   {empId}
                 </span>
-                <h3 className="text-base font-bold text-gray-900">{empName}</h3>
+                <h3 className="text-lg font-extrabold text-[var(--text-main)]">{empName}</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition cursor-pointer"
+                className="p-2 rounded-xl text-[var(--text-main)] opacity-70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-4 text-sm text-left">
+            <div className="p-6 overflow-y-auto space-y-5 text-sm text-left custom-scrollbar">
               {/* Date, Time & Geographical Location */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs">
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Calendar size={15} className="text-blue-500 shrink-0" />
-                  <span>{dateStr}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-[var(--glass-bg-primary)]/50 p-5 rounded-2xl border border-[var(--glass-border)] shadow-inner text-xs">
+                <div className="flex items-center gap-3 text-[var(--text-main)] opacity-80">
+                  <div className="p-2 bg-blue-500/20 rounded-lg shrink-0 border border-blue-500/20">
+                    <Calendar size={16} className="text-blue-400" />
+                  </div>
+                  <span className="font-medium text-sm">{dateStr}</span>
                 </div>
 
-                <div className="flex items-center gap-2 text-gray-700">
-                  <Clock size={15} className="text-purple-500 shrink-0" />
-                  <span>{timeStr}</span>
+                <div className="flex items-center gap-3 text-[var(--text-main)] opacity-80">
+                  <div className="p-2 bg-purple-500/20 rounded-lg shrink-0 border border-purple-500/20">
+                    <Clock size={16} className="text-purple-400" />
+                  </div>
+                  <span className="font-medium text-sm">{timeStr}</span>
                 </div>
 
-                <div className="sm:col-span-2 flex items-start gap-2 text-gray-700 pt-2 border-t border-slate-200/60">
-                  <MapPin size={15} className="text-emerald-500 shrink-0 mt-0.5" />
+                <div className="sm:col-span-2 flex items-start gap-3 text-[var(--text-main)] opacity-80 pt-3 border-t border-[var(--glass-border)]">
+                  <div className="p-2 bg-emerald-500/20 rounded-lg shrink-0 border border-emerald-500/20">
+                    <MapPin size={16} className="text-emerald-400" />
+                  </div>
                   <div>
-                    <span className="font-semibold text-gray-900 block">Geographical Location</span>
-                    <span className="text-gray-600">{location}</span>
+                    <span className="font-bold text-[var(--text-main)] block mb-0.5">Geographical Location</span>
+                    <span className="text-[var(--text-main)] opacity-70 font-medium">{location}</span>
                   </div>
                 </div>
               </div>
 
               {/* Uploaded Site Image */}
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
-                  <ImageIcon size={14} className="text-blue-500" /> Uploaded Site Picture
+                <label className="text-xs font-bold text-[var(--text-main)] opacity-70 uppercase tracking-wider block mb-2 flex items-center gap-2">
+                  <ImageIcon size={15} className="text-blue-400" /> Uploaded Site Picture
                 </label>
                 {photoUrl ? (
-                  <div className="rounded-xl overflow-hidden border border-gray-200 aspect-video max-h-56 bg-slate-900 flex items-center justify-center">
+                  <div className="rounded-2xl overflow-hidden border border-[var(--glass-border)] shadow-lg aspect-video max-h-56 bg-[var(--glass-bg-primary)] flex items-center justify-center">
                     <img
                       src={photoUrl}
                       alt="Field Visit Verification"
@@ -170,7 +176,7 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
                     />
                   </div>
                 ) : (
-                  <div className="p-6 text-center bg-gray-50 border border-dashed rounded-xl text-gray-400 text-xs">
+                  <div className="p-6 text-center bg-[var(--glass-bg-primary)]/50 border border-dashed border-[var(--glass-border)] rounded-2xl text-slate-500 text-xs font-medium">
                     No site photo attached to this visit.
                   </div>
                 )}
@@ -178,44 +184,48 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
 
               {/* Items & Quantity */}
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
-                  <Package size={14} className="text-amber-500" /> Items & Quantity Needed
+                <label className="text-xs font-bold text-[var(--text-main)] opacity-70 uppercase tracking-wider block mb-2 flex items-center gap-2">
+                  <Package size={15} className="text-amber-400" /> Items & Quantity Needed
                 </label>
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium text-gray-800">
+                <div className="p-4 bg-[var(--glass-bg-primary)]/50 border border-[var(--glass-border)] shadow-inner rounded-2xl text-sm font-medium text-[var(--text-main)] opacity-80">
                   {items}
                 </div>
               </div>
 
               {/* Additional Notes */}
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
-                  <FileText size={14} className="text-indigo-500" /> Additional Notes
+                <label className="text-xs font-bold text-[var(--text-main)] opacity-70 uppercase tracking-wider block mb-2 flex items-center gap-2">
+                  <FileText size={15} className="text-indigo-400" /> Additional Notes
                 </label>
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-700 leading-relaxed">
+                <div className="p-4 bg-[var(--glass-bg-primary)]/50 border border-[var(--glass-border)] shadow-inner rounded-2xl text-sm text-[var(--text-main)] opacity-80 leading-relaxed">
                   {notes}
                 </div>
               </div>
             </div>
 
             {/* Modal Actions */}
-            <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-              <span className="text-xs text-gray-500">
+            <div className="p-5 border-t border-[var(--glass-border)] bg-[var(--glass-bg-primary)]/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <span className="text-xs text-[var(--text-main)] opacity-70 font-medium">
                 Status:{' '}
-                <strong className="text-gray-800 uppercase">
+                <strong className={`uppercase px-2 py-1 rounded-md ml-1 ${
+                    status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400' :
+                    status === 'REJECTED' ? 'bg-rose-500/20 text-rose-400' :
+                    'bg-amber-500/20 text-amber-400'
+                }`}>
                   {status === 'REJECTED' ? 'DECLINED' : status}
                 </strong>
               </span>
 
-              <div className="flex gap-2">
+              <div className="flex gap-3 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => {
                     onStatusUpdate(entry.id, 'REJECTED');
                     setIsOpen(false);
                   }}
-                  className="flex items-center gap-1.5 px-4 py-2 border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 rounded-xl text-xs font-semibold transition cursor-pointer"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 border border-rose-500/30 text-rose-400 bg-rose-500/10 hover:bg-rose-500 hover:text-white rounded-xl text-xs font-bold transition-all shadow-lg cursor-pointer"
                 >
-                  <XCircle size={15} /> Decline
+                  <XCircle size={16} /> Decline
                 </button>
                 <button
                   type="button"
@@ -223,9 +233,9 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
                     onStatusUpdate(entry.id, 'APPROVED');
                     setIsOpen(false);
                   }}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition shadow-sm cursor-pointer"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-500/20 border border-emerald-500/30 hover:bg-emerald-500 text-emerald-400 hover:text-white rounded-xl text-xs font-bold transition-all shadow-lg cursor-pointer"
                 >
-                  <CheckCircle size={15} /> Approve
+                  <CheckCircle size={16} /> Approve
                 </button>
               </div>
             </div>
