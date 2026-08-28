@@ -60,7 +60,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   // ==========================================
   // EXISTING EMPLOYEE METHODS (LEAVE AS IS)
