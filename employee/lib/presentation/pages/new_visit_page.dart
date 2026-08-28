@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:uuid/uuid.dart';
 import '../app_theme.dart';
 import '../providers/reference_data_provider.dart';
 import '../providers/api_provider.dart';
@@ -25,9 +26,11 @@ class NewVisitPage extends ConsumerStatefulWidget {
 
 class _NewVisitPageState extends ConsumerState<NewVisitPage> {
   final _formKey = GlobalKey<FormState>();
+  final _recordId = const Uuid().v4();
   
-  String? _selectedSiteId;
+  final _siteNameController = TextEditingController();
   Position? _currentPosition;
+  String? _addressText;
   bool _isGettingLocation = false;
   
   XFile? _imageFile;
@@ -35,7 +38,7 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
   bool _isUploadingImage = false;
   String? _uploadedImageUrl;
 
-  final List<_MaterialEntry> _materials = [];
+  final List<_ManualMaterialEntry> _materials = [];
   
   final _followUpDateController = TextEditingController();
   final _followUpNotesController = TextEditingController();
@@ -46,6 +49,7 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
 
   @override
   void dispose() {
+    _siteNameController.dispose();
     _followUpDateController.dispose();
     _followUpNotesController.dispose();
     _notesController.dispose();
@@ -69,7 +73,28 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
       } 
 
       final position = await Geolocator.getCurrentPosition();
-      setState(() => _currentPosition = position);
+      
+      // Reverse geocode to get full address
+      String address = '${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}';
+      try {
+        final url = Uri.parse(
+          'https://nominatim.openstreetmap.org/reverse?lat=${position.latitude}&lon=${position.longitude}&format=json&addressdetails=1',
+        );
+        final response = await http.get(url, headers: {'User-Agent': 'FieldSalesApp/1.0'});
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          if (data['display_name'] != null) {
+            address = data['display_name'];
+          }
+        }
+      } catch (_) {
+        // Fall back to lat/lng if reverse geocoding fails
+      }
+      
+      setState(() {
+        _currentPosition = position;
+        _addressText = address;
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -104,6 +129,7 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
       final uri = Uri.parse('$baseUrl/uploads/image');
       final request = http.MultipartRequest('POST', uri)
         ..headers['Authorization'] = 'Bearer $token'
+        ..fields['recordId'] = _recordId
         ..files.add(http.MultipartFile.fromBytes(
           'file',
           bytes,
@@ -132,9 +158,9 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
     }
   }
 
-  void _addMaterial(MaterialItem material) {
+  void _addMaterial() {
     setState(() {
-      _materials.add(_MaterialEntry(material: material));
+      _materials.add(_ManualMaterialEntry());
     });
   }
 
@@ -145,15 +171,25 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Theme(
-          data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppTheme.accentCoral,
-              onPrimary: Colors.white,
-              surface: AppTheme.surfaceDark,
-              onSurface: AppTheme.textPrimary,
-            ),
-          ),
+          data: isDark
+              ? ThemeData.dark().copyWith(
+                  colorScheme: const ColorScheme.dark(
+                    primary: AppTheme.accentCoral,
+                    onPrimary: Colors.white,
+                    surface: AppTheme.surfaceDark,
+                    onSurface: AppTheme.textPrimary,
+                  ),
+                )
+              : ThemeData.light().copyWith(
+                  colorScheme: const ColorScheme.light(
+                    primary: AppTheme.accentCoral,
+                    onPrimary: Colors.white,
+                    surface: AppTheme.surfaceLight,
+                    onSurface: AppTheme.textPrimaryLight,
+                  ),
+                ),
           child: child!,
         );
       },
@@ -167,9 +203,19 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedSiteId == null) {
+    if (_siteNameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a customer site')),
+        const SnackBar(content: Text('Please enter a customer site name')),
+      );
+      return;
+    }
+
+    if (_currentPosition == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('GPS Location is required. Please capture your location first.'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -187,15 +233,16 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
       }
 
       final materialsData = _materials
-          .where((m) => m.quantityController.text.isNotEmpty)
+          .where((m) => m.nameController.text.trim().isNotEmpty && m.quantityController.text.isNotEmpty)
           .map((m) => {
-                'materialId': m.material.id,
+                'materialName': m.nameController.text.trim(),
                 'quantity': double.tryParse(m.quantityController.text) ?? 0,
               })
           .toList();
 
       await repository.createVisit({
-        'customerSiteId': _selectedSiteId,
+        'id': _recordId,
+        'customerSiteName': _siteNameController.text.trim(),
         'notes': _notesController.text,
         'remarks': _remarksController.text,
         'lat': _currentPosition?.latitude,
@@ -228,10 +275,10 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundDark,
+      backgroundColor: context.backgroundColor,
       appBar: AppBar(
-        backgroundColor: AppTheme.surfaceDark,
-        title: Text('New Field Entry', style: AppTheme.headingSmall),
+        backgroundColor: context.surfaceColor,
+        title: Text('New Field Entry', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
         centerTitle: true,
         elevation: 0,
       ),
@@ -242,20 +289,11 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
           children: [
             // ─── Customer Site ─────────────────────────────────────
             _buildSectionHeader(Icons.store_rounded, 'Customer Site'),
-            ref.watch(customerSitesProvider).when(
-              data: (sites) => DropdownButtonFormField<String>(
-                decoration: AppTheme.inputDecoration(label: 'Select Site'),
-                dropdownColor: AppTheme.surfaceDark,
-                value: _selectedSiteId,
-                items: sites.map((s) => DropdownMenuItem(
-                  value: s.id,
-                  child: Text(s.name, style: AppTheme.bodyLarge),
-                )).toList(),
-                onChanged: (val) => setState(() => _selectedSiteId = val),
-                validator: (val) => val == null ? 'Required' : null,
-              ),
-              loading: () => const CircularProgressIndicator(),
-              error: (e, _) => Text('Error loading sites: $e', style: const TextStyle(color: Colors.red)),
+            TextFormField(
+              controller: _siteNameController,
+              decoration: AppTheme.inputDecoration(label: 'Enter Site Name', context: context),
+              style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
+              validator: (val) => (val == null || val.trim().isEmpty) ? 'Required' : null,
             ),
             const SizedBox(height: 24),
 
@@ -264,31 +302,45 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceDark,
+                color: context.surfaceColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.borderSubtle),
+                border: Border.all(color: context.borderSubtleColor),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    _currentPosition != null ? Icons.check_circle_rounded : Icons.location_searching_rounded,
-                    color: _currentPosition != null ? AppTheme.accentGreen : AppTheme.textMuted,
+                  Row(
+                    children: [
+                      Icon(
+                        _currentPosition != null ? Icons.check_circle_rounded : Icons.location_searching_rounded,
+                        color: _currentPosition != null ? AppTheme.accentGreen : context.textMutedColor,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _currentPosition != null
+                              ? _addressText ?? 'Location captured'
+                              : 'Location not captured',
+                          style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _isGettingLocation ? null : _getLocation,
+                        child: _isGettingLocation
+                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Text('Capture', style: TextStyle(color: AppTheme.accentTeal)),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _currentPosition != null
-                          ? '${_currentPosition!.latitude.toStringAsFixed(4)}, ${_currentPosition!.longitude.toStringAsFixed(4)}'
-                          : 'Location not captured',
-                      style: AppTheme.bodyMedium,
+                  if (_currentPosition != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      '${_currentPosition!.latitude.toStringAsFixed(4)}, ${_currentPosition!.longitude.toStringAsFixed(4)}',
+                      style: AppTheme.bodySmall.copyWith(color: context.textMutedColor),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: _isGettingLocation ? null : _getLocation,
-                    child: _isGettingLocation
-                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Text('Capture', style: TextStyle(color: AppTheme.accentTeal)),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -302,9 +354,9 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
                 height: 120,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceDark,
+                  color: context.surfaceColor,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.borderSubtle),
+                  border: Border.all(color: context.borderSubtleColor),
                 ),
                 child: _isUploadingImage
                     ? const Center(child: CircularProgressIndicator())
@@ -316,9 +368,9 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.add_a_photo_rounded, color: AppTheme.textMuted, size: 32),
+                              Icon(Icons.add_a_photo_rounded, color: context.textMutedColor, size: 32),
                               const SizedBox(height: 8),
-                              Text('Tap to capture photo', style: AppTheme.bodySmall),
+                              Text('Tap to capture photo', style: AppTheme.bodySmall.copyWith(color: context.textMutedColor)),
                             ],
                           ),
               ),
@@ -332,24 +384,21 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
               child: Row(
                 children: [
                   Expanded(
-                    flex: 2,
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceDark,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(m.material.name, style: AppTheme.bodyLarge),
+                    flex: 3,
+                    child: TextFormField(
+                      controller: m.nameController,
+                      decoration: AppTheme.inputDecoration(label: 'Material Name', context: context),
+                      style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Expanded(
-                    flex: 1,
+                    flex: 2,
                     child: TextFormField(
                       controller: m.quantityController,
                       keyboardType: TextInputType.number,
-                      decoration: AppTheme.inputDecoration(label: 'Qty (${m.material.unit})'),
-                      style: AppTheme.bodyLarge,
+                      decoration: AppTheme.inputDecoration(label: 'Qty', context: context),
+                      style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
                     ),
                   ),
                   IconButton(
@@ -359,22 +408,24 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
                 ],
               ),
             )),
-            ref.watch(materialsProvider).when(
-              data: (materials) => DropdownButtonFormField<MaterialItem>(
-                decoration: AppTheme.inputDecoration(label: 'Add Material'),
-                dropdownColor: AppTheme.surfaceDark,
-                items: materials.map((m) => DropdownMenuItem(
-                  value: m,
-                  child: Text('${m.name} (${m.unit})', style: AppTheme.bodyLarge),
-                )).toList(),
-                onChanged: (val) {
-                  if (val != null && !_materials.any((e) => e.material.id == val.id)) {
-                    _addMaterial(val);
-                  }
-                },
+            GestureDetector(
+              onTap: _addMaterial,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.surfaceColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: context.borderSubtleColor, style: BorderStyle.solid),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_rounded, color: AppTheme.accentTeal, size: 20),
+                    const SizedBox(width: 8),
+                    Text('Add Material', style: AppTheme.bodyMedium.copyWith(color: AppTheme.accentTeal, fontWeight: FontWeight.w600)),
+                  ],
+                ),
               ),
-              loading: () => const CircularProgressIndicator(),
-              error: (e, _) => const Text('Error loading materials'),
             ),
             const SizedBox(height: 24),
 
@@ -387,14 +438,15 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
               decoration: AppTheme.inputDecoration(
                 label: 'Due Date',
                 icon: Icons.calendar_today_rounded,
+                context: context,
               ),
-              style: AppTheme.bodyLarge,
+              style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _followUpNotesController,
-              decoration: AppTheme.inputDecoration(label: 'Follow-up Notes'),
-              style: AppTheme.bodyLarge,
+              decoration: AppTheme.inputDecoration(label: 'Follow-up Notes', context: context),
+              style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
               maxLines: 2,
             ),
             const SizedBox(height: 24),
@@ -403,8 +455,8 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
             _buildSectionHeader(Icons.notes_rounded, 'Visit Remarks'),
             TextFormField(
               controller: _remarksController,
-              decoration: AppTheme.inputDecoration(label: 'General remarks or notes'),
-              style: AppTheme.bodyLarge,
+              decoration: AppTheme.inputDecoration(label: 'General remarks or notes', context: context),
+              style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
               maxLines: 3,
             ),
             const SizedBox(height: 32),
@@ -444,9 +496,7 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
   }
 }
 
-class _MaterialEntry {
-  final MaterialItem material;
+class _ManualMaterialEntry {
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController quantityController = TextEditingController();
-
-  _MaterialEntry({required this.material});
 }

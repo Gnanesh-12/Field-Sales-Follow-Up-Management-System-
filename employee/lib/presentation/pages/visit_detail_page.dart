@@ -39,11 +39,11 @@ class VisitDetailPage extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.surfaceDark,
-        title: Text('Delete Visit', style: AppTheme.headingSmall),
-        content: Text('Are you sure you want to delete this visit?', style: AppTheme.bodyMedium),
+        backgroundColor: ctx.surfaceColor,
+        title: Text('Delete Visit', style: AppTheme.headingSmall.copyWith(color: ctx.textPrimaryColor)),
+        content: Text('Are you sure you want to delete this visit?', style: AppTheme.bodyMedium.copyWith(color: ctx.textSecondaryColor)),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel', style: TextStyle(color: AppTheme.textMuted))),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Cancel', style: TextStyle(color: ctx.textMutedColor))),
           TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
         ],
       ),
@@ -71,10 +71,10 @@ class VisitDetailPage extends ConsumerWidget {
     final visitAsync = ref.watch(visitDetailProvider(visitId));
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundDark,
+      backgroundColor: context.backgroundColor,
       appBar: AppBar(
-        backgroundColor: AppTheme.surfaceDark,
-        title: Text('Visit Details', style: AppTheme.headingSmall),
+        backgroundColor: context.surfaceColor,
+        title: Text('Visit Details', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
         centerTitle: true,
         elevation: 0,
         actions: [
@@ -85,14 +85,14 @@ class VisitDetailPage extends ConsumerWidget {
         ],
       ),
       body: visitAsync.when(
-        data: (visit) => _buildDetailContent(visit),
+        data: (visit) => _buildDetailContent(context, visit),
         loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.accentTeal)),
         error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.red))),
       ),
     );
   }
 
-  Widget _buildDetailContent(FieldVisit visit) {
+  Widget _buildDetailContent(BuildContext context, FieldVisit visit) {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -153,9 +153,9 @@ class VisitDetailPage extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceDark,
+              color: context.surfaceColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.borderSubtle),
+              border: Border.all(color: context.borderSubtleColor),
             ),
             child: Row(
               children: [
@@ -173,8 +173,8 @@ class VisitDetailPage extends ConsumerWidget {
                     builder: (context, ref, child) {
                       final addressAsync = ref.watch(addressProvider((visit.location!.lat, visit.location!.lng)));
                       return addressAsync.when(
-                        data: (address) => Text(address, style: AppTheme.bodyLarge),
-                        loading: () => const Text('Loading address...', style: TextStyle(color: AppTheme.textMuted, fontSize: 14)),
+                        data: (address) => Text(address, style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
+                        loading: () => Text('Loading address...', style: TextStyle(color: context.textMutedColor, fontSize: 14)),
                         error: (e, st) => const Text('Address unavailable', style: TextStyle(color: Colors.red, fontSize: 14)),
                       );
                     },
@@ -200,8 +200,8 @@ class VisitDetailPage extends ConsumerWidget {
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Container(
                 height: 200,
-                color: AppTheme.surfaceDark,
-                child: const Center(child: Icon(Icons.broken_image_rounded, color: AppTheme.textMuted, size: 48)),
+                color: context.surfaceColor,
+                child: Center(child: Icon(Icons.broken_image_rounded, color: context.textMutedColor, size: 48)),
               ),
             ),
           ),
@@ -215,13 +215,13 @@ class VisitDetailPage extends ConsumerWidget {
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceDark,
+              color: context.surfaceColor,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(m.material?.name ?? 'Unknown', style: AppTheme.bodyLarge),
+                Text(m.material?.name ?? 'Unknown', style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
                 Text('${m.quantity} ${m.material?.unit ?? ''}', 
                   style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.bold, color: AppTheme.accentCoral)),
               ],
@@ -236,11 +236,11 @@ class VisitDetailPage extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceDark,
+              color: context.surfaceColor,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.borderSubtle),
+              border: Border.all(color: context.borderSubtleColor),
             ),
-            child: Text(visit.remarks!, style: AppTheme.bodyMedium),
+            child: Text(visit.remarks!, style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor)),
           ),
           const SizedBox(height: 24),
         ],
@@ -252,7 +252,7 @@ class VisitDetailPage extends ConsumerWidget {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceDark,
+              color: context.surfaceColor,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: f.status == 'pending' ? AppTheme.accentGold : AppTheme.accentGreen),
             ),
@@ -263,7 +263,7 @@ class VisitDetailPage extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Due: ${DateFormat('MMM d, yyyy').format(f.dueDate)}', 
-                      style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.bold)),
+                      style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.bold, color: context.textPrimaryColor)),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
@@ -281,7 +281,7 @@ class VisitDetailPage extends ConsumerWidget {
                 ),
                 if (f.notes != null && f.notes!.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  Text(f.notes!, style: AppTheme.bodyMedium),
+                  Text(f.notes!, style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor)),
                 ]
               ],
             ),
@@ -293,11 +293,13 @@ class VisitDetailPage extends ConsumerWidget {
   }
 
   Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(
-        title,
-        style: AppTheme.headingSmall.copyWith(color: AppTheme.textMuted),
+    return Builder(
+      builder: (context) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Text(
+          title,
+          style: AppTheme.headingSmall.copyWith(color: context.textMutedColor),
+        ),
       ),
     );
   }

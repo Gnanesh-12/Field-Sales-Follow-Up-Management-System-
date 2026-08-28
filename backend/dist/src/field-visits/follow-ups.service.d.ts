@@ -14,6 +14,7 @@ export declare class FollowUpsService {
             };
         } & {
             employeeId: string;
+            status: string;
             id: string;
             timestamp: Date;
             notes: string | null;
@@ -43,6 +44,7 @@ export declare class FollowUpsService {
             };
         } & {
             employeeId: string;
+            status: string;
             id: string;
             timestamp: Date;
             notes: string | null;

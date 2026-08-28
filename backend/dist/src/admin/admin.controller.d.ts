@@ -26,11 +26,17 @@ export declare class AdminController {
     }>;
     getEmployees(): Promise<any>;
     addEmployee(body: any): Promise<any>;
+    deleteEmployee(id: string): Promise<{
+        message: string;
+    }>;
     updateEmployee(id: string, body: any): Promise<any>;
     toggleStatus(id: string, status: 'ACTIVE' | 'INACTIVE'): Promise<any>;
     getFieldEntries(): Promise<any>;
     updateEntryStatus(id: string, status: string): Promise<any>;
     changePassword(body: any): Promise<{
         message: string;
+    }>;
+    exportRecords(filters: any): Promise<{
+        csvData: string;
     }>;
 }

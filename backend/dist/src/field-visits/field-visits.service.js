@@ -18,10 +18,33 @@ let FieldVisitsService = class FieldVisitsService {
         this.prisma = prisma;
     }
     async createVisit(employeeId, data) {
+        let site = await this.prisma.customerSite.findFirst({
+            where: { name: data.customerSiteName },
+        });
+        if (!site) {
+            site = await this.prisma.customerSite.create({
+                data: { name: data.customerSiteName, address: '' },
+            });
+        }
+        let materialEntries = [];
+        if (data.materials?.length) {
+            for (const m of data.materials) {
+                let material = await this.prisma.material.findFirst({
+                    where: { name: m.materialName },
+                });
+                if (!material) {
+                    material = await this.prisma.material.create({
+                        data: { name: m.materialName, unit: m.unit || 'units' },
+                    });
+                }
+                materialEntries.push({ materialId: material.id, quantity: m.quantity });
+            }
+        }
         return this.prisma.fieldVisit.create({
             data: {
+                id: data.id,
                 employeeId,
-                customerSiteId: data.customerSiteId,
+                customerSiteId: site.id,
                 notes: data.notes,
                 remarks: data.remarks,
                 location: (data.lat != null && data.lng != null) ? {
@@ -37,8 +60,8 @@ let FieldVisitsService = class FieldVisitsService {
                         type: 'image',
                     }
                 } : undefined,
-                materials: data.materials?.length ? {
-                    create: data.materials.map(m => ({
+                materials: materialEntries.length > 0 ? {
+                    create: materialEntries.map(m => ({
                         materialId: m.materialId,
                         quantity: m.quantity,
                     }))

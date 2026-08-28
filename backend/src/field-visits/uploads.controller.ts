@@ -11,9 +11,13 @@ export class UploadsController {
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: './uploads',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
+      filename: (req: any, file, cb) => {
+        // req.user is set by JwtAuthGuard
+        const employeeId = req.user?.sub || 'UNKNOWN';
+        const recordId = req.body?.recordId || 'NO-RECORD';
+        const timestamp = Date.now();
+        // Format: {employeeId}_{recordId}_{timestamp}.jpg
+        cb(null, `${employeeId}_${recordId}_${timestamp}${extname(file.originalname)}`);
       },
     }),
     fileFilter: (req, file, cb) => {

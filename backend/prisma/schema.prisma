@@ -12,17 +12,27 @@ datasource db {
 }
 
 model Employee {
-  id          String       @id // Employee ID like SE-FS-001
+  id             String       @id // Employee ID like SE-FS-001
   name           String
   phone          String?
   profilePicture String?
   password       String       // For basic auth (PIN)
   isFirstLogin   Boolean      @default(true)
-  role        String       @default("employee-role")
-  status      String       @default("active") // 'active' | 'deactivated'
-  fieldVisits FieldVisit[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  role           String       @default("employee-role")
+  status         String       @default("active") // 'active' | 'deactivated'
+  fieldVisits    FieldVisit[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Admin {
+  id        String   @id // Admin ID
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model CustomerSite {
@@ -48,6 +58,7 @@ model FieldVisit {
   timestamp      DateTime         @default(now())
   notes          String?
   remarks        String?
+  status         String           @default("PENDING") // 'PENDING' | 'APPROVED' | 'REJECTED'
   employeeId     String
   employee       Employee         @relation(fields: [employeeId], references: [id])
   customerSiteId String

@@ -59,8 +59,8 @@ let FieldVisitsController = class FieldVisitsController {
     }
     async createVisit(req, body) {
         const employeeId = req.user.sub || req.user.employeeId;
-        if (!body.customerSiteId) {
-            throw new common_1.BadRequestException('customerSiteId is required');
+        if (!body.customerSiteName) {
+            throw new common_1.BadRequestException('customerSiteName is required');
         }
         return this.fieldVisitsService.createVisit(employeeId, body);
     }

@@ -36,8 +36,10 @@ __decorate([
         storage: (0, multer_1.diskStorage)({
             destination: './uploads',
             filename: (req, file, cb) => {
-                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-                cb(null, `${uniqueSuffix}${(0, path_1.extname)(file.originalname)}`);
+                const employeeId = req.user?.sub || 'UNKNOWN';
+                const recordId = req.body?.recordId || 'NO-RECORD';
+                const timestamp = Date.now();
+                cb(null, `${employeeId}_${recordId}_${timestamp}${(0, path_1.extname)(file.originalname)}`);
             },
         }),
         fileFilter: (req, file, cb) => {

@@ -283,15 +283,21 @@ class _DashboardPageState extends ConsumerState<DashboardPage>
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1E3A5F), Color(0xFF0F3460)],
-        ),
-        border: Border.all(color: AppTheme.borderSubtle),
+        gradient: context.isDarkMode
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF1E3A5F), Color(0xFF0F3460)],
+              )
+            : const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+              ),
+        border: Border.all(color: context.borderSubtleColor),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F3460).withValues(alpha: 0.4),
+            color: (context.isDarkMode ? const Color(0xFF0F3460) : const Color(0xFF4F46E5)).withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),

@@ -31,13 +31,13 @@ export class AdminController {
   }
 }*/
 
-import { Controller, Get, Post, Patch, Body, Param, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuthService } from '../auth/auth.service';
 
 @Controller('api/admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService, private readonly authService: AuthService,) {}
+  constructor(private readonly adminService: AdminService, private readonly authService: AuthService,) { }
 
   @Post('auth/register')
   async adminRegister(@Body() body: any) {
@@ -69,6 +69,11 @@ export class AdminController {
     return this.adminService.addEmployee(body);
   }
 
+  @Delete('employees/:id')
+  deleteEmployee(@Param('id') id: string) {
+    return this.adminService.deleteEmployee(id);
+  }
+
   @Patch('employees/:id')
   updateEmployee(@Param('id') id: string, @Body() body: any) {
     return this.adminService.updateEmployee(id, body);
@@ -94,5 +99,10 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   async changePassword(@Body() body: any) {
     return this.authService.changePassword(body);
+  }
+
+  @Post('exports')
+  async exportRecords(@Body() filters: any) {
+    return this.adminService.exportRecords(filters);
   }
 }

@@ -50,6 +50,7 @@ export declare class FieldVisitsController {
             })[];
         } & {
             employeeId: string;
+            status: string;
             id: string;
             timestamp: Date;
             notes: string | null;
@@ -70,6 +71,7 @@ export declare class FieldVisitsController {
                 };
             } & {
                 employeeId: string;
+                status: string;
                 id: string;
                 timestamp: Date;
                 notes: string | null;
@@ -144,6 +146,7 @@ export declare class FieldVisitsController {
         })[];
     } & {
         employeeId: string;
+        status: string;
         id: string;
         timestamp: Date;
         notes: string | null;
@@ -200,6 +203,7 @@ export declare class FieldVisitsController {
             })[];
         } & {
             employeeId: string;
+            status: string;
             id: string;
             timestamp: Date;
             notes: string | null;
@@ -259,6 +263,7 @@ export declare class FieldVisitsController {
         })[];
     } & {
         employeeId: string;
+        status: string;
         id: string;
         timestamp: Date;
         notes: string | null;
@@ -282,6 +287,7 @@ export declare class FieldVisitsController {
             };
         } & {
             employeeId: string;
+            status: string;
             id: string;
             timestamp: Date;
             notes: string | null;
@@ -311,6 +317,7 @@ export declare class FieldVisitsController {
             };
         } & {
             employeeId: string;
+            status: string;
             id: string;
             timestamp: Date;
             notes: string | null;

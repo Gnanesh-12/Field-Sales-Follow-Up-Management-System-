@@ -87,6 +87,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               if (value == null || value.trim().isEmpty) {
                 return 'Employee ID is required';
               }
+              final RegExp employeeIdRegex = RegExp(r'^[A-Z]{2}-[A-Z]{2}-\d{3}$');
+              if (!employeeIdRegex.hasMatch(value)) {
+                return 'Format must be SE-FS-001';
+              }
               return null;
             },
             enabled: !authState.isLoading,

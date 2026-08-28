@@ -3,7 +3,8 @@ export declare class FieldVisitsService {
     private prisma;
     constructor(prisma: PrismaService);
     createVisit(employeeId: string, data: {
-        customerSiteId: string;
+        id?: string;
+        customerSiteName: string;
         notes?: string;
         remarks?: string;
         lat?: number;
@@ -11,7 +12,8 @@ export declare class FieldVisitsService {
         accuracy?: number;
         imageUrl?: string;
         materials?: {
-            materialId: string;
+            materialName: string;
+            unit?: string;
             quantity: number;
         }[];
         followUp?: {
@@ -65,6 +67,7 @@ export declare class FieldVisitsService {
         })[];
     } & {
         employeeId: string;
+        status: string;
         id: string;
         timestamp: Date;
         notes: string | null;
@@ -121,6 +124,7 @@ export declare class FieldVisitsService {
             })[];
         } & {
             employeeId: string;
+            status: string;
             id: string;
             timestamp: Date;
             notes: string | null;
@@ -180,6 +184,7 @@ export declare class FieldVisitsService {
         })[];
     } & {
         employeeId: string;
+        status: string;
         id: string;
         timestamp: Date;
         notes: string | null;

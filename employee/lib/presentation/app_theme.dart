@@ -154,29 +154,36 @@ class AppTheme {
     required String label,
     IconData? icon,
     String? hint,
+    BuildContext? context,
   }) {
+    final isDark = context != null ? context.isDarkMode : true;
+    final fillClr = isDark ? surfaceDark.withValues(alpha: 0.6) : surfaceLight;
+    final labelClr = isDark ? textSecondary : textSecondaryLight;
+    final hintClr = isDark ? textMuted : textMutedLight;
+    final borderClr = isDark ? borderSubtle : borderSubtleLight;
+
     return InputDecoration(
       labelText: label,
       hintText: hint,
       labelStyle: GoogleFonts.inter(
-        color: textSecondary,
+        color: labelClr,
         fontSize: 14,
       ),
       hintStyle: GoogleFonts.inter(
-        color: textMuted,
+        color: hintClr,
         fontSize: 14,
       ),
       prefixIcon: icon != null ? Icon(icon, color: accentTeal, size: 22) : null,
       filled: true,
-      fillColor: surfaceDark.withValues(alpha: 0.6),
+      fillColor: fillClr,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: borderSubtle),
+        borderSide: BorderSide(color: borderClr),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: borderSubtle),
+        borderSide: BorderSide(color: borderClr),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),

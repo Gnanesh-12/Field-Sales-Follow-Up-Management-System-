@@ -137,9 +137,9 @@ export class AuthService {
   async adminRegister(email: string, password: string, name?: string) {
     const cleanEmail = email.trim().toLowerCase();
 
-    // Check if an account already exists using cleanEmail as id
-    const existing = await (this.prisma as any).employee.findUnique({
-      where: { id: cleanEmail },
+    // Check if an account already exists
+    const existing = await (this.prisma as any).admin.findUnique({
+      where: { email: cleanEmail },
     });
 
     if (existing) {
@@ -149,13 +149,13 @@ export class AuthService {
     // Hash password with bcrypt salt rounds = 10
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await (this.prisma as any).employee.create({
+    const user = await (this.prisma as any).admin.create({
       data: {
-        id: cleanEmail, // Store email as the unique ID
+        id: `ADM-${Date.now()}`,
+        email: cleanEmail,
         name: name?.trim() || cleanEmail.split('@')[0],
         password: hashedPassword,
         role: 'ADMIN',
-        status: 'ACTIVE',
       },
     });
 
@@ -170,7 +170,7 @@ export class AuthService {
       token,
       user: {
         id: user.id,
-        email: user.id,
+        email: user.email,
         name: user.name,
         role: user.role,
       },
@@ -180,8 +180,8 @@ export class AuthService {
   async adminLogin(email: string, password: string) {
     const cleanEmail = email.trim().toLowerCase();
 
-    const user = await (this.prisma as any).employee.findUnique({
-      where: { id: cleanEmail },
+    const user = await (this.prisma as any).admin.findUnique({
+      where: { email: cleanEmail },
     });
 
     if (!user || !user.password) {
@@ -204,14 +204,13 @@ export class AuthService {
       token,
       user: {
         id: user.id,
-        email: user.id,
+        email: user.email,
         name: user.name,
         role: user.role,
       },
     };
   }
 
-  // Add this inside AuthService in backend/src/auth/auth.service.ts
   async changePassword(data: { email: string; oldPassword: string; newPassword: string }) {
     const cleanEmail = data.email.trim().toLowerCase();
 
@@ -219,8 +218,8 @@ export class AuthService {
       throw new BadRequestException('Email, current password, and new password are required.');
     }
 
-    const user = await (this.prisma as any).employee.findUnique({
-      where: { id: cleanEmail },
+    const user = await (this.prisma as any).admin.findUnique({
+      where: { email: cleanEmail },
     });
 
     if (!user || !user.password) {
@@ -234,8 +233,8 @@ export class AuthService {
 
     const hashedNewPassword = await bcrypt.hash(data.newPassword, 10);
 
-    await (this.prisma as any).employee.update({
-      where: { id: cleanEmail },
+    await (this.prisma as any).admin.update({
+      where: { email: cleanEmail },
       data: { password: hashedNewPassword },
     });
 

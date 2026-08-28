@@ -4,8 +4,6 @@ import {
   Filter,
   ArrowUpDown,
   Calendar,
-  User,
-  ShieldCheck,
   RotateCcw,
   Download,
   Radio,
@@ -22,11 +20,11 @@ export const FieldEntriesPage: React.FC = () => {
   const [entries, setEntries] = useState<FieldEntry[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
-  
+
   // Date filter states
   const [selectedMonth, setSelectedMonth] = useState<string>('ALL');
   const [selectedYear, setSelectedYear] = useState<string>('ALL');
-  
+
   const [sortBy, setSortBy] = useState<SortField>('date');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
@@ -141,56 +139,37 @@ export const FieldEntriesPage: React.FC = () => {
     });
   }, [entries, searchQuery, statusFilter, selectedMonth, selectedYear, sortBy, sortOrder]);
 
-  const exportToCSV = () => {
+  const exportToCSV = async () => {
     if (processedEntries.length === 0) {
       alert('No entries available to export based on current filters.');
       return;
     }
 
-    const headers = [
-      'EMP ID',
-      'Employee Name',
-      'Date',
-      'Time',
-      'Geographical Location',
-      'Items & Quantity Needed',
-      'Additional Notes',
-      'Status',
-      'Image URL',
-    ];
+    try {
+      // Pass any required filters; the backend currently processes all/handles mapping
+      const res = await apiClient.post<{ csvData: string }>('/exports', {
+        searchQuery,
+        statusFilter,
+        selectedMonth,
+        selectedYear,
+      });
 
-    const rows = processedEntries.map((entry: any) => {
-      const dateObj = new Date(entry.createdAt || entry.timestamp || Date.now());
-      const dateStr = dateObj.toLocaleDateString('en-GB');
-      const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-      const photo = entry.attachments?.[0]?.url || entry.imageUrl || entry.photoUrl || 'N/A';
-      const items = (entry.itemsNeeded || entry.materials || entry.remarks || 'None').replace(/"/g, '""');
-      const notes = (entry.notes || 'None').replace(/"/g, '""');
-      const loc = getLocation(entry).replace(/"/g, '""');
+      if (res.data && res.data.csvData) {
+        const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + res.data.csvData;
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
 
-      return [
-        `"${getEmpId(entry)}"`,
-        `"${getEmpName(entry)}"`,
-        `"${dateStr}"`,
-        `"${timeStr}"`,
-        `"${loc}"`,
-        `"${items}"`,
-        `"${notes}"`,
-        `"${getStatus(entry)}"`,
-        `"${photo}"`,
-      ].join(',');
-    });
-
-    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-
-    const timestamp = new Date().toISOString().slice(0, 10);
-    link.setAttribute('download', `Field_Visit_Report_${timestamp}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+        const timestamp = new Date().toISOString().slice(0, 10);
+        link.setAttribute('download', `Field_Visit_Report_${timestamp}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err) {
+      console.error('Failed to export records:', err);
+      alert('Failed to generate export file. Please try again.');
+    }
   };
 
   const toggleSortOrder = () => {
@@ -249,11 +228,10 @@ export const FieldEntriesPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsAutoSync(!isAutoSync)}
-            className={`flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl font-bold border transition-all cursor-pointer shadow-lg ${
-              isAutoSync
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-white shadow-emerald-500/10'
-                : 'glass-input border-[var(--glass-border)] text-[var(--text-main)] opacity-80 hover:bg-slate-800'
-            }`}
+            className={`flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl font-bold border transition-all cursor-pointer shadow-lg ${isAutoSync
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-white shadow-emerald-500/10'
+              : 'glass-input border-[var(--glass-border)] text-[var(--text-main)] opacity-80 hover:bg-slate-800'
+              }`}
           >
             <RefreshCw size={14} className={isAutoSync ? 'animate-spin' : ''} />
             {isAutoSync ? 'Auto-Sync ON' : 'Auto-Sync OFF'}
@@ -370,91 +348,27 @@ export const FieldEntriesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Structured Single-Line Table */}
-      <div className="overflow-x-auto glass-panel border-none shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] mb-6">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-[var(--glass-border)] bg-[var(--glass-bg-primary)] text-xs uppercase tracking-wider text-[var(--text-main)] opacity-80 font-bold">
-              <th
-                onClick={() => {
-                  setSortBy('empId');
-                  toggleSortOrder();
-                }}
-                className="p-5 cursor-pointer hover:text-indigo-400 hover:bg-white/5 transition-colors font-bold tracking-widest column-header"
-              >
-                <div className="flex items-center gap-2">
-                  <User size={14} />
-                  <span>EMP ID</span>
-                  {sortBy === 'empId' && (
-                    <span className="text-indigo-400 text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                  )}
-                </div>
-              </th>
-              <th
-                onClick={() => {
-                  setSortBy('name');
-                  toggleSortOrder();
-                }}
-                className="p-5 cursor-pointer hover:text-indigo-400 hover:bg-white/5 transition-colors font-bold tracking-widest column-header"
-              >
-                <div className="flex items-center gap-2">
-                  <span>Employee Name</span>
-                  {sortBy === 'name' && (
-                    <span className="text-indigo-400 text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                  )}
-                </div>
-              </th>
-              <th
-                onClick={() => {
-                  setSortBy('date');
-                  toggleSortOrder();
-                }}
-                className="p-5 cursor-pointer hover:text-indigo-400 hover:bg-white/5 transition-colors font-bold tracking-widest column-header"
-              >
-                <div className="flex items-center gap-2">
-                  <Calendar size={14} />
-                  <span>Date & Time</span>
-                  {sortBy === 'date' && (
-                    <span className="text-indigo-400 text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                  )}
-                </div>
-              </th>
-              <th
-                onClick={() => {
-                  setSortBy('status');
-                  toggleSortOrder();
-                }}
-                className="p-5 cursor-pointer hover:text-indigo-400 hover:bg-white/5 transition-colors font-bold tracking-widest column-header"
-              >
-                <div className="flex items-center gap-2">
-                  <ShieldCheck size={14} />
-                  <span>Status</span>
-                  {sortBy === 'status' && (
-                    <span className="text-indigo-400 text-[10px]">{sortOrder === 'asc' ? '▲' : '▼'}</span>
-                  )}
-                </div>
-              </th>
-              <th className="p-5 text-right font-bold tracking-widest column-header">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 text-sm">
-            {processedEntries.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="p-8 text-center text-gray-400">
-                  {isFetching ? 'Loading latest entries...' : 'No field visit records found.'}
-                </td>
-              </tr>
-            ) : (
-              processedEntries.map((entry) => (
-                <FieldEntryCard
-                  key={entry.id}
-                  entry={entry}
-                  onStatusUpdate={handleStatusUpdate}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
+      {/* Entry Cards Grid */}
+      <div className="space-y-4">
+        {processedEntries.length === 0 ? (
+          <div className="glass-panel p-12 text-center border-none shadow-2xl">
+            <div className="text-6xl mb-4 opacity-30">📋</div>
+            <p className="text-lg font-bold text-[var(--text-main)] opacity-60">
+              {isFetching ? 'Loading latest entries...' : 'No field visit records found.'}
+            </p>
+            <p className="text-sm text-[var(--text-main)] opacity-40 mt-1">
+              Entries will appear here once employees submit field visits.
+            </p>
+          </div>
+        ) : (
+          processedEntries.map((entry) => (
+            <FieldEntryCard
+              key={entry.id}
+              entry={entry}
+              onStatusUpdate={handleStatusUpdate}
+            />
+          ))
+        )}
       </div>
     </div>
   );

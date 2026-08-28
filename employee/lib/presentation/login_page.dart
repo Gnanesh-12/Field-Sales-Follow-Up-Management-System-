@@ -147,51 +147,6 @@ class _LoginPageState extends ConsumerState<LoginPage>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 28),
-
-                  // ─── Register Link ────────────────────────────
-                  FadeTransition(
-                    opacity: CurvedAnimation(
-                      parent: _animController,
-                      curve: const Interval(0.6, 0.9, curve: Curves.easeOut),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account? ",
-                          style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pushReplacement(
-                              PageRouteBuilder(
-                                pageBuilder: (context, animation,
-                                        secondaryAnimation) =>
-                                    const RegisterPage(),
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  return FadeTransition(
-                                      opacity: animation, child: child);
-                                },
-                                transitionDuration:
-                                    const Duration(milliseconds: 400),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            'Register',
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: AppTheme.accentTeal,
-                              fontWeight: FontWeight.w700,
-                              decoration: TextDecoration.underline,
-                              decorationColor: AppTheme.accentTeal,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   const SizedBox(height: 40),
                 ],
               ),

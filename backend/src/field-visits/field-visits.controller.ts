@@ -54,8 +54,8 @@ export class FieldVisitsController {
   @Roles('employee-role', 'EMPLOYEE')
   async createVisit(@Req() req, @Body() body: any) {
     const employeeId = req.user.sub || req.user.employeeId;
-    if (!body.customerSiteId) {
-      throw new BadRequestException('customerSiteId is required');
+    if (!body.customerSiteName) {
+      throw new BadRequestException('customerSiteName is required');
     }
     return this.fieldVisitsService.createVisit(employeeId, body);
   }

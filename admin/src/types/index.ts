@@ -19,14 +19,23 @@ export interface FieldEntry {
   siteName?: string;
   location?: string;
   address?: string;
+  gpsLat?: number | null;
+  gpsLng?: number | null;
+  gpsAccuracy?: number | null;
   photoUrl?: string;
   imageUrl?: string;
+  attachments?: { id: string; fileUrl: string; type: string }[];
   itemsNeeded?: string | string[];
   materials?: string | string[];
+  materialsFormatted?: { name: string; unit: string; quantity: number }[];
+  followUps?: { id: string; dueDate: string; status: string; notes?: string }[];
   notes?: string;
   remarks?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   createdAt?: string;
+  timestamp?: string;
+  customerSite?: { name: string };
+  site?: { name: string };
 }
 
 export interface AddEmployeeForm {

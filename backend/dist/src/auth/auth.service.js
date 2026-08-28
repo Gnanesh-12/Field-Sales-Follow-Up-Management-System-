@@ -112,20 +112,20 @@ let AuthService = class AuthService {
     }
     async adminRegister(email, password, name) {
         const cleanEmail = email.trim().toLowerCase();
-        const existing = await this.prisma.employee.findUnique({
-            where: { id: cleanEmail },
+        const existing = await this.prisma.admin.findUnique({
+            where: { email: cleanEmail },
         });
         if (existing) {
             throw new common_1.BadRequestException('An account with this email already exists.');
         }
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await this.prisma.employee.create({
+        const user = await this.prisma.admin.create({
             data: {
-                id: cleanEmail,
+                id: `ADM-${Date.now()}`,
+                email: cleanEmail,
                 name: name?.trim() || cleanEmail.split('@')[0],
                 password: hashedPassword,
                 role: 'ADMIN',
-                status: 'ACTIVE',
             },
         });
         const token = this.jwtService.sign({
@@ -138,7 +138,7 @@ let AuthService = class AuthService {
             token,
             user: {
                 id: user.id,
-                email: user.id,
+                email: user.email,
                 name: user.name,
                 role: user.role,
             },
@@ -146,8 +146,8 @@ let AuthService = class AuthService {
     }
     async adminLogin(email, password) {
         const cleanEmail = email.trim().toLowerCase();
-        const user = await this.prisma.employee.findUnique({
-            where: { id: cleanEmail },
+        const user = await this.prisma.admin.findUnique({
+            where: { email: cleanEmail },
         });
         if (!user || !user.password) {
             throw new common_1.UnauthorizedException('Invalid email or password.');
@@ -166,7 +166,7 @@ let AuthService = class AuthService {
             token,
             user: {
                 id: user.id,
-                email: user.id,
+                email: user.email,
                 name: user.name,
                 role: user.role,
             },
@@ -177,8 +177,8 @@ let AuthService = class AuthService {
         if (!cleanEmail || !data.oldPassword || !data.newPassword) {
             throw new common_1.BadRequestException('Email, current password, and new password are required.');
         }
-        const user = await this.prisma.employee.findUnique({
-            where: { id: cleanEmail },
+        const user = await this.prisma.admin.findUnique({
+            where: { email: cleanEmail },
         });
         if (!user || !user.password) {
             throw new common_1.UnauthorizedException('Invalid email or account does not exist.');
@@ -188,8 +188,8 @@ let AuthService = class AuthService {
             throw new common_1.UnauthorizedException('Current password is incorrect.');
         }
         const hashedNewPassword = await bcrypt.hash(data.newPassword, 10);
-        await this.prisma.employee.update({
-            where: { id: cleanEmail },
+        await this.prisma.admin.update({
+            where: { email: cleanEmail },
             data: { password: hashedNewPassword },
         });
         return { message: 'Password updated successfully! You can now log in with your new password.' };

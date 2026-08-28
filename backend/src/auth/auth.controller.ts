@@ -52,7 +52,12 @@ export class AuthController {
     if (!body.employeeId || !body.pin) {
       throw new BadRequestException('Missing required fields');
     }
-    const user = await this.authService.validateUser(body.employeeId, body.pin);
+    const empId = body.employeeId.toUpperCase();
+    const employeeIdRegex = /^[A-Z]{2}-[A-Z]{2}-\d{3}$/;
+    if (!employeeIdRegex.test(empId)) {
+      throw new BadRequestException('Employee ID must be in the format SE-FS-001');
+    }
+    const user = await this.authService.validateUser(empId, body.pin);
     if (!user) {
       throw new UnauthorizedException('Invalid Employee ID or PIN');
     }

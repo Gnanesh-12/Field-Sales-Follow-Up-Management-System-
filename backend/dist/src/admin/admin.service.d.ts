@@ -5,7 +5,6 @@ export declare class AdminService {
     getEmployees(): Promise<any>;
     addEmployee(data: {
         name: string;
-        employeeId: string;
         phone?: string;
         password: string;
     }): Promise<any>;
@@ -14,7 +13,13 @@ export declare class AdminService {
         phone?: string;
         password?: string;
     }): Promise<any>;
+    deleteEmployee(id: string): Promise<{
+        message: string;
+    }>;
     toggleEmployeeStatus(id: string, status: 'ACTIVE' | 'INACTIVE'): Promise<any>;
     getFieldEntries(): Promise<any>;
     updateEntryStatus(id: string, status: string): Promise<any>;
+    exportRecords(filters: any): Promise<{
+        csvData: string;
+    }>;
 }

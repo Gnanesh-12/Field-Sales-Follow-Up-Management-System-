@@ -65,17 +65,18 @@ let AdminService = class AdminService {
         });
     }
     async addEmployee(data) {
-        const rawId = (data.employeeId || '').trim().toLowerCase();
-        const empIdRegex = /^[a-z]{2}-[a-z]{2}-\d{3}$/;
-        if (!empIdRegex.test(rawId)) {
-            throw new common_1.BadRequestException('Invalid Employee ID format. Expected format: 4 letters, 3 digits with hyphens (e.g., se-fs-001).');
-        }
-        const existingEmployee = await this.prisma.employee.findUnique({
-            where: { id: rawId },
+        const lastEmployee = await this.prisma.employee.findFirst({
+            where: { id: { startsWith: 'SE-FS-' } },
+            orderBy: { id: 'desc' },
         });
-        if (existingEmployee) {
-            throw new common_1.BadRequestException(`Employee ID "${rawId}" is already registered (status: ${existingEmployee.status}).`);
+        let nextNum = 1;
+        if (lastEmployee) {
+            const parts = lastEmployee.id.split('-');
+            if (parts.length === 3) {
+                nextNum = parseInt(parts[2], 10) + 1;
+            }
         }
+        const rawId = `SE-FS-${nextNum.toString().padStart(3, '0')}`;
         const hashedPassword = await bcrypt.hash(data.password, 10);
         return this.prisma.employee.create({
             data: {
@@ -102,6 +103,28 @@ let AdminService = class AdminService {
             data: updateData,
         });
     }
+    async deleteEmployee(id) {
+        const employee = await this.prisma.employee.findUnique({
+            where: { id },
+        });
+        if (!employee) {
+            throw new common_1.BadRequestException(`Employee "${id}" not found.`);
+        }
+        const fieldVisits = await this.prisma.fieldVisit.findMany({
+            where: { employeeId: id },
+            select: { id: true },
+        });
+        const visitIds = fieldVisits.map((v) => v.id);
+        if (visitIds.length > 0) {
+            await this.prisma.attachment.deleteMany({ where: { fieldVisitId: { in: visitIds } } });
+            await this.prisma.location.deleteMany({ where: { fieldVisitId: { in: visitIds } } });
+            await this.prisma.followUp.deleteMany({ where: { fieldVisitId: { in: visitIds } } });
+            await this.prisma.materialSupply.deleteMany({ where: { fieldVisitId: { in: visitIds } } });
+            await this.prisma.fieldVisit.deleteMany({ where: { employeeId: id } });
+        }
+        await this.prisma.employee.delete({ where: { id } });
+        return { message: `Employee "${id}" has been permanently deleted.` };
+    }
     async toggleEmployeeStatus(id, status) {
         return this.prisma.employee.update({
             where: { id },
@@ -119,7 +142,12 @@ let AdminService = class AdminService {
                     },
                 },
                 site: true,
+                location: true,
                 attachments: true,
+                materials: {
+                    include: { material: true },
+                },
+                followUps: true,
             },
             orderBy: {
                 createdAt: 'desc',
@@ -127,24 +155,33 @@ let AdminService = class AdminService {
         });
         return entries.map((entry) => {
             const siteObj = entry.site || {};
-            const photo = entry.attachments?.[0]?.url ||
+            const photo = entry.attachments?.[0]?.fileUrl ||
+                entry.attachments?.[0]?.url ||
                 entry.attachments?.[0]?.filePath ||
                 entry.imageUrl ||
                 entry.photoUrl ||
                 null;
             const remarks = entry.remarks || '';
-            let status = 'PENDING';
-            if (remarks.includes('STATUS:APPROVED'))
-                status = 'APPROVED';
-            else if (remarks.includes('STATUS:REJECTED'))
-                status = 'REJECTED';
+            const status = entry.status || 'PENDING';
+            const materialsFormatted = entry.materials?.map((ms) => ({
+                name: ms.material?.name || 'Unknown',
+                unit: ms.material?.unit || '',
+                quantity: ms.quantity,
+            })) || [];
             return {
                 ...entry,
                 siteName: siteObj.name || 'Field Site',
                 location: siteObj.geoTag || siteObj.address || siteObj.name || 'Geographical Site',
+                gpsLat: entry.location?.lat || null,
+                gpsLng: entry.location?.lng || null,
+                gpsAccuracy: entry.location?.accuracy || null,
                 imageUrl: photo,
                 photoUrl: photo,
-                itemsNeeded: remarks.replace(/STATUS:[A-Z]+(\s*\|\s*)?/g, '').trim(),
+                materialsFormatted,
+                itemsNeeded: materialsFormatted.length > 0
+                    ? materialsFormatted.map((m) => `${m.name}: ${m.quantity} ${m.unit}`).join(', ')
+                    : remarks || 'None',
+                followUps: entry.followUps || [],
                 status,
             };
         });
@@ -155,12 +192,34 @@ let AdminService = class AdminService {
         });
         if (!entry)
             throw new common_1.BadRequestException('Entry not found');
-        const cleanRemarks = (entry.remarks || '').replace(/STATUS:[A-Z]+(\s*\|\s*)?/g, '').trim();
-        const updatedRemarks = `STATUS:${status.toUpperCase()} | ${cleanRemarks}`.trim();
         return this.prisma.fieldVisit.update({
             where: { id },
-            data: { remarks: updatedRemarks },
+            data: { status: status.toUpperCase() },
         });
+    }
+    async exportRecords(filters) {
+        const entries = await this.getFieldEntries();
+        const exportMapping = [
+            { header: 'EMP ID', key: (e) => e.employee?.id || '' },
+            { header: 'Employee Name', key: (e) => e.employee?.name || '' },
+            { header: 'Date', key: (e) => new Date(e.createdAt).toLocaleDateString('en-GB') },
+            { header: 'Time', key: (e) => new Date(e.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) },
+            { header: 'Geographical Location', key: (e) => e.location || '' },
+            { header: 'Items & Quantity Needed', key: (e) => e.itemsNeeded || '' },
+            { header: 'Additional Notes', key: (e) => e.notes || '' },
+            { header: 'Status', key: (e) => e.status },
+            { header: 'Image URL', key: (e) => e.imageUrl || '' },
+        ];
+        const headers = exportMapping.map(m => m.header).join(',');
+        const rows = entries.map((entry) => {
+            return exportMapping.map(m => {
+                const value = m.key(entry) || '';
+                return `"${String(value).replace(/"/g, '""')}"`;
+            }).join(',');
+        });
+        return {
+            csvData: [headers, ...rows].join('\n')
+        };
     }
 };
 exports.AdminService = AdminService;

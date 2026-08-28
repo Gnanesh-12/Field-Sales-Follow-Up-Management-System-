@@ -44,6 +44,9 @@ let AdminController = class AdminController {
     addEmployee(body) {
         return this.adminService.addEmployee(body);
     }
+    deleteEmployee(id) {
+        return this.adminService.deleteEmployee(id);
+    }
     updateEmployee(id, body) {
         return this.adminService.updateEmployee(id, body);
     }
@@ -58,6 +61,9 @@ let AdminController = class AdminController {
     }
     async changePassword(body) {
         return this.authService.changePassword(body);
+    }
+    async exportRecords(filters) {
+        return this.adminService.exportRecords(filters);
     }
 };
 exports.AdminController = AdminController;
@@ -89,6 +95,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], AdminController.prototype, "addEmployee", null);
+__decorate([
+    (0, common_1.Delete)('employees/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AdminController.prototype, "deleteEmployee", null);
 __decorate([
     (0, common_1.Patch)('employees/:id'),
     __param(0, (0, common_1.Param)('id')),
@@ -127,6 +140,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AdminController.prototype, "changePassword", null);
+__decorate([
+    (0, common_1.Post)('exports'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AdminController.prototype, "exportRecords", null);
 exports.AdminController = AdminController = __decorate([
     (0, common_1.Controller)('api/admin'),
     __metadata("design:paramtypes", [admin_service_1.AdminService, auth_service_1.AuthService])

@@ -58,6 +58,17 @@ export const EmployeesPage: React.FC = () => {
     }
   };
 
+  const handleDeleteEmployee = async (id: string) => {
+    if (!confirm(`Are you sure you want to permanently delete employee "${id.toUpperCase()}"? This action cannot be undone.`)) return;
+
+    try {
+      await apiClient.delete(`/employees/${id}`);
+      fetchEmployees();
+    } catch (err: any) {
+      alert(err.response?.data?.message || err.response?.data?.error || 'Failed to delete employee');
+    }
+  };
+
   // Combined Search and Status filtering
   const filteredEmployees = employees.filter((emp) => {
     const q = searchQuery.toLowerCase().trim();
@@ -122,6 +133,7 @@ export const EmployeesPage: React.FC = () => {
         employees={filteredEmployees}
         onEdit={(emp) => setSelectedEmployee(emp)}
         onToggleStatus={handleToggleStatus}
+        onDelete={handleDeleteEmployee}
       />
 
       <AddEmployeeModal
