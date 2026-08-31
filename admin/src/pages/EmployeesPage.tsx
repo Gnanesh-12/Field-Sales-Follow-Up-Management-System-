@@ -83,49 +83,53 @@ export const EmployeesPage: React.FC = () => {
   });
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div className="animate-in fade-in duration-300">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-3xl font-extrabold heading-gradient tracking-tight">Employee Roster</h2>
-          <p className="text-sm subtitle-text mt-1 font-medium">Manage field sales personnel credentials & access</p>
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Employee Roster</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-1 font-medium">Manage field sales personnel credentials & access</p>
         </div>
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="glass-button flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all"
+          className="glass-button flex items-center gap-2 px-4 py-2 text-sm cursor-pointer"
         >
-          <UserPlus size={18} /> <span>Add Employee</span>
+          <UserPlus size={16} /> <span>Add Employee</span>
         </button>
       </div>
 
       {/* Search & Status Filter Controls */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
-        <div className="relative flex-1 w-full group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-indigo-300 group-focus-within:text-indigo-400 transition-colors">
-            <Search size={18} />
+      <div className="flex flex-col sm:flex-row items-center gap-3 mb-6 bg-[var(--bg-surface)] p-3 rounded-xl border border-[var(--border-subtle)] shadow-sm">
+        <div className="relative flex-1 w-full">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-tertiary)]">
+            <Search size={16} />
           </div>
           <input
             type="text"
             placeholder="Search by Employee Name or EMP ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="glass-input w-full pl-12 pr-4 py-3"
+            className="w-full pl-10 pr-4 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-lg text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-colors placeholder-[var(--text-tertiary)]"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto relative group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-indigo-300 group-focus-within:text-indigo-400 transition-colors">
-            <Filter size={16} />
+        <div className="relative w-full sm:w-48 shrink-0">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-tertiary)]">
+            <Filter size={14} />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'ACTIVE' | 'INACTIVE')}
-            className="glass-input w-full sm:w-48 pl-10 pr-8 py-3 appearance-none cursor-pointer"
+            className="w-full pl-9 pr-8 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-lg text-sm text-[var(--text-primary)] appearance-none cursor-pointer focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-colors"
           >
-            <option value="ALL" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">All Statuses</option>
-            <option value="ACTIVE" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Active Only</option>
-            <option value="INACTIVE" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Inactive Only</option>
+            <option value="ALL">All Statuses</option>
+            <option value="ACTIVE">Active Only</option>
+            <option value="INACTIVE">Inactive Only</option>
           </select>
+          {/* Custom chevron to replace default appearance-none */}
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-[var(--text-tertiary)]">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+          </div>
         </div>
       </div>
 
@@ -140,6 +144,7 @@ export const EmployeesPage: React.FC = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleAddEmployee}
+        isLoading={false}
       />
 
       <EditEmployeeModal

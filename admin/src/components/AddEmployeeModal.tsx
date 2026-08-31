@@ -45,51 +45,51 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div 
-        className="glass-panel w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 shadow-2xl"
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div
+        className="bg-[var(--bg-surface)] border border-[var(--border-strong)] w-full max-w-md rounded-xl overflow-hidden shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-5 border-b border-[var(--glass-border)] bg-[var(--glass-bg-primary)]">
+        <div className="px-6 py-5 border-b border-[var(--border-subtle)] bg-[var(--bg-app)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-xl border border-indigo-500/30">
-                <User size={20} />
+              <div className="p-2 bg-[var(--brand-subtle)] text-[var(--brand-primary)] rounded-lg border border-[var(--brand-subtle-border)]">
+                <User size={18} />
               </div>
-              <h2 className="text-xl font-bold text-[var(--text-main)]">Add New Employee</h2>
+              <h2 className="text-lg font-bold text-[var(--text-primary)]">Add New Employee</h2>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl text-[var(--text-main)] opacity-50 hover:opacity-100 hover:bg-[var(--glass-border)] transition-colors"
+              className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-colors cursor-pointer"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </button>
           </div>
-          <p className="text-sm text-[var(--text-main)] opacity-60 mt-2">
+          <p className="text-xs text-[var(--text-secondary)] font-medium mt-2">
             The system will automatically generate a unique Employee ID (e.g., SE-FS-001).
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {error && (
-            <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-start gap-3">
-              <AlertCircle size={18} className="text-rose-400 shrink-0 mt-0.5" />
-              <p className="text-sm font-medium text-rose-400">{error}</p>
+            <div className="p-3 bg-[var(--status-error-subtle)] border border-[var(--status-error)]/20 rounded-md flex items-start gap-2.5">
+              <AlertCircle size={16} className="text-[var(--status-error)] shrink-0 mt-0.5" />
+              <p className="text-xs font-medium text-[var(--status-error)]">{error}</p>
             </div>
           )}
 
           <div className="space-y-4">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-main)] opacity-70 mb-2 ml-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
                 Full Name *
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[var(--text-main)] opacity-40 group-focus-within:opacity-100 group-focus-within:text-indigo-400 transition-colors">
-                  <User size={18} />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-tertiary)] group-focus-within:text-[var(--brand-primary)] transition-colors">
+                  <User size={16} />
                 </div>
                 <input
                   type="text"
@@ -97,36 +97,36 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. John Doe"
-                  className="glass-input w-full pl-11 pr-4 py-3 text-sm placeholder:text-[var(--text-main)] placeholder:opacity-30"
+                  className="w-full pl-9 pr-3 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-main)] opacity-70 mb-2 ml-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
                 Phone Number
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[var(--text-main)] opacity-40 group-focus-within:opacity-100 group-focus-within:text-indigo-400 transition-colors">
-                  <Phone size={18} />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-tertiary)] group-focus-within:text-[var(--brand-primary)] transition-colors">
+                  <Phone size={16} />
                 </div>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="e.g. +91 9876543210"
-                  className="glass-input w-full pl-11 pr-4 py-3 text-sm placeholder:text-[var(--text-main)] placeholder:opacity-30"
+                  className="w-full pl-9 pr-3 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-main)] opacity-70 mb-2 ml-1">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
                 Password / Login PIN *
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[var(--text-main)] opacity-40 group-focus-within:opacity-100 group-focus-within:text-indigo-400 transition-colors">
-                  <Lock size={18} />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-tertiary)] group-focus-within:text-[var(--brand-primary)] transition-colors">
+                  <Lock size={16} />
                 </div>
                 <input
                   type="text"
@@ -135,33 +135,33 @@ export const AddEmployeeModal: React.FC<AddEmployeeModalProps> = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Minimum 4 characters"
-                  className="glass-input w-full pl-11 pr-4 py-3 text-sm placeholder:text-[var(--text-main)] placeholder:opacity-30"
+                  className="w-full pl-9 pr-3 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
                 />
               </div>
-              <p className="text-[11px] text-[var(--text-main)] opacity-40 mt-1 ml-1">
+              <p className="text-[10px] text-[var(--text-tertiary)] font-medium mt-1">
                 The employee will use this to log into the mobile app.
               </p>
             </div>
           </div>
 
-          <div className="pt-4 flex gap-3">
+          <div className="pt-2 flex gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 rounded-xl border border-[var(--glass-border)] text-[var(--text-main)] opacity-70 hover:opacity-100 hover:bg-white/5 font-bold text-sm transition-all"
+              className="flex-1 px-4 py-2.5 rounded-md border border-[var(--border-strong)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] font-semibold text-sm transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="flex-1 flex justify-center items-center gap-2 px-4 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(99,102,241,0.4)]"
+              className="flex-1 flex justify-center items-center gap-2 px-4 py-2.5 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white rounded-md font-semibold text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer shadow-sm"
             >
               {isLoading ? (
-                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
               ) : (
                 <>
-                  <Save size={18} /> Add Employee
+                  <Save size={16} /> Add Employee
                 </>
               )}
             </button>

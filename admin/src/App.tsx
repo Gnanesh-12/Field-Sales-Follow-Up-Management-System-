@@ -14,7 +14,7 @@ export default function App() {
     }
   });
 
-  const [activeTab, setActiveTab] = useState<'employees' | 'entries' | 'activity'>('employees');
+  const [activeTab, setActiveTab] = useState<'employees' | 'entries' | 'activity'>('activity');
 
   // Theme State
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
@@ -45,22 +45,9 @@ export default function App() {
   }
 
   return (
-    <div className="relative h-screen w-screen flex flex-col md:flex-row overflow-hidden font-sans bg-[#0b0f19]">
-      {/* Background Blobs */}
-      <div className="bg-blob bg-indigo-600/25 w-80 h-80 rounded-full top-[-10%] left-[-10%] pointer-events-none"></div>
-      <div className="bg-blob bg-purple-600/25 w-96 h-96 rounded-full bottom-[-10%] right-[-10%] pointer-events-none" style={{ animationDelay: '2s' }}></div>
-
-      {/* Main Workspace (Scrolls smoothly inside its own container) */}
-      <main className="flex-1 h-full p-3 md:p-5 order-2 md:order-1 overflow-y-auto min-w-0">
-        <div className="w-full max-w-6xl mx-auto glass-panel p-4 md:p-6 min-h-full">
-          {activeTab === 'employees' && <EmployeesPage />}
-          {activeTab === 'entries' && <FieldEntriesPage />}
-          {activeTab === 'activity' && <EmployeeActivityPage />}
-        </div>
-      </main>
-
-      {/* Right Sidebar (Responsive width for 14-inch screens) */}
-      <div className="w-full md:w-64 lg:w-72 h-full shrink-0 order-1 md:order-2 p-3 md:p-5 pl-0">
+    <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-app)]">
+      {/* Left Sidebar */}
+      <div className="hidden md:flex md:w-64 lg:w-72 h-full shrink-0 border-r border-[var(--border-subtle)] bg-[var(--bg-surface)]">
         <Navigation
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -69,6 +56,26 @@ export default function App() {
           toggleTheme={toggleTheme}
         />
       </div>
+
+      {/* Main Workspace */}
+      <main className="flex-1 h-full overflow-y-auto min-w-0 bg-[var(--bg-app)] relative flex flex-col">
+        {/* Mobile Header and Nav inside Navigation component, we can render it here for mobile */}
+        <div className="md:hidden">
+          <Navigation
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onLogout={handleLogout}
+            isDarkMode={isDarkMode}
+            toggleTheme={toggleTheme}
+          />
+        </div>
+        
+        <div className="flex-1 p-4 md:p-8 w-full max-w-7xl mx-auto">
+          {activeTab === 'employees' && <EmployeesPage />}
+          {activeTab === 'entries' && <FieldEntriesPage />}
+          {activeTab === 'activity' && <EmployeeActivityPage />}
+        </div>
+      </main>
     </div>
   );
 }

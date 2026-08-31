@@ -16,78 +16,80 @@ export const EmployeeTable: React.FC<EmployeeTableProps> = ({
   onDelete,
 }) => {
   return (
-    <div className="overflow-x-auto glass-panel border-none shadow-[0_8px_32px_0_rgba(31,38,135,0.2)] mb-6">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="border-b border-[var(--glass-border)] bg-[var(--glass-bg-primary)] text-xs uppercase tracking-wider text-[var(--text-main)] opacity-80 font-bold">
-            <th className="p-5 font-bold tracking-widest text-indigo-300">EMP ID / Login ID</th>
-            <th className="p-5 font-bold tracking-widest text-indigo-300">Name</th>
-            <th className="p-5 font-bold tracking-widest text-indigo-300">Phone</th>
-            <th className="p-5 font-bold tracking-widest text-indigo-300">Status</th>
-            <th className="p-5 text-right font-bold tracking-widest text-indigo-300">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-white/5 text-sm">
-          {employees.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="p-10 text-center text-[var(--text-main)] opacity-70 font-medium">
-                No matching employees found.
-              </td>
+    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl shadow-sm overflow-hidden mb-6">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-app)]">
+              <th className="py-3 px-4 font-semibold text-[var(--text-secondary)] text-xs uppercase tracking-wider">EMP ID / Login ID</th>
+              <th className="py-3 px-4 font-semibold text-[var(--text-secondary)] text-xs uppercase tracking-wider">Name</th>
+              <th className="py-3 px-4 font-semibold text-[var(--text-secondary)] text-xs uppercase tracking-wider">Phone</th>
+              <th className="py-3 px-4 font-semibold text-[var(--text-secondary)] text-xs uppercase tracking-wider">Status</th>
+              <th className="py-3 px-4 text-right font-semibold text-[var(--text-secondary)] text-xs uppercase tracking-wider">Actions</th>
             </tr>
-          ) : (
-            employees.map((emp) => {
-              const isActive = (emp.status || 'ACTIVE').toUpperCase() === 'ACTIVE';
+          </thead>
+          <tbody className="divide-y divide-[var(--border-subtle)]">
+            {employees.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-12 text-center text-[var(--text-tertiary)] text-sm font-medium border-t border-dashed border-[var(--border-subtle)]">
+                  No matching employees found.
+                </td>
+              </tr>
+            ) : (
+              employees.map((emp) => {
+                const isActive = (emp.status || 'ACTIVE').toUpperCase() === 'ACTIVE';
 
-              return (
-                <tr key={emp.id} className="hover:bg-white/10 transition-all duration-200 group">
-                  <td className="p-5 font-mono font-bold text-[var(--text-main)] group-hover:text-indigo-300 transition-colors">{emp.id.toUpperCase()}</td>
-                  <td className="p-5 font-bold text-[var(--text-main)] opacity-90">{emp.name}</td>
-                  <td className="p-5 text-[var(--text-main)] opacity-70">{emp.phone || 'N/A'}</td>
-                  <td className="p-5">
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-lg ${isActive
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-emerald-500/20'
-                          : 'bg-rose-500/20 text-rose-400 border border-rose-500/30 shadow-rose-500/20'
-                        }`}
-                    >
-                      {isActive ? 'ACTIVE' : 'INACTIVE'}
-                    </span>
-                  </td>
-                  <td className="p-5 text-right space-x-3">
-                    <button
-                      type="button"
-                      title="Edit Details"
-                      onClick={() => onEdit(emp)}
-                      className="p-2 rounded-xl text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500 hover:text-white border border-indigo-500/30 transition-all duration-300 inline-flex items-center shadow-lg"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      title={isActive ? 'Deactivate Employee' : 'Activate Employee'}
-                      onClick={() => onToggleStatus(emp.id, emp.status || 'ACTIVE')}
-                      className={`p-2 rounded-xl transition-all duration-300 inline-flex items-center border shadow-lg ${isActive
-                          ? 'text-rose-400 bg-rose-500/10 hover:bg-rose-500 hover:text-white border-rose-500/30 shadow-rose-500/20'
-                          : 'text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white border-emerald-500/30 shadow-emerald-500/20'
-                        }`}
-                    >
-                      <Power size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      title="Delete Employee"
-                      onClick={() => onDelete(emp.id)}
-                      className="p-2 rounded-xl text-red-400 bg-red-500/10 hover:bg-red-500 hover:text-white border border-red-500/30 transition-all duration-300 inline-flex items-center shadow-lg"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
+                return (
+                  <tr key={emp.id} className="hover:bg-[var(--bg-surface-hover)] transition-colors group">
+                    <td className="py-3 px-4 font-mono font-medium text-[var(--text-primary)] text-xs">{emp.id.toUpperCase()}</td>
+                    <td className="py-3 px-4 font-semibold text-[var(--text-primary)]">{emp.name}</td>
+                    <td className="py-3 px-4 text-[var(--text-secondary)]">{emp.phone || 'N/A'}</td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${isActive
+                            ? 'bg-[var(--status-success-subtle)] text-[var(--status-success)] border-[var(--status-success-subtle)]'
+                            : 'bg-[var(--status-error-subtle)] text-[var(--status-error)] border-[var(--status-error-subtle)]'
+                          }`}
+                      >
+                        {isActive ? 'ACTIVE' : 'INACTIVE'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-right space-x-2">
+                      <button
+                        type="button"
+                        title="Edit Details"
+                        onClick={() => onEdit(emp)}
+                        className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--brand-primary)] hover:bg-[var(--brand-subtle)] transition-colors inline-flex items-center cursor-pointer"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        title={isActive ? 'Deactivate Employee' : 'Activate Employee'}
+                        onClick={() => onToggleStatus(emp.id, emp.status || 'ACTIVE')}
+                        className={`p-1.5 rounded-md transition-colors inline-flex items-center cursor-pointer ${isActive
+                            ? 'text-[var(--text-secondary)] hover:text-[var(--status-error)] hover:bg-[var(--status-error-subtle)]'
+                            : 'text-[var(--text-secondary)] hover:text-[var(--status-success)] hover:bg-[var(--status-success-subtle)]'
+                          }`}
+                      >
+                        <Power size={16} />
+                      </button>
+                      <button
+                        type="button"
+                        title="Delete Employee"
+                        onClick={() => onDelete(emp.id)}
+                        className="p-1.5 rounded-md text-[var(--text-secondary)] hover:text-[var(--status-error)] hover:bg-[var(--status-error-subtle)] transition-colors inline-flex items-center cursor-pointer"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

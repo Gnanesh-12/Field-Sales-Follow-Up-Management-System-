@@ -39,61 +39,64 @@ export const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="glass-panel w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 shadow-[0_0_50px_0_rgba(99,102,241,0.2)]">
-        <div className="flex justify-between items-center px-6 py-5 border-b border-[var(--glass-border)] bg-[var(--glass-bg-primary)]">
-          <h3 className="text-xl font-extrabold heading-gradient tracking-tight">Edit Employee: {employee.id}</h3>
-          <button onClick={onClose} className="p-2 rounded-xl text-[var(--text-main)] opacity-70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer">
-            <X size={20} />
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div
+        className="bg-[var(--bg-surface)] border border-[var(--border-strong)] w-full max-w-md rounded-xl overflow-hidden shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center px-6 py-4 border-b border-[var(--border-subtle)] bg-[var(--bg-app)]">
+          <h3 className="text-lg font-bold text-[var(--text-primary)]">Edit Employee: <span className="text-[var(--text-secondary)] font-mono text-sm ml-1">{employee.id}</span></h3>
+          <button onClick={onClose} className="p-1.5 rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] transition-colors cursor-pointer">
+            <X size={18} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-[var(--text-main)] opacity-70 uppercase tracking-wider mb-2">Full Name</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">Full Name</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="glass-input w-full px-4 py-3"
+              className="w-full px-3 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[var(--text-main)] opacity-70 uppercase tracking-wider mb-2">Phone Number</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">Phone Number</label>
             <input
               type="text"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="glass-input w-full px-4 py-3"
+              className="w-full px-3 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[var(--text-main)] opacity-70 uppercase tracking-wider mb-2">
-              New Password <span className="text-slate-500 font-medium normal-case ml-1">(leave blank to keep unchanged)</span>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-1.5">
+              New Password <span className="text-[var(--text-tertiary)] normal-case ml-1 font-medium">(leave blank to keep)</span>
             </label>
             <input
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="glass-input w-full px-4 py-3"
+              className="w-full px-3 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all placeholder-[var(--text-tertiary)]"
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-5 border-t border-[var(--glass-border)] mt-6">
+          <div className="flex justify-end gap-3 pt-5 border-t border-[var(--border-subtle)] mt-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl text-sm font-bold text-[var(--text-main)] opacity-80 hover:text-white bg-[var(--glass-bg-primary)]/50 hover:bg-slate-700/50 border border-[var(--glass-border)]/50 transition-all cursor-pointer"
+              className="px-4 py-2 rounded-md text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-strong)] hover:bg-[var(--bg-surface-hover)] transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="glass-button px-5 py-2.5 rounded-xl text-sm font-bold shadow-lg cursor-pointer"
+              className="px-4 py-2 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white rounded-md text-sm font-semibold transition-colors cursor-pointer shadow-sm"
             >
               Save Changes
             </button>

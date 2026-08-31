@@ -201,24 +201,24 @@ export const FieldEntriesPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header with Live Sync Indicator */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-3xl font-extrabold heading-gradient-purple tracking-tight">Field Visit Entries</h2>
+            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Field Visit Entries</h1>
             {isAutoSync ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-lg shadow-emerald-500/20">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-[var(--status-success-subtle)] text-[var(--status-success)] border border-[var(--status-success-subtle)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--status-success)] animate-ping" />
                 Live Sync
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[var(--glass-bg-primary)] text-[var(--text-main)] opacity-70 border border-[var(--glass-border)]">
-                <Radio size={12} /> Sync Paused
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] border border-[var(--border-strong)]">
+                <Radio size={10} /> Paused
               </span>
             )}
           </div>
-          <p className="text-sm subtitle-text mt-1 font-medium">
+          <p className="text-sm text-[var(--text-secondary)] mt-1 font-medium">
             Real-time feed of field visits, materials, and approvals
           </p>
         </div>
@@ -228,9 +228,9 @@ export const FieldEntriesPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsAutoSync(!isAutoSync)}
-            className={`flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl font-bold border transition-all cursor-pointer shadow-lg ${isAutoSync
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-white shadow-emerald-500/10'
-              : 'glass-input border-[var(--glass-border)] text-[var(--text-main)] opacity-80 hover:bg-slate-800'
+            className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-md font-semibold border transition-colors cursor-pointer ${isAutoSync
+              ? 'bg-[var(--status-success-subtle)] border-[var(--status-success-subtle)] text-[var(--status-success)] hover:bg-[var(--status-success)] hover:text-white'
+              : 'bg-[var(--bg-surface)] border-[var(--border-strong)] text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)]'
               }`}
           >
             <RefreshCw size={14} className={isAutoSync ? 'animate-spin' : ''} />
@@ -240,54 +240,55 @@ export const FieldEntriesPage: React.FC = () => {
           {(selectedMonth !== 'ALL' || selectedYear !== 'ALL' || statusFilter !== 'ALL' || searchQuery) && (
             <button
               onClick={resetFilters}
-              className="flex items-center gap-2 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 hover:bg-rose-500 hover:text-white px-4 py-2.5 rounded-xl font-bold transition-all cursor-pointer shadow-lg"
+              className="flex items-center gap-2 text-xs bg-[var(--status-error-subtle)] text-[var(--status-error)] hover:bg-[var(--status-error)] hover:text-white px-3 py-1.5 rounded-md font-semibold transition-colors cursor-pointer"
             >
-              <RotateCcw size={14} /> Reset
+              <RotateCcw size={14} /> Reset Filters
             </button>
           )}
 
           <button
             onClick={exportToCSV}
-            className="glass-button flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all cursor-pointer shadow-lg"
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] text-white rounded-md text-sm font-semibold transition-colors cursor-pointer shadow-sm"
           >
-            <Download size={15} /> Export CSV
+            <Download size={14} /> Export CSV
           </button>
         </div>
       </div>
 
       {/* Filter and Sort Toolbar */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 glass-panel p-5 shadow-2xl border-none">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 bg-[var(--bg-surface)] p-4 rounded-xl border border-[var(--border-subtle)] shadow-sm">
         {/* Search Bar */}
-        <div className="relative w-full lg:col-span-2 group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none accent-icon group-focus-within:text-indigo-400 transition-colors">
-            <Search size={16} />
+        <div className="relative w-full lg:col-span-2">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-tertiary)]">
+            <Search size={14} />
           </div>
           <input
             type="text"
             placeholder="Search EMP ID, Name, Site..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="glass-input w-full pl-10 pr-4 py-2.5 text-sm"
+            className="w-full pl-9 pr-3 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
           />
         </div>
 
         {/* Month Picker */}
-        <div className="relative w-full group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none accent-icon group-focus-within:text-indigo-400 transition-colors">
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-tertiary)]">
             <Calendar size={14} />
           </div>
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="glass-input w-full pl-10 pr-8 py-2.5 text-sm appearance-none cursor-pointer"
+            className="w-full pl-9 pr-8 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] appearance-none cursor-pointer focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
           >
-            <option value="ALL" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">All Months</option>
+            <option value="ALL">All Months</option>
             {months.map((m) => (
-              <option key={m.value} value={m.value} className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">
-                {m.label}
-              </option>
+              <option key={m.value} value={m.value}>{m.label}</option>
             ))}
           </select>
+          <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-[var(--text-tertiary)]">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+          </div>
         </div>
 
         {/* Year Picker */}
@@ -295,53 +296,62 @@ export const FieldEntriesPage: React.FC = () => {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
-            className="glass-input w-full px-4 py-2.5 text-sm appearance-none cursor-pointer"
+            className="w-full pl-3 pr-8 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] appearance-none cursor-pointer focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
           >
-            <option value="ALL" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">All Years</option>
+            <option value="ALL">All Years</option>
             {availableYears.map((yr) => (
-              <option key={yr} value={yr} className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">
-                {yr}
-              </option>
+              <option key={yr} value={yr}>{yr}</option>
             ))}
           </select>
+          <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-[var(--text-tertiary)]">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+          </div>
         </div>
 
         {/* Status Filter */}
-        <div className="relative w-full group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none accent-icon group-focus-within:text-indigo-400 transition-colors">
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-tertiary)]">
             <Filter size={14} />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="glass-input w-full pl-10 pr-8 py-2.5 text-sm appearance-none cursor-pointer"
+            className="w-full pl-9 pr-8 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] appearance-none cursor-pointer focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
           >
-            <option value="ALL" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">All Statuses</option>
-            <option value="PENDING" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Pending Only</option>
-            <option value="APPROVED" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Approved Only</option>
-            <option value="REJECTED" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Declined Only</option>
+            <option value="ALL">All Statuses</option>
+            <option value="PENDING">Pending Only</option>
+            <option value="APPROVED">Approved Only</option>
+            <option value="REJECTED">Declined Only</option>
           </select>
+          <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-[var(--text-tertiary)]">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+          </div>
         </div>
 
         {/* Sort Field & Order Toggle */}
-        <div className="flex items-center gap-3 w-full">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortField)}
-            className="glass-input flex-1 py-2.5 px-4 text-sm appearance-none cursor-pointer"
-          >
-            <option value="date" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Date</option>
-            <option value="empId" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">EMP ID</option>
-            <option value="name" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Name</option>
-            <option value="location" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Location</option>
-            <option value="status" className="bg-[var(--glass-bg-primary)] text-[var(--text-main)]">Status</option>
-          </select>
+        <div className="flex items-center gap-2 w-full">
+          <div className="relative flex-1">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortField)}
+              className="w-full pl-3 pr-8 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] appearance-none cursor-pointer focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
+            >
+              <option value="date">Date</option>
+              <option value="empId">EMP ID</option>
+              <option value="name">Name</option>
+              <option value="location">Location</option>
+              <option value="status">Status</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-[var(--text-tertiary)]">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+            </div>
+          </div>
 
           <button
             type="button"
             title={`Toggle Sort Order (${sortOrder === 'asc' ? 'Ascending' : 'Descending'})`}
             onClick={toggleSortOrder}
-            className="p-3 bg-[var(--glass-bg-primary)]/50 hover:bg-indigo-500 hover:text-white border border-[var(--glass-border)]/50 hover:border-indigo-500 rounded-xl text-indigo-300 transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-lg"
+            className="p-2 bg-[var(--bg-app)] hover:bg-[var(--bg-surface-hover)] hover:text-[var(--brand-primary)] border border-[var(--border-strong)] rounded-md text-[var(--text-secondary)] transition-colors flex items-center justify-center shrink-0 cursor-pointer"
           >
             <ArrowUpDown size={16} />
           </button>
@@ -351,12 +361,12 @@ export const FieldEntriesPage: React.FC = () => {
       {/* Entry Cards Grid */}
       <div className="space-y-4">
         {processedEntries.length === 0 ? (
-          <div className="glass-panel p-12 text-center border-none shadow-2xl">
-            <div className="text-6xl mb-4 opacity-30">📋</div>
-            <p className="text-lg font-bold text-[var(--text-main)] opacity-60">
+          <div className="bg-[var(--bg-surface)] rounded-xl p-12 text-center border-2 border-dashed border-[var(--border-subtle)]">
+            <div className="text-4xl mb-3 text-[var(--text-tertiary)]">📋</div>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">
               {isFetching ? 'Loading latest entries...' : 'No field visit records found.'}
             </p>
-            <p className="text-sm text-[var(--text-main)] opacity-40 mt-1">
+            <p className="text-xs text-[var(--text-secondary)] mt-1">
               Entries will appear here once employees submit field visits.
             </p>
           </div>
