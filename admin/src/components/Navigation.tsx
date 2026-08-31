@@ -1,160 +1,3 @@
-/*
-import React, { useState } from 'react';
-import { Users, FileText, User, Lock, LogOut, Menu, X, Sun, Moon } from 'lucide-react';
-
-interface NavigationProps {
-  activeTab: 'employees' | 'entries';
-  setActiveTab: (tab: 'employees' | 'entries') => void;
-  onLogout?: () => void;
-  isDarkMode?: boolean;
-  toggleTheme?: () => void;
-}
-
-export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab, onLogout, isDarkMode, toggleTheme }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAccountOpen, setIsAccountOpen] = useState(false);
-
-  // Retrieve logged-in user profile from localStorage if present
-  const user = (() => {
-    try {
-      const stored = localStorage.getItem('user');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  })();
-
-  const adminName = user?.name || 'Admin Account';
-  const adminEmail = user?.email || user?.id || 'admin@company.com';
-
-  const handleLogoutClick = () => {
-    if (onLogout) {
-      onLogout();
-    } else {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.reload();
-    }
-  };
-
-  return (
-    <div className="w-full h-full p-4 md:p-8 pl-0">
-      <div className="md:hidden flex items-center justify-between p-4 glass-panel mb-4 w-full">
-        <h1 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Admin Portal</h1>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-indigo-300 hover:text-white transition">
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
-      
-      <aside
-        className={`
-          ${isMobileMenuOpen ? 'block' : 'hidden'} md:flex flex-col
-          w-full h-full glass-panel border-none shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]
-          p-6 justify-between min-h-[calc(100vh-4rem)]
-        `}
-      >
-        <div>
-          <div className="hidden md:block mb-10 text-center">
-            <h1 className="text-3xl font-extrabold tracking-tight text-gradient mb-1">
-              Sales Admin
-            </h1>
-            <div className="h-1 w-12 bg-indigo-500 rounded-full mx-auto mb-2 opacity-80"></div>
-            <p className="text-xs text-indigo-300 font-medium tracking-wide uppercase">Field Management</p>
-          </div>
-
-          <nav className="space-y-3">
-            <button
-              onClick={() => {
-                setActiveTab('employees');
-                setIsMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 cursor-pointer overflow-hidden relative group ${activeTab === 'employees'
-                  ? 'text-[var(--text-main)] shadow-lg shadow-indigo-500/20 bg-indigo-500/20 border border-indigo-500/30'
-                  : 'text-[var(--text-main)] opacity-80 hover:bg-white/5 border border-transparent'
-                }`}
-            >
-              {activeTab === 'employees' && <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 animate-pulse"></div>}
-              <Users size={20} className={activeTab === 'employees' ? 'text-indigo-400 relative z-10' : 'text-[var(--text-main)] opacity-70 group-hover:text-indigo-400 transition-colors relative z-10'} />
-              <span className="relative z-10">Employees</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setActiveTab('entries');
-                setIsMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 cursor-pointer overflow-hidden relative group ${activeTab === 'entries'
-                  ? 'text-[var(--text-main)] shadow-lg shadow-purple-500/20 bg-purple-500/20 border border-purple-500/30'
-                  : 'text-[var(--text-main)] opacity-80 hover:bg-white/5 border border-transparent'
-                }`}
-            >
-              {activeTab === 'entries' && <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 animate-pulse"></div>}
-              <FileText size={20} className={activeTab === 'entries' ? 'text-purple-400 relative z-10' : 'text-[var(--text-main)] opacity-70 group-hover:text-purple-400 transition-colors relative z-10'} />
-              <span className="relative z-10">Field Entries</span>
-            </button>
-          </nav>
-        </div>
-
-        
-        <div>
-          
-          {toggleTheme && (
-            <button
-              onClick={toggleTheme}
-              className="w-full flex items-center gap-4 px-5 py-3.5 mb-2 rounded-2xl text-sm font-bold transition-all duration-300 cursor-pointer text-[var(--text-main)] opacity-80 hover:bg-white/5 border border-transparent hover:border-white/10"
-            >
-              <div className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
-                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-              </div>
-              <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-            </button>
-          )}
-
-          
-          <div className="relative pt-4 border-t border-[var(--glass-border)]">
-            <button
-              onClick={() => setIsAccountOpen(!isAccountOpen)}
-              className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-white/5 transition-all text-left cursor-pointer group border border-transparent hover:border-white/10"
-            >
-              <div className="flex items-center gap-4 overflow-hidden">
-                <div className="p-2.5 bg-indigo-500/20 rounded-xl text-indigo-400 border border-indigo-500/30 shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                  <User size={20} />
-                </div>
-                <div className="overflow-hidden">
-                  <p className="text-sm font-bold text-[var(--text-main)] truncate">{adminName}</p>
-                  <p className="text-xs text-indigo-300/70 truncate">{adminEmail}</p>
-                </div>
-              </div>
-            </button>
-
-            {isAccountOpen && (
-              <div className="absolute bottom-20 right-0 left-0 bg-[var(--glass-bg-primary)]/90 backdrop-blur-xl border border-[var(--glass-border)] rounded-2xl p-2 shadow-2xl space-y-1 z-30 animate-in fade-in zoom-in-95 duration-200">
-                <button
-                  onClick={handleLogoutClick}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10 rounded-xl transition cursor-pointer font-bold"
-                >
-                  <LogOut size={16} /> Sign Out
-                </button>
-
-                <button
-                  onClick={() => {
-                    localStorage.removeItem('token');
-                    window.location.reload();
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--text-main)] opacity-80 hover:bg-white/10 rounded-xl transition cursor-pointer font-bold"
-                >
-                  <Lock size={16} /> Change Password
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </aside>
-    </div>
-  );
-};*/
-
 import React, { useState } from 'react';
 import { Users, FileText, BarChart3, User, Lock, LogOut, Menu, X, Sun, Moon } from 'lucide-react';
 
@@ -170,7 +13,6 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
 
-  // Retrieve logged-in user profile from localStorage if present
   const user = (() => {
     try {
       const stored = localStorage.getItem('user');
@@ -194,46 +36,46 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
   };
 
   return (
-    <div className="w-full h-full p-4 md:p-8 pl-0">
+    <div className="w-full h-full flex flex-col justify-between">
       {/* Mobile Top App Bar */}
-      <div className="md:hidden flex items-center justify-between p-4 glass-panel mb-4 w-full">
-        <h1 className="text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Admin Portal</h1>
+      <div className="md:hidden flex items-center justify-between p-3 glass-panel mb-2 w-full">
+        <h1 className="text-lg font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Admin Portal</h1>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-indigo-300 hover:text-white transition">
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
-      {/* Right Desktop Sidebar */}
+      {/* Right Desktop Sidebar Panel */}
       <aside
         className={`
           ${isMobileMenuOpen ? 'block' : 'hidden'} md:flex flex-col
-          w-full h-full glass-panel border-none shadow-[0_8px_32px_0_rgba(31,38,135,0.37)]
-          p-6 justify-between min-h-[calc(100vh-4rem)]
+          w-full h-full glass-panel border-none shadow-xl
+          p-4 lg:p-5 justify-between
         `}
       >
         <div>
-          <div className="hidden md:block mb-10 text-center">
-            <h1 className="text-3xl font-extrabold tracking-tight text-gradient mb-1">
+          <div className="hidden md:block mb-6 text-center">
+            <h1 className="text-2xl font-extrabold tracking-tight text-gradient mb-0.5">
               Sales Admin
             </h1>
-            <div className="h-1 w-12 bg-indigo-500 rounded-full mx-auto mb-2 opacity-80"></div>
-            <p className="text-xs text-indigo-300 font-medium tracking-wide uppercase">Field Management</p>
+            <div className="h-0.5 w-10 bg-indigo-500 rounded-full mx-auto mb-1.5 opacity-80"></div>
+            <p className="text-[10px] text-indigo-300 font-medium tracking-wider uppercase">Field Management</p>
           </div>
 
-          <nav className="space-y-3">
+          <nav className="space-y-2">
             <button
               onClick={() => {
                 setActiveTab('employees');
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 cursor-pointer overflow-hidden relative group ${activeTab === 'employees'
-                  ? 'text-[var(--text-main)] shadow-lg shadow-indigo-500/20 bg-indigo-500/20 border border-indigo-500/30'
-                  : 'text-[var(--text-main)] opacity-80 hover:bg-white/5 border border-transparent'
-                }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                activeTab === 'employees'
+                  ? 'text-white shadow-md bg-indigo-500/25 border border-indigo-500/30'
+                  : 'text-indigo-200/70 hover:bg-white/5 hover:text-white border border-transparent'
+              }`}
             >
-              {activeTab === 'employees' && <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 animate-pulse"></div>}
-              <Users size={20} className={activeTab === 'employees' ? 'text-indigo-400 relative z-10' : 'text-[var(--text-main)] opacity-70 group-hover:text-indigo-400 transition-colors relative z-10'} />
-              <span className="relative z-10">Employees</span>
+              <Users size={18} className={activeTab === 'employees' ? 'text-indigo-400' : 'text-indigo-300/70'} />
+              <span>Employees</span>
             </button>
 
             <button
@@ -241,14 +83,14 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
                 setActiveTab('entries');
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 cursor-pointer overflow-hidden relative group ${activeTab === 'entries'
-                  ? 'text-[var(--text-main)] shadow-lg shadow-purple-500/20 bg-purple-500/20 border border-purple-500/30'
-                  : 'text-[var(--text-main)] opacity-80 hover:bg-white/5 border border-transparent'
-                }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                activeTab === 'entries'
+                  ? 'text-white shadow-md bg-purple-500/25 border border-purple-500/30'
+                  : 'text-indigo-200/70 hover:bg-white/5 hover:text-white border border-transparent'
+              }`}
             >
-              {activeTab === 'entries' && <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 animate-pulse"></div>}
-              <FileText size={20} className={activeTab === 'entries' ? 'text-purple-400 relative z-10' : 'text-[var(--text-main)] opacity-70 group-hover:text-purple-400 transition-colors relative z-10'} />
-              <span className="relative z-10">Field Entries</span>
+              <FileText size={18} className={activeTab === 'entries' ? 'text-purple-400' : 'text-indigo-300/70'} />
+              <span>Field Entries</span>
             </button>
 
             <button
@@ -256,67 +98,64 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
                 setActiveTab('activity');
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all duration-300 cursor-pointer overflow-hidden relative group ${activeTab === 'activity'
-                  ? 'text-[var(--text-main)] shadow-lg shadow-cyan-500/20 bg-cyan-500/20 border border-cyan-500/30'
-                  : 'text-[var(--text-main)] opacity-80 hover:bg-white/5 border border-transparent'
-                }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                activeTab === 'activity'
+                  ? 'text-white shadow-md bg-cyan-500/25 border border-cyan-500/30'
+                  : 'text-indigo-200/70 hover:bg-white/5 hover:text-white border border-transparent'
+              }`}
             >
-              {activeTab === 'activity' && <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 animate-pulse"></div>}
-              <BarChart3 size={20} className={activeTab === 'activity' ? 'text-cyan-400 relative z-10' : 'text-[var(--text-main)] opacity-70 group-hover:text-cyan-400 transition-colors relative z-10'} />
-              <span className="relative z-10">Activity & Analytics</span>
+              <BarChart3 size={18} className={activeTab === 'activity' ? 'text-cyan-400' : 'text-indigo-300/70'} />
+              <span>Activity & Analytics</span>
             </button>
           </nav>
         </div>
 
-        {/* Bottom Section */}
-        <div>
+        {/* Bottom Actions */}
+        <div className="pt-3 border-t border-white/10 space-y-2">
           {/* Theme Toggle */}
           {toggleTheme && (
             <button
               onClick={toggleTheme}
-              className="w-full flex items-center gap-4 px-5 py-3.5 mb-2 rounded-2xl text-sm font-bold transition-all duration-300 cursor-pointer text-[var(--text-main)] opacity-80 hover:bg-white/5 border border-transparent hover:border-white/10"
+              className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-semibold text-indigo-200/80 hover:bg-white/5 border border-transparent transition cursor-pointer"
             >
-              <div className={`p-2 rounded-xl transition-colors ${isDarkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
-                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+              <div className={`p-1.5 rounded-lg ${isDarkMode ? 'bg-amber-500/20 text-amber-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
+                {isDarkMode ? <Sun size={15} /> : <Moon size={15} />}
               </div>
               <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
             </button>
           )}
 
-          {/* Account Menu Section */}
-          <div className="relative pt-4 border-t border-[var(--glass-border)]">
+          {/* User Profile / Menu */}
+          <div className="relative">
             <button
               onClick={() => setIsAccountOpen(!isAccountOpen)}
-              className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-white/5 transition-all text-left cursor-pointer group border border-transparent hover:border-white/10"
+              className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 transition text-left cursor-pointer"
             >
-              <div className="flex items-center gap-4 overflow-hidden">
-                <div className="p-2.5 bg-indigo-500/20 rounded-xl text-indigo-400 border border-indigo-500/30 shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                  <User size={20} />
-                </div>
-                <div className="overflow-hidden">
-                  <p className="text-sm font-bold text-[var(--text-main)] truncate">{adminName}</p>
-                  <p className="text-xs text-indigo-300/70 truncate">{adminEmail}</p>
-                </div>
+              <div className="p-2 bg-indigo-500/20 rounded-lg text-indigo-400 border border-indigo-500/30 shrink-0">
+                <User size={16} />
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-xs font-bold text-white truncate">{adminName}</p>
+                <p className="text-[10px] text-indigo-300/60 truncate">{adminEmail}</p>
               </div>
             </button>
 
             {isAccountOpen && (
-              <div className="absolute bottom-20 right-0 left-0 bg-[var(--glass-bg-primary)]/90 backdrop-blur-xl border border-[var(--glass-border)] rounded-2xl p-2 shadow-2xl space-y-1 z-30 animate-in fade-in zoom-in-95 duration-200">
+              <div className="absolute bottom-14 right-0 left-0 bg-[#121829]/95 backdrop-blur-xl border border-white/10 rounded-xl p-1.5 shadow-2xl space-y-1 z-30">
                 <button
                   onClick={handleLogoutClick}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10 rounded-xl transition cursor-pointer font-bold"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-rose-400 hover:bg-rose-500/10 rounded-lg transition font-semibold cursor-pointer"
                 >
-                  <LogOut size={16} /> Sign Out
+                  <LogOut size={14} /> Sign Out
                 </button>
-
                 <button
                   onClick={() => {
                     localStorage.removeItem('token');
                     window.location.reload();
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[var(--text-main)] opacity-80 hover:bg-white/10 rounded-xl transition cursor-pointer font-bold"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-indigo-200 hover:bg-white/5 rounded-lg transition font-semibold cursor-pointer"
                 >
-                  <Lock size={16} /> Change Password
+                  <Lock size={14} /> Change Password
                 </button>
               </div>
             )}

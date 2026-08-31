@@ -6,7 +6,6 @@ import 'providers/theme_provider.dart';
 import 'widgets/animated_background.dart';
 import 'widgets/glass_card.dart';
 import 'widgets/login_form.dart';
-import 'register_page.dart';
 import 'reset_password_page.dart';
 import 'home_shell.dart';
 

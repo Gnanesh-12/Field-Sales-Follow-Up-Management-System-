@@ -1,36 +1,3 @@
-/*import { Controller, Get, Post, Delete, Patch, Body, Param } from '@nestjs/common';
-import { AdminService } from './admin.service';
-
-@Controller('api/admin')
-export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
-
-  @Get('employees')
-  getEmployees() {
-    return this.adminService.getEmployees();
-  }
-
-  @Post('employees')
-  addEmployee(@Body() body: any) {
-    return this.adminService.addEmployee(body);
-  }
-
-  @Delete('employees/:id')
-  deleteEmployee(@Param('id') id: string) {
-    return this.adminService.deleteEmployee(id);
-  }
-
-  @Get('field-entries')
-  getFieldEntries() {
-    return this.adminService.getFieldEntries();
-  }
-
-  @Patch('field-entries/:id/status')
-  updateStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.adminService.updateEntryStatus(id, status);
-  }
-}*/
-
 import { Controller, Get, Post, Patch, Delete, Body, Param, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuthService } from '../auth/auth.service';
