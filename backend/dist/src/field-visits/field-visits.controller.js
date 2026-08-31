@@ -59,6 +59,10 @@ let FieldVisitsController = class FieldVisitsController {
     }
     async createVisit(req, body) {
         const employeeId = req.user.sub || req.user.employeeId;
+        const employee = await this.prisma.employee.findUnique({ where: { id: employeeId } });
+        if (employee?.status === 'INACTIVE') {
+            throw new common_1.ForbiddenException('Your account is temporarily deactivated. You cannot enter new entities.');
+        }
         if (!body.customerSiteName) {
             throw new common_1.BadRequestException('customerSiteName is required');
         }
@@ -77,6 +81,10 @@ let FieldVisitsController = class FieldVisitsController {
     }
     async deleteVisit(req, id) {
         const employeeId = req.user.sub || req.user.employeeId;
+        const employee = await this.prisma.employee.findUnique({ where: { id: employeeId } });
+        if (employee?.status === 'INACTIVE') {
+            throw new common_1.ForbiddenException('Your account is temporarily deactivated. You cannot delete entities.');
+        }
         const result = await this.fieldVisitsService.deleteVisit(employeeId, id);
         if (result.count === 0)
             throw new common_1.NotFoundException('Visit not found');
@@ -88,6 +96,10 @@ let FieldVisitsController = class FieldVisitsController {
     }
     async updateFollowUp(req, id, body) {
         const employeeId = req.user.sub || req.user.employeeId;
+        const employee = await this.prisma.employee.findUnique({ where: { id: employeeId } });
+        if (employee?.status === 'INACTIVE') {
+            throw new common_1.ForbiddenException('Your account is temporarily deactivated. You cannot modify entities.');
+        }
         if (!body.status)
             throw new common_1.BadRequestException('status is required');
         const result = await this.followUpsService.updateFollowUpStatus(employeeId, id, body.status);

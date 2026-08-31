@@ -26,7 +26,12 @@ let CustomerSitesController = class CustomerSitesController {
             orderBy: { name: 'asc' },
         });
     }
-    async create(body) {
+    async create(req, body) {
+        const employeeId = req.user.sub || req.user.employeeId;
+        const employee = await this.prisma.employee.findUnique({ where: { id: employeeId } });
+        if (employee?.status === 'INACTIVE') {
+            throw new common_1.ForbiddenException('Your account is temporarily deactivated. You cannot enter new entities.');
+        }
         if (!body.name || !body.address) {
             throw new common_1.BadRequestException('name and address are required');
         }
@@ -48,9 +53,10 @@ __decorate([
 ], CustomerSitesController.prototype, "list", null);
 __decorate([
     (0, common_1.Post)(),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], CustomerSitesController.prototype, "create", null);
 exports.CustomerSitesController = CustomerSitesController = __decorate([

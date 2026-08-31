@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Req, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, Req, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 import { FieldVisitsService } from './field-visits.service';
 import { FollowUpsService } from './follow-ups.service';
@@ -54,6 +54,12 @@ export class FieldVisitsController {
   @Roles('employee-role', 'EMPLOYEE')
   async createVisit(@Req() req, @Body() body: any) {
     const employeeId = req.user.sub || req.user.employeeId;
+
+    const employee = await this.prisma.employee.findUnique({ where: { id: employeeId } });
+    if (employee?.status === 'INACTIVE') {
+      throw new ForbiddenException('Your account is temporarily deactivated. You cannot enter new entities.');
+    }
+
     if (!body.customerSiteName) {
       throw new BadRequestException('customerSiteName is required');
     }
@@ -84,6 +90,12 @@ export class FieldVisitsController {
   @Roles('employee-role', 'EMPLOYEE')
   async deleteVisit(@Req() req, @Param('id') id: string) {
     const employeeId = req.user.sub || req.user.employeeId;
+
+    const employee = await this.prisma.employee.findUnique({ where: { id: employeeId } });
+    if (employee?.status === 'INACTIVE') {
+      throw new ForbiddenException('Your account is temporarily deactivated. You cannot delete entities.');
+    }
+
     const result = await this.fieldVisitsService.deleteVisit(employeeId, id);
     if (result.count === 0) throw new NotFoundException('Visit not found');
     return { success: true };
@@ -101,6 +113,12 @@ export class FieldVisitsController {
   @Roles('employee-role', 'EMPLOYEE')
   async updateFollowUp(@Req() req, @Param('id') id: string, @Body() body: any) {
     const employeeId = req.user.sub || req.user.employeeId;
+
+    const employee = await this.prisma.employee.findUnique({ where: { id: employeeId } });
+    if (employee?.status === 'INACTIVE') {
+      throw new ForbiddenException('Your account is temporarily deactivated. You cannot modify entities.');
+    }
+
     if (!body.status) throw new BadRequestException('status is required');
     const result = await this.followUpsService.updateFollowUpStatus(employeeId, id, body.status);
     if (!result) throw new NotFoundException('Follow-up not found');

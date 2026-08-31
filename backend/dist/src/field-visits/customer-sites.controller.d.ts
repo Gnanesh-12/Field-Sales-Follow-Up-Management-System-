@@ -10,7 +10,7 @@ export declare class CustomerSitesController {
         address: string;
         geoTag: string | null;
     }[]>;
-    create(body: any): Promise<{
+    create(req: any, body: any): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;

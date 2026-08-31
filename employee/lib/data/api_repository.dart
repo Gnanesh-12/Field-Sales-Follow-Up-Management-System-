@@ -119,6 +119,14 @@ class ApiRepository {
     if (response.statusCode == 201) {
       return FieldVisit.fromJson(jsonDecode(response.body));
     } else {
+      try {
+        final body = jsonDecode(response.body);
+        if (body['message'] != null) {
+          throw ApiException(body['message']);
+        }
+      } catch (e) {
+        if (e is ApiException) rethrow;
+      }
       throw ApiException('Failed to create visit');
     }
   }
