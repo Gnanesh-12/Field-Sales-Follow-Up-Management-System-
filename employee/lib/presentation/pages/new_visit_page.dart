@@ -9,13 +9,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:uuid/uuid.dart';
 import '../app_theme.dart';
-import '../providers/reference_data_provider.dart';
 import '../providers/api_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/visits_provider.dart';
 import '../../data/api_repository.dart';
-import '../../data/models/models.dart';
 
 class NewVisitPage extends ConsumerStatefulWidget {
   const NewVisitPage({super.key});
