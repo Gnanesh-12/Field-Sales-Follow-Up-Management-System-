@@ -41,7 +41,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
     if (_formKey.currentState!.validate()) {
       ref.read(authProvider.notifier).login(
-            _employeeIdController.text,
+            _employeeIdController.text.trim(),
             _pinController.text,
           );
     }
@@ -62,10 +62,15 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               icon: Icons.cloud_off_rounded,
               message: authState.error!.message,
               onRetry: authState.isLoading ? null : _submit,
-            ),
-
+            )
           // ─── Invalid Credentials Error ────────────────────────
-          if (authState.error is InvalidCredentialsException)
+          else if (authState.error is InvalidCredentialsException)
+            _AnimatedErrorBanner(
+              icon: Icons.error_outline_rounded,
+              message: authState.error!.message,
+            )
+          // ─── Generic Error Banner ─────────────────────────────
+          else if (authState.error != null)
             _AnimatedErrorBanner(
               icon: Icons.error_outline_rounded,
               message: authState.error!.message,
@@ -88,7 +93,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                 return 'Employee ID is required';
               }
               final RegExp employeeIdRegex = RegExp(r'^[A-Z]{2}-[A-Z]{2}-\d{3}$');
-              if (!employeeIdRegex.hasMatch(value)) {
+              if (!employeeIdRegex.hasMatch(value.trim())) {
                 return 'Format must be SE-FS-001';
               }
               return null;

@@ -8,6 +8,13 @@ String get _baseUrl {
   if (const bool.hasEnvironment('API_URL')) {
     return const String.fromEnvironment('API_URL');
   }
+  if (kDebugMode) {
+    // In Android emulator, localhost is 10.0.2.2
+    if (!kIsWeb && Platform.isAndroid) {
+      return 'http://10.0.2.2:3000';
+    }
+    return 'http://localhost:3000';
+  }
   throw AuthException('API_URL is not configured for production environment');
 }
 

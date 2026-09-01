@@ -34,7 +34,7 @@ class DashboardPage extends ConsumerWidget {
               children: [
                 const Icon(Icons.error_outline, color: AppTheme.dangerRed, size: 48),
                 const SizedBox(height: 16),
-                Text('Failed to load dashboard', style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
+                Text(error.toString(), style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor), textAlign: TextAlign.center),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => ref.refresh(dashboardProvider),
