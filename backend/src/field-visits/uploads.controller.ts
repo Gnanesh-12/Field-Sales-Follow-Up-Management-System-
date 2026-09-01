@@ -10,7 +10,7 @@ export class UploadsController {
   @Post('image')
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
-      destination: process.env.STORAGE_PATH || './uploads',
+      destination: process.env.STORAGE_PATH,
       filename: (req: any, file, cb) => {
         // req.user is set by JwtAuthGuard
         const employeeId = req.user?.sub || 'UNKNOWN';

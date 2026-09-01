@@ -6,7 +6,10 @@ const path_1 = require("path");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     app.enableCors();
-    app.useStaticAssets((0, path_1.join)(process.cwd(), process.env.STORAGE_PATH || 'uploads'), {
+    if (!process.env.STORAGE_PATH) {
+        throw new Error('STORAGE_PATH environment variable is required for production uploads');
+    }
+    app.useStaticAssets((0, path_1.join)(process.cwd(), process.env.STORAGE_PATH), {
         prefix: '/uploads/',
     });
     await app.listen(process.env.PORT ?? 3000);

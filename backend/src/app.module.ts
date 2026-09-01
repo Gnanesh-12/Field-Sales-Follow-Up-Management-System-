@@ -6,14 +6,22 @@ import { PrismaModule } from './prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { EmployeeModule } from './employee/employee.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { AdminModule } from './admin/admin.module'; //change made
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     FieldVisitsModule,
-    JwtModule.register({ secret: process.env.JWT_SECRET }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+      }),
+    }),
     AuthModule,
     EmployeeModule,
     AdminModule, //change made

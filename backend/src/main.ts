@@ -8,7 +8,11 @@ async function bootstrap() {
   app.enableCors();
 
   // Serve uploaded files statically
-  app.useStaticAssets(join(process.cwd(), process.env.STORAGE_PATH || 'uploads'), {
+  if (!process.env.STORAGE_PATH) {
+    throw new Error('STORAGE_PATH environment variable is required for production uploads');
+  }
+  
+  app.useStaticAssets(join(process.cwd(), process.env.STORAGE_PATH), {
     prefix: '/uploads/',
   });
 

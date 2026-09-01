@@ -88,7 +88,7 @@ export const FieldEntryDetailModal: React.FC<FieldEntryDetailModalProps> = ({
             {photo ? (
               <div className="rounded-xl overflow-hidden border border-gray-200 bg-black/5 aspect-video flex items-center justify-center">
                 <img
-                  src={photo.startsWith('http') ? photo : `http://localhost:3000${photo}`}
+                  src={photo.startsWith('http') ? photo : `${import.meta.env.VITE_API_URL || ''}${photo}`}
                   alt="Site Visit"
                   className="w-full h-full object-cover"
                   onError={(e) => {

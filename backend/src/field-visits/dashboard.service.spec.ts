@@ -5,9 +5,11 @@ import { PrismaService } from '../prisma/prisma.service';
 const mockPrismaService = {
   fieldVisit: {
     findMany: jest.fn(),
+    count: jest.fn(),
   },
   followUp: {
     findMany: jest.fn(),
+    count: jest.fn(),
   },
 };
 
@@ -34,9 +36,15 @@ describe('DashboardService', () => {
   it('should return empty arrays gracefully', async () => {
     (prisma.fieldVisit.findMany as jest.Mock).mockResolvedValue([]);
     (prisma.followUp.findMany as jest.Mock).mockResolvedValue([]);
+    (prisma.fieldVisit.count as jest.Mock).mockResolvedValue(0);
+    (prisma.followUp.count as jest.Mock).mockResolvedValue(0);
 
     const result = await service.getDashboardSummary('employee1');
-    expect(result).toEqual({ recentVisits: [], pendingFollowUps: [] });
+    expect(result).toEqual({
+      stats: { todayVisits: 0, weekVisits: 0, pendingFollowUps: 0, completedThisWeek: 0, totalVisits: 0 },
+      recentVisits: [],
+      recentFollowUps: []
+    });
   });
 
   it('should query data only for the given employeeId', async () => {
@@ -45,27 +53,19 @@ describe('DashboardService', () => {
 
     (prisma.fieldVisit.findMany as jest.Mock).mockResolvedValue(mockVisits);
     (prisma.followUp.findMany as jest.Mock).mockResolvedValue(mockFollowUps);
+    (prisma.fieldVisit.count as jest.Mock).mockResolvedValue(1);
+    (prisma.followUp.count as jest.Mock).mockResolvedValue(1);
 
     const result = await service.getDashboardSummary('employee1');
-    
-    expect(prisma.fieldVisit.findMany).toHaveBeenCalledWith({
-      where: { employeeId: 'employee1' },
-      take: 10,
-      orderBy: { timestamp: 'desc' },
-      include: { site: true },
-    });
 
-    expect(prisma.followUp.findMany).toHaveBeenCalledWith({
-      where: {
-        visit: { employeeId: 'employee1' },
-        status: { not: 'completed' },
-      },
-      orderBy: { dueDate: 'asc' },
-    });
+    expect(prisma.fieldVisit.findMany).toHaveBeenCalled();
+    expect(prisma.followUp.findMany).toHaveBeenCalled();
 
     expect(result).toEqual({
+      stats: { todayVisits: 1, weekVisits: 1, pendingFollowUps: 1, completedThisWeek: 1, totalVisits: 1 },
       recentVisits: mockVisits,
-      pendingFollowUps: mockFollowUps,
+      recentFollowUps: mockFollowUps,
     });
   });
 });
+

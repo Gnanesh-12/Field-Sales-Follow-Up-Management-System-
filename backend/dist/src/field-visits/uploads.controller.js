@@ -34,7 +34,7 @@ __decorate([
     (0, common_1.Post)('image'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
         storage: (0, multer_1.diskStorage)({
-            destination: process.env.STORAGE_PATH || './uploads',
+            destination: process.env.STORAGE_PATH,
             filename: (req, file, cb) => {
                 const employeeId = req.user?.sub || 'UNKNOWN';
                 const recordId = req.body?.recordId || 'NO-RECORD';

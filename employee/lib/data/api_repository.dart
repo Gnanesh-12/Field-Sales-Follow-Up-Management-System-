@@ -9,8 +9,7 @@ String get baseUrl {
   if (const bool.hasEnvironment('API_URL')) {
     return const String.fromEnvironment('API_URL');
   }
-  if (kIsWeb) return 'http://localhost:3000';
-  return Platform.isAndroid ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+  throw ApiException('API_URL is not configured for production environment');
 }
 
 class ApiException implements Exception {

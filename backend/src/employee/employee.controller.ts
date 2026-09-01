@@ -29,7 +29,7 @@ export class EmployeeController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: process.env.STORAGE_PATH || './uploads',
+        destination: process.env.STORAGE_PATH,
         filename: (req: any, file, callback) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
