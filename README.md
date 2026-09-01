@@ -25,7 +25,7 @@ This project is built using a modern, scalable technology stack and follows a mo
 
 ### 1. Backend API (`/backend`)
 - **Framework:** [NestJS](https://nestjs.com/) (Node.js framework)
-- **Database:** SQLite (via `better-sqlite3`)
+- **Database:** MongoDB
 - **ORM:** [Prisma](https://www.prisma.io/)
 - **Authentication:** JWT (JSON Web Tokens) with Passport
 - **Language:** TypeScript
@@ -79,7 +79,7 @@ npm install
 # Initialize Prisma & generate client
 npx prisma generate
 
-# Run database migrations (creates SQLite db)
+# Sync database schema to MongoDB
 npx prisma db push
 
 # (Optional) Seed the database with initial admin user and sample data

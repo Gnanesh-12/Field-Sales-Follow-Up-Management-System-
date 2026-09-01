@@ -27,27 +27,6 @@ export class FieldVisitsController {
     return this.dashboardService.getDashboardSummary(employeeId);
   }
 
-  // ─── Profile ────────────────────────────────────────────
-  @Get('profile')
-  @Roles('employee-role', 'EMPLOYEE')
-  async getProfile(@Req() req) {
-    const employeeId = req.user.sub || req.user.employeeId;
-    console.log(`getProfile called for employeeId: ${employeeId}, req.user: ${JSON.stringify(req.user)}`);
-    const employee = await this.prisma.employee.findUnique({
-      where: { id: employeeId },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        role: true,
-        status: true,
-        profilePicture: true,
-        createdAt: true,
-      },
-    });
-    if (!employee) throw new NotFoundException('Employee not found');
-    return employee;
-  }
 
   // ─── Field Visits ───────────────────────────────────────
   @Post('visits')
@@ -63,7 +42,12 @@ export class FieldVisitsController {
     if (!body.customerSiteName) {
       throw new BadRequestException('customerSiteName is required');
     }
-    return this.fieldVisitsService.createVisit(employeeId, body);
+    try {
+      return await this.fieldVisitsService.createVisit(employeeId, body);
+    } catch (error) {
+      console.error('CREATE VISIT ERROR:', error);
+      throw new BadRequestException(error.message || 'Error creating visit');
+    }
   }
 
   @Get('visits')

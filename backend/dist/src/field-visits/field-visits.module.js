@@ -21,7 +21,7 @@ let FieldVisitsModule = class FieldVisitsModule {
 exports.FieldVisitsModule = FieldVisitsModule;
 exports.FieldVisitsModule = FieldVisitsModule = __decorate([
     (0, common_1.Module)({
-        imports: [jwt_1.JwtModule.register({ secret: 'secret' })],
+        imports: [jwt_1.JwtModule.register({ secret: process.env.JWT_SECRET })],
         controllers: [
             field_visits_controller_1.FieldVisitsController,
             customer_sites_controller_1.CustomerSitesController,

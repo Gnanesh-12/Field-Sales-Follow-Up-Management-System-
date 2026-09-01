@@ -10,7 +10,7 @@ The backend is built with a robust, scalable architecture using Node.js and Nest
 - **Framework:** NestJS (Node.js) - Chosen for its modular architecture and TypeScript support.
 - **Language:** TypeScript
 - **Database ORM:** Prisma - Provides type-safe database access and schema migrations.
-- **Database Systems:** PostgreSQL (Primary production database via `pg`) & SQLite (`better-sqlite3` adapter integration).
+- **Database Systems:** MongoDB.
 
 **Authentication & Security:**
 - **Strategy:** JWT (JSON Web Tokens) with Passport.js (`@nestjs/jwt`, `@nestjs/passport`, `passport-jwt`).

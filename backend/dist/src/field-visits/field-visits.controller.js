@@ -38,25 +38,6 @@ let FieldVisitsController = class FieldVisitsController {
         const employeeId = req.user.sub || req.user.employeeId;
         return this.dashboardService.getDashboardSummary(employeeId);
     }
-    async getProfile(req) {
-        const employeeId = req.user.sub || req.user.employeeId;
-        console.log(`getProfile called for employeeId: ${employeeId}, req.user: ${JSON.stringify(req.user)}`);
-        const employee = await this.prisma.employee.findUnique({
-            where: { id: employeeId },
-            select: {
-                id: true,
-                name: true,
-                phone: true,
-                role: true,
-                status: true,
-                profilePicture: true,
-                createdAt: true,
-            },
-        });
-        if (!employee)
-            throw new common_1.NotFoundException('Employee not found');
-        return employee;
-    }
     async createVisit(req, body) {
         const employeeId = req.user.sub || req.user.employeeId;
         const employee = await this.prisma.employee.findUnique({ where: { id: employeeId } });
@@ -66,7 +47,13 @@ let FieldVisitsController = class FieldVisitsController {
         if (!body.customerSiteName) {
             throw new common_1.BadRequestException('customerSiteName is required');
         }
-        return this.fieldVisitsService.createVisit(employeeId, body);
+        try {
+            return await this.fieldVisitsService.createVisit(employeeId, body);
+        }
+        catch (error) {
+            console.error('CREATE VISIT ERROR:', error);
+            throw new common_1.BadRequestException(error.message || 'Error creating visit');
+        }
     }
     async listVisits(req, page, limit) {
         const employeeId = req.user.sub || req.user.employeeId;
@@ -117,14 +104,6 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], FieldVisitsController.prototype, "getDashboardSummary", null);
-__decorate([
-    (0, common_1.Get)('profile'),
-    (0, exports.Roles)('employee-role', 'EMPLOYEE'),
-    __param(0, (0, common_1.Req)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], FieldVisitsController.prototype, "getProfile", null);
 __decorate([
     (0, common_1.Post)('visits'),
     (0, exports.Roles)('employee-role', 'EMPLOYEE'),

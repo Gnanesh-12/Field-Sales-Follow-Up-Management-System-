@@ -17,6 +17,24 @@ let EmployeeService = class EmployeeService {
     constructor(prisma) {
         this.prisma = prisma;
     }
+    async getProfile(employeeId) {
+        const employee = await this.prisma.employee.findUnique({
+            where: { id: employeeId },
+            select: {
+                id: true,
+                name: true,
+                phone: true,
+                role: true,
+                status: true,
+                profilePicture: true,
+                createdAt: true,
+            }
+        });
+        if (!employee) {
+            throw new common_1.NotFoundException('Employee not found');
+        }
+        return employee;
+    }
     async updateProfilePicture(employeeId, profilePictureUrl) {
         const employee = await this.prisma.employee.findUnique({
             where: { id: employeeId },

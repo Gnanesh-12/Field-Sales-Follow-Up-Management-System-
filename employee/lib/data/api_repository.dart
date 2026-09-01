@@ -1,10 +1,17 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'models/models.dart';
 
-final String baseUrl = kIsWeb ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+String get baseUrl {
+  if (const bool.hasEnvironment('API_URL')) {
+    return const String.fromEnvironment('API_URL');
+  }
+  if (kIsWeb) return 'http://localhost:3000';
+  return Platform.isAndroid ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+}
 
 class ApiException implements Exception {
   final String message;

@@ -17,7 +17,7 @@ let EmployeeModule = class EmployeeModule {
 exports.EmployeeModule = EmployeeModule;
 exports.EmployeeModule = EmployeeModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule, jwt_1.JwtModule.register({ secret: 'secret' })],
+        imports: [prisma_module_1.PrismaModule, jwt_1.JwtModule.register({ secret: process.env.JWT_SECRET })],
         controllers: [employee_controller_1.EmployeeController],
         providers: [employee_service_1.EmployeeService],
     })

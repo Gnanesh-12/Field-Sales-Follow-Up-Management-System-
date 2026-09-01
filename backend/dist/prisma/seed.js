@@ -63,31 +63,35 @@ async function main() {
             status: 'ACTIVE',
         },
     });
+    const site1Id = '507f1f77bcf86cd799439011';
+    const site2Id = '507f1f77bcf86cd799439012';
     const site1 = await prisma.customerSite.upsert({
-        where: { id: 'site-prestige-001' },
+        where: { id: site1Id },
         update: {},
         create: {
-            id: 'site-prestige-001',
+            id: site1Id,
             name: 'Prestige Tech Cloud, Phase 2',
             address: 'Outer Ring Rd, Nagavara, Bengaluru',
             geoTag: 'Hebbal, Bengaluru',
         },
     });
     const site2 = await prisma.customerSite.upsert({
-        where: { id: 'site-brigade-002' },
+        where: { id: site2Id },
         update: {},
         create: {
-            id: 'site-brigade-002',
+            id: site2Id,
             name: 'Brigade Gateway Commercial',
             address: 'Dr Rajkumar Rd, Rajajinagar, Bengaluru',
             geoTag: 'Malleshwaram, Bengaluru',
         },
     });
+    const visit1Id = '607f1f77bcf86cd799439021';
+    const visit2Id = '607f1f77bcf86cd799439022';
     await prisma.fieldVisit.upsert({
-        where: { id: 'visit-entry-001' },
+        where: { id: visit1Id },
         update: {},
         create: {
-            id: 'visit-entry-001',
+            id: visit1Id,
             employeeId: emp1.id,
             customerSiteId: site1.id,
             notes: 'Client requested immediate quotation for electrical cabling and cement bags.',
@@ -95,10 +99,10 @@ async function main() {
         },
     });
     await prisma.fieldVisit.upsert({
-        where: { id: 'visit-entry-002' },
+        where: { id: visit2Id },
         update: {},
         create: {
-            id: 'visit-entry-002',
+            id: visit2Id,
             employeeId: emp2.id,
             customerSiteId: site2.id,
             notes: 'Followed up on lighting requirements. Sample inspection approved by site engineer.',

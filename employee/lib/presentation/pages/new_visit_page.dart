@@ -236,7 +236,9 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
         );
         ref.invalidate(dashboardProvider);
         ref.invalidate(visitsProvider);
-        Navigator.pop(context);
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
       }
     } catch (e) {
       if (mounted) {

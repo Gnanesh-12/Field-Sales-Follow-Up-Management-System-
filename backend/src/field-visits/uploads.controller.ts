@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, UseGuards, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { diskStorage } from 'multer';
@@ -10,7 +10,7 @@ export class UploadsController {
   @Post('image')
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
-      destination: './uploads',
+      destination: process.env.STORAGE_PATH || './uploads',
       filename: (req: any, file, cb) => {
         // req.user is set by JwtAuthGuard
         const employeeId = req.user?.sub || 'UNKNOWN';
@@ -21,8 +21,9 @@ export class UploadsController {
       },
     }),
     fileFilter: (req, file, cb) => {
-      if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
-        cb(new Error('Only image files are allowed'), false);
+      const isImage = file.mimetype.match(/\/(jpg|jpeg|png|webp)$/) || file.originalname.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+      if (!isImage) {
+        return cb(new BadRequestException('Only image files are allowed'), false);
       }
       cb(null, true);
     },

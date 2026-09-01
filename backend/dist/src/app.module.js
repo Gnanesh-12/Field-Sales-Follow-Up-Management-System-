@@ -24,7 +24,7 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             prisma_module_1.PrismaModule,
             field_visits_module_1.FieldVisitsModule,
-            jwt_1.JwtModule.register({ secret: 'secret' }),
+            jwt_1.JwtModule.register({ secret: process.env.JWT_SECRET }),
             auth_module_1.AuthModule,
             employee_module_1.EmployeeModule,
             admin_module_1.AdminModule,

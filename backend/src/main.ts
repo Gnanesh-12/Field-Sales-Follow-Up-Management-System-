@@ -8,7 +8,7 @@ async function bootstrap() {
   app.enableCors();
 
   // Serve uploaded files statically
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+  app.useStaticAssets(join(process.cwd(), process.env.STORAGE_PATH || 'uploads'), {
     prefix: '/uploads/',
   });
 

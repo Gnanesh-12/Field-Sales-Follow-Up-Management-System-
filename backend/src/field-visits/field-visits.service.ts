@@ -43,47 +43,64 @@ export class FieldVisitsService {
       }
     }
 
-    return this.prisma.fieldVisit.create({
-      data: {
-        id: data.id,
-        employeeId,
-        customerSiteId: site.id,
-        notes: data.notes,
-        remarks: data.remarks,
-        location: (data.lat != null && data.lng != null) ? {
-          create: {
-            lat: data.lat,
-            lng: data.lng,
-            accuracy: data.accuracy,
-          }
-        } : undefined,
-        attachments: data.imageUrl ? {
-          create: {
-            fileUrl: data.imageUrl,
-            type: 'image',
-          }
-        } : undefined,
-        materials: materialEntries.length > 0 ? {
-          create: materialEntries.map(m => ({
-            materialId: m.materialId,
-            quantity: m.quantity,
-          }))
-        } : undefined,
-        followUps: data.followUp ? {
-          create: {
-            notes: data.followUp.notes,
-            dueDate: new Date(data.followUp.dueDate),
-          }
-        } : undefined,
-      },
-      include: {
-        site: true,
-        location: true,
-        attachments: true,
-        materials: { include: { material: true } },
-        followUps: true,
-      },
-    });
+    try {
+      return await this.prisma.fieldVisit.create({
+        data: {
+          id: data.id,
+          employeeId,
+          customerSiteId: site.id,
+          notes: data.notes,
+          remarks: data.remarks,
+          location: (data.lat != null && data.lng != null) ? {
+            create: {
+              lat: data.lat,
+              lng: data.lng,
+              accuracy: data.accuracy,
+            }
+          } : undefined,
+          attachments: data.imageUrl ? {
+            create: {
+              fileUrl: data.imageUrl,
+              type: 'image',
+            }
+          } : undefined,
+          materials: materialEntries.length > 0 ? {
+            create: materialEntries.map(m => ({
+              materialId: m.materialId,
+              quantity: m.quantity,
+            }))
+          } : undefined,
+          followUps: data.followUp ? {
+            create: {
+              notes: data.followUp.notes,
+              dueDate: new Date(data.followUp.dueDate),
+            }
+          } : undefined,
+        },
+        include: {
+          site: true,
+          location: true,
+          attachments: true,
+          materials: { include: { material: true } },
+          followUps: true,
+        },
+      });
+    } catch (error) {
+      if (error.code === 'P2002' && data.id) {
+        // Idempotency: if the visit was already created with this ID, just return it.
+        return this.prisma.fieldVisit.findUnique({
+          where: { id: data.id },
+          include: {
+            site: true,
+            location: true,
+            attachments: true,
+            materials: { include: { material: true } },
+            followUps: true,
+          },
+        });
+      }
+      throw error;
+    }
   }
 
   async listVisits(employeeId: string, page = 1, limit = 20) {

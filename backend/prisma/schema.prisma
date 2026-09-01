@@ -6,13 +6,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model Employee {
-  id             String       @id // Employee ID like SE-FS-001
+  id             String       @id @map("_id") // Employee ID like SE-FS-001
   name           String
   phone          String?
   profilePicture String?
@@ -26,7 +25,7 @@ model Employee {
 }
 
 model Admin {
-  id        String   @id // Admin ID
+  id        String   @id @map("_id") // Admin ID
   name      String
   email     String   @unique
   password  String
@@ -36,7 +35,7 @@ model Admin {
 }
 
 model CustomerSite {
-  id          String       @id @default(uuid())
+  id          String       @id @default(uuid()) @map("_id")
   name        String
   address     String
   geoTag      String?
@@ -46,7 +45,7 @@ model CustomerSite {
 }
 
 model Material {
-  id       String           @id @default(uuid())
+  id       String           @id @default(uuid()) @map("_id")
   name     String
   unit     String           // e.g. 'kg', 'units', 'litres'
   supplies MaterialSupply[]
@@ -54,14 +53,14 @@ model Material {
 }
 
 model FieldVisit {
-  id             String           @id @default(uuid())
+  id             String           @id @default(uuid()) @map("_id")
   timestamp      DateTime         @default(now())
   notes          String?
   remarks        String?
   status         String           @default("PENDING") // 'PENDING' | 'APPROVED' | 'REJECTED'
   employeeId     String
   employee       Employee         @relation(fields: [employeeId], references: [id])
-  customerSiteId String
+  customerSiteId String           
   site           CustomerSite     @relation(fields: [customerSiteId], references: [id])
   followUps      FollowUp[]
   location       Location?
@@ -72,39 +71,39 @@ model FieldVisit {
 }
 
 model FollowUp {
-  id           String     @id @default(uuid())
+  id           String     @id @default(uuid()) @map("_id")
   dueDate      DateTime
   status       String     @default("pending") // 'pending', 'completed'
   notes        String?
-  fieldVisitId String
+  fieldVisitId String     
   visit        FieldVisit @relation(fields: [fieldVisitId], references: [id])
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 }
 
 model Location {
-  id           String     @id @default(uuid())
+  id           String     @id @default(uuid()) @map("_id")
   lat          Float
   lng          Float
   accuracy     Float?
-  fieldVisitId String     @unique
+  fieldVisitId String     @unique 
   visit        FieldVisit @relation(fields: [fieldVisitId], references: [id])
 }
 
 model Attachment {
-  id           String     @id @default(uuid())
+  id           String     @id @default(uuid()) @map("_id")
   fileUrl      String
   type         String     @default("image") // 'image'
-  fieldVisitId String
+  fieldVisitId String     
   visit        FieldVisit @relation(fields: [fieldVisitId], references: [id])
   createdAt    DateTime   @default(now())
 }
 
 model MaterialSupply {
-  id           String     @id @default(uuid())
+  id           String     @id @default(uuid()) @map("_id")
   quantity     Float
-  materialId   String
+  materialId   String     
   material     Material   @relation(fields: [materialId], references: [id])
-  fieldVisitId String
+  fieldVisitId String     
   visit        FieldVisit @relation(fields: [fieldVisitId], references: [id])
 }

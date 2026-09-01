@@ -21,18 +21,16 @@ let JwtAuthGuard = class JwtAuthGuard {
         const request = context.switchToHttp().getRequest();
         const authHeader = request.headers.authorization;
         if (!authHeader) {
-            request.user = { employeeId: 'mock-employee-id', role: 'employee-role' };
-            return true;
+            throw new common_1.UnauthorizedException('Missing token');
         }
         try {
             const token = authHeader.split(' ')[1];
-            const decoded = this.jwtService.verify(token, { secret: 'secret' });
+            const decoded = this.jwtService.verify(token, { secret: process.env.JWT_SECRET });
             request.user = decoded;
             return true;
         }
         catch (e) {
-            request.user = { employeeId: 'mock-employee-id', role: 'employee-role' };
-            return true;
+            throw new common_1.UnauthorizedException('Invalid token');
         }
     }
 };

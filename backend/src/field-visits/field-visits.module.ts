@@ -9,7 +9,7 @@ import { FollowUpsService } from './follow-ups.service';
 import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [JwtModule.register({ secret: 'secret' })],
+  imports: [JwtModule.register({ secret: process.env.JWT_SECRET })],
   controllers: [
     FieldVisitsController,
     CustomerSitesController,
@@ -22,4 +22,4 @@ import { JwtModule } from '@nestjs/jwt';
     FollowUpsService,
   ],
 })
-export class FieldVisitsModule {}
+export class FieldVisitsModule { }

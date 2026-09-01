@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Put,
   UseGuards,
   UseInterceptors,
@@ -17,12 +18,18 @@ import { extname } from 'path';
 export class EmployeeController {
   constructor(private readonly employeeService: EmployeeService) { }
 
+  @Get('me/profile')
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@Request() req) {
+    return this.employeeService.getProfile(req.user.sub);
+  }
+
   @Put('me/profile-picture')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads',
+        destination: process.env.STORAGE_PATH || './uploads',
         filename: (req: any, file, callback) => {
           const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           const ext = extname(file.originalname);
@@ -30,7 +37,8 @@ export class EmployeeController {
         },
       }),
       fileFilter: (req, file, callback) => {
-        if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+        const isImage = file.mimetype.match(/\/(jpg|jpeg|png|webp|gif)$/) || file.originalname.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+        if (!isImage) {
           return callback(new BadRequestException('Only image files are allowed!'), false);
         }
         callback(null, true);

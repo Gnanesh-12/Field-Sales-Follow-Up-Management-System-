@@ -19,7 +19,7 @@ exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Module)({
         imports: [
             prisma_module_1.PrismaModule,
-            jwt_1.JwtModule.register({ secret: 'secret', signOptions: { expiresIn: '1d' } }),
+            jwt_1.JwtModule.register({ secret: process.env.JWT_SECRET, signOptions: { expiresIn: '1d' } }),
         ],
         controllers: [auth_controller_1.AuthController],
         providers: [auth_service_1.AuthService],

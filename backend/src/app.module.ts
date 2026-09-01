@@ -13,7 +13,7 @@ import { AdminModule } from './admin/admin.module'; //change made
   imports: [
     PrismaModule,
     FieldVisitsModule,
-    JwtModule.register({ secret: 'secret' }),
+    JwtModule.register({ secret: process.env.JWT_SECRET }),
     AuthModule,
     EmployeeModule,
     AdminModule, //change made
@@ -21,4 +21,4 @@ import { AdminModule } from './admin/admin.module'; //change made
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

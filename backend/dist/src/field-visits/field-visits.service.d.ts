@@ -20,7 +20,7 @@ export declare class FieldVisitsService {
             notes: string;
             dueDate: string;
         };
-    }): Promise<{
+    }): Promise<({
         location: {
             id: string;
             fieldVisitId: string;
@@ -75,7 +75,7 @@ export declare class FieldVisitsService {
         customerSiteId: string;
         createdAt: Date;
         updatedAt: Date;
-    }>;
+    }) | null>;
     listVisits(employeeId: string, page?: number, limit?: number): Promise<{
         visits: ({
             location: {

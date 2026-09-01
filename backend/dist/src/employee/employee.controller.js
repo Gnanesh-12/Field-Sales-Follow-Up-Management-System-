@@ -24,6 +24,9 @@ let EmployeeController = class EmployeeController {
     constructor(employeeService) {
         this.employeeService = employeeService;
     }
+    async getProfile(req) {
+        return this.employeeService.getProfile(req.user.sub);
+    }
     async uploadProfilePicture(req, file) {
         if (!file) {
             throw new common_1.BadRequestException('File is required');
@@ -35,11 +38,19 @@ let EmployeeController = class EmployeeController {
 };
 exports.EmployeeController = EmployeeController;
 __decorate([
+    (0, common_1.Get)('me/profile'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], EmployeeController.prototype, "getProfile", null);
+__decorate([
     (0, common_1.Put)('me/profile-picture'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
         storage: (0, multer_1.diskStorage)({
-            destination: './uploads',
+            destination: process.env.STORAGE_PATH || './uploads',
             filename: (req, file, callback) => {
                 const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
                 const ext = (0, path_1.extname)(file.originalname);
@@ -47,7 +58,8 @@ __decorate([
             },
         }),
         fileFilter: (req, file, callback) => {
-            if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+            const isImage = file.mimetype.match(/\/(jpg|jpeg|png|webp|gif)$/) || file.originalname.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+            if (!isImage) {
                 return callback(new common_1.BadRequestException('Only image files are allowed!'), false);
             }
             callback(null, true);

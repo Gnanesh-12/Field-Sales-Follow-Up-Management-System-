@@ -34,7 +34,7 @@ __decorate([
     (0, common_1.Post)('image'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
         storage: (0, multer_1.diskStorage)({
-            destination: './uploads',
+            destination: process.env.STORAGE_PATH || './uploads',
             filename: (req, file, cb) => {
                 const employeeId = req.user?.sub || 'UNKNOWN';
                 const recordId = req.body?.recordId || 'NO-RECORD';
@@ -43,8 +43,9 @@ __decorate([
             },
         }),
         fileFilter: (req, file, cb) => {
-            if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
-                cb(new Error('Only image files are allowed'), false);
+            const isImage = file.mimetype.match(/\/(jpg|jpeg|png|webp)$/) || file.originalname.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+            if (!isImage) {
+                return cb(new common_1.BadRequestException('Only image files are allowed'), false);
             }
             cb(null, true);
         },
