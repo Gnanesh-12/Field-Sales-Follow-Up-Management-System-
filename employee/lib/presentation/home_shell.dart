@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'app_theme.dart';
 import 'dashboard_page.dart';
 import 'pages/visits_page.dart';
@@ -36,81 +35,45 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   Widget _buildBottomNav() {
-    final items = [
-      _NavItem(Icons.dashboard_rounded, 'Home'),
-      _NavItem(Icons.map_rounded, 'Visits'),
-      _NavItem(Icons.pending_actions_rounded, 'Follow-ups'),
-      _NavItem(Icons.person_rounded, 'Profile'),
-    ];
-
     return Container(
       decoration: BoxDecoration(
         color: context.surfaceColor,
         border: Border(
           top: BorderSide(color: context.borderSubtleColor),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
       ),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: items.asMap().entries.map((entry) {
-              final index = entry.key;
-              final item = entry.value;
-              final isActive = index == _selectedIndex;
-
-              return GestureDetector(
-                onTap: () => setState(() => _selectedIndex = index),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  padding: EdgeInsets.symmetric(horizontal: isActive ? 16 : 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? AppTheme.accentCoral.withValues(alpha: 0.15)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        item.icon,
-                        color: isActive ? AppTheme.accentCoral : context.textMutedColor,
-                        size: 22,
-                      ),
-                      if (isActive) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          item.label,
-                          style: GoogleFonts.inter(
-                            color: AppTheme.accentCoral,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
+        child: NavigationBar(
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: (index) => setState(() => _selectedIndex = index),
+          backgroundColor: context.surfaceColor,
+          elevation: 0,
+          indicatorColor: Colors.black.withValues(alpha: 0.05),
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard_rounded, color: AppTheme.primaryBlue),
+              label: 'Today',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.map_outlined),
+              selectedIcon: Icon(Icons.map_rounded, color: AppTheme.primaryBlue),
+              label: 'Visits',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.pending_actions_outlined),
+              selectedIcon: Icon(Icons.pending_actions_rounded, color: AppTheme.primaryBlue),
+              label: 'Follow-ups',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person_rounded, color: AppTheme.primaryBlue),
+              label: 'Profile',
+            ),
+          ],
         ),
       ),
     );
   }
-}
-
-class _NavItem {
-  final IconData icon;
-  final String label;
-
-  const _NavItem(this.icon, this.label);
 }

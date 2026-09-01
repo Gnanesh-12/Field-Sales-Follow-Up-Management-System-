@@ -44,7 +44,7 @@ class VisitDetailPage extends ConsumerWidget {
         content: Text('Are you sure you want to delete this visit?', style: AppTheme.bodyMedium.copyWith(color: ctx.textSecondaryColor)),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Cancel', style: TextStyle(color: ctx.textMutedColor))),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete', style: TextStyle(color: AppTheme.dangerRed))),
         ],
       ),
     );
@@ -74,20 +74,20 @@ class VisitDetailPage extends ConsumerWidget {
       backgroundColor: context.backgroundColor,
       appBar: AppBar(
         backgroundColor: context.surfaceColor,
-        title: Text('Visit Details', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
-        centerTitle: true,
+        title: Text('Visit Report', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
+        centerTitle: false,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+            icon: const Icon(Icons.delete_outline, color: AppTheme.dangerRed),
             onPressed: () => _deleteVisit(context, ref),
           ),
         ],
       ),
       body: visitAsync.when(
         data: (visit) => _buildDetailContent(context, visit),
-        loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.accentTeal)),
-        error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: Colors.red))),
+        loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primaryBlue)),
+        error: (err, _) => Center(child: Text('Error: $err', style: const TextStyle(color: AppTheme.dangerRed))),
       ),
     );
   }
@@ -100,8 +100,8 @@ class VisitDetailPage extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: AppTheme.tealGradient,
-            borderRadius: BorderRadius.circular(20),
+            color: AppTheme.primaryBlue,
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,8 +113,8 @@ class VisitDetailPage extends ConsumerWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.location_on_rounded, color: Colors.white70, size: 16),
-                  const SizedBox(width: 4),
+                  const Icon(Icons.location_on, color: Colors.white70, size: 16),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       visit.site?.address ?? 'No address',
@@ -124,28 +124,20 @@ class VisitDetailPage extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.access_time_rounded, color: Colors.white, size: 14),
-                    const SizedBox(width: 6),
-                    Text(
-                      DateFormat('MMM d, yyyy - h:mm a').format(visit.timestamp),
-                      style: AppTheme.bodySmall.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
+              Row(
+                children: [
+                  const Icon(Icons.access_time, color: Colors.white70, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    DateFormat('MMM d, yyyy - h:mm a').format(visit.timestamp),
+                    style: AppTheme.bodySmall.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
 
         // ─── Location Data ─────────────────────────────────────
         if (visit.location != null) ...[
@@ -154,19 +146,12 @@ class VisitDetailPage extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: context.surfaceColor,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: context.borderSubtleColor),
             ),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentTeal.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.map_rounded, color: AppTheme.accentTeal),
-                ),
+                const Icon(Icons.map_outlined, color: AppTheme.primaryBlue, size: 28),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Consumer(
@@ -175,7 +160,7 @@ class VisitDetailPage extends ConsumerWidget {
                       return addressAsync.when(
                         data: (address) => Text(address, style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
                         loading: () => Text('Loading address...', style: TextStyle(color: context.textMutedColor, fontSize: 14)),
-                        error: (e, st) => const Text('Address unavailable', style: TextStyle(color: Colors.red, fontSize: 14)),
+                        error: (e, st) => const Text('Address unavailable', style: TextStyle(color: AppTheme.dangerRed, fontSize: 14)),
                       );
                     },
                   ),
@@ -183,18 +168,18 @@ class VisitDetailPage extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
         ],
 
         // ─── Image Attachment ──────────────────────────────────
         if (visit.attachments.isNotEmpty) ...[
-          _buildSectionTitle('Site Image'),
+          _buildSectionTitle('Site Evidence'),
           ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             child: Image.network(
               visit.attachments.first.fileUrl.startsWith('http') 
                   ? visit.attachments.first.fileUrl 
-                  : '$baseUrl/${visit.attachments.first.fileUrl.startsWith('/') ? visit.attachments.first.fileUrl.substring(1) : visit.attachments.first.fileUrl}',
+                  : "$baseUrl/${visit.attachments.first.fileUrl.startsWith('/') ? visit.attachments.first.fileUrl.substring(1) : visit.attachments.first.fileUrl}",
               height: 200,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -205,7 +190,7 @@ class VisitDetailPage extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
         ],
 
         // ─── Materials ─────────────────────────────────────────
@@ -213,36 +198,37 @@ class VisitDetailPage extends ConsumerWidget {
           _buildSectionTitle('Materials Supplied'),
           ...visit.materials.map((m) => Container(
             margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: context.surfaceColor,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.borderSubtleColor),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(m.material?.name ?? 'Unknown', style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
                 Text('${m.quantity} ${m.material?.unit ?? ''}', 
-                  style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.bold, color: AppTheme.accentCoral)),
+                  style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.bold, color: context.textPrimaryColor)),
               ],
             ),
           )),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
         ],
 
         // ─── Remarks ───────────────────────────────────────────
         if (visit.remarks != null && visit.remarks!.isNotEmpty) ...[
-          _buildSectionTitle('Remarks'),
+          _buildSectionTitle('Notes / Remarks'),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: context.surfaceColor,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: context.borderSubtleColor),
             ),
-            child: Text(visit.remarks!, style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor)),
+            child: Text(visit.remarks!, style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
         ],
 
         // ─── Follow-Ups ────────────────────────────────────────
@@ -252,9 +238,9 @@ class VisitDetailPage extends ConsumerWidget {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: context.surfaceColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: f.status == 'pending' ? AppTheme.accentGold : AppTheme.accentGreen),
+              color: f.status == 'pending' ? AppTheme.warningOrange.withValues(alpha: 0.05) : AppTheme.successGreen.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: f.status == 'pending' ? AppTheme.warningOrange : AppTheme.successGreen),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,26 +248,26 @@ class VisitDetailPage extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Due: ${DateFormat('MMM d, yyyy').format(f.dueDate)}', 
-                      style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.bold, color: context.textPrimaryColor)),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: f.status == 'pending' ? AppTheme.accentGold.withValues(alpha: 0.2) : AppTheme.accentGreen.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                    Row(
+                      children: [
+                        Icon(Icons.flag, size: 20, color: f.status == 'pending' ? AppTheme.warningOrange : AppTheme.successGreen),
+                        const SizedBox(width: 8),
+                        Text("Due: ${DateFormat('MMM d, yyyy').format(f.dueDate)}", 
+                          style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.bold, color: context.textPrimaryColor)),
+                      ],
+                    ),
+                    Text(
+                      f.status.toUpperCase(), 
+                      style: AppTheme.bodySmall.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: f.status == 'pending' ? AppTheme.warningOrange : AppTheme.successGreen,
                       ),
-                      child: Text(f.status.toUpperCase(), 
-                        style: TextStyle(
-                          fontSize: 10, 
-                          fontWeight: FontWeight.bold,
-                          color: f.status == 'pending' ? AppTheme.accentGold : AppTheme.accentGreen,
-                        )),
                     ),
                   ],
                 ),
                 if (f.notes != null && f.notes!.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  Text(f.notes!, style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor)),
+                  Text(f.notes!, style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
                 ]
               ],
             ),
@@ -298,7 +284,7 @@ class VisitDetailPage extends ConsumerWidget {
         padding: const EdgeInsets.only(bottom: 12),
         child: Text(
           title,
-          style: AppTheme.headingSmall.copyWith(color: context.textMutedColor),
+          style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor),
         ),
       ),
     );

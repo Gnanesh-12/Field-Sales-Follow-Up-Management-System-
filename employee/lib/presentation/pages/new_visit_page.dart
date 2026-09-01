@@ -4,7 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
+
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:uuid/uuid.dart';
@@ -31,7 +31,7 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
   String? _addressText;
   bool _isGettingLocation = false;
   
-  XFile? _imageFile;
+
   Uint8List? _imageBytes; // For web display
   bool _isUploadingImage = false;
   String? _uploadedImageUrl;
@@ -72,7 +72,6 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
 
       final position = await Geolocator.getCurrentPosition();
       
-      // Reverse geocode to get full address
       String address = '${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}';
       try {
         final url = Uri.parse(
@@ -86,7 +85,7 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
           }
         }
       } catch (_) {
-        // Fall back to lat/lng if reverse geocoding fails
+        // Fall back to lat/lng
       }
       
       setState(() {
@@ -111,7 +110,6 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _imageFile = pickedFile;
         _imageBytes = bytes;
       });
       _uploadImage(pickedFile, bytes);
@@ -124,15 +122,14 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
       final secureStorage = ref.read(secureStorageProvider);
       final token = await secureStorage.read(key: 'jwt_token');
       
-      final uri = Uri.parse('$baseUrl/uploads/image');
-      final request = http.MultipartRequest('POST', uri)
+      final uri = Uri.parse('$baseUrl/uploads/image'); 
+      final request = http.MultipartRequest('POST', uri) 
         ..headers['Authorization'] = 'Bearer $token'
         ..fields['recordId'] = _recordId
         ..files.add(http.MultipartFile.fromBytes(
           'file',
           bytes,
           filename: file.name,
-          contentType: MediaType('image', 'jpeg'),
         ));
         
       final response = await request.send();
@@ -156,11 +153,7 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
     }
   }
 
-  void _addMaterial() {
-    setState(() {
-      _materials.add(_ManualMaterialEntry());
-    });
-  }
+
 
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
@@ -169,25 +162,8 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
         return Theme(
-          data: isDark
-              ? ThemeData.dark().copyWith(
-                  colorScheme: const ColorScheme.dark(
-                    primary: AppTheme.accentCoral,
-                    onPrimary: Colors.white,
-                    surface: AppTheme.surfaceDark,
-                    onSurface: AppTheme.textPrimary,
-                  ),
-                )
-              : ThemeData.light().copyWith(
-                  colorScheme: const ColorScheme.light(
-                    primary: AppTheme.accentCoral,
-                    onPrimary: Colors.white,
-                    surface: AppTheme.surfaceLight,
-                    onSurface: AppTheme.textPrimaryLight,
-                  ),
-                ),
+          data: context.isDarkMode ? AppTheme.darkTheme : AppTheme.lightTheme,
           child: child!,
         );
       },
@@ -210,9 +186,9 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
 
     if (_currentPosition == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('GPS Location is required. Please capture your location first.'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('GPS Location is required.'),
+          backgroundColor: AppTheme.dangerRed,
         ),
       );
       return;
@@ -253,7 +229,10 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Field visit logged successfully!')),
+          SnackBar(
+            content: const Text('Visit saved successfully'),
+            backgroundColor: AppTheme.successGreen,
+          ),
         );
         ref.invalidate(dashboardProvider);
         ref.invalidate(visitsProvider);
@@ -262,7 +241,7 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit: $e')),
+          SnackBar(content: Text('Failed to submit: $e'), backgroundColor: AppTheme.dangerRed),
         );
       }
     } finally {
@@ -275,220 +254,217 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
     return Scaffold(
       backgroundColor: context.backgroundColor,
       appBar: AppBar(
+        title: Text('Record Visit', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
+        centerTitle: false,
         backgroundColor: context.surfaceColor,
-        title: Text('New Field Entry', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
-        centerTitle: true,
         elevation: 0,
+        actions: [
+          if (_isSubmitting)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: SizedBox(
+                width: 24, height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else
+            TextButton(
+              onPressed: _submit,
+              child: Text('SAVE', style: AppTheme.buttonText.copyWith(color: AppTheme.primaryBlue)),
+            ),
+        ],
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           children: [
-            // ─── Customer Site ─────────────────────────────────────
-            _buildSectionHeader(Icons.store_rounded, 'Customer Site'),
+            // ─── 1. Site Information ──────────────────────────────────────────
+            _buildSectionTitle('1. Where are you?'),
             TextFormField(
               controller: _siteNameController,
-              decoration: AppTheme.inputDecoration(label: 'Enter Site Name', context: context),
+              decoration: AppTheme.inputDecoration(
+                label: 'Customer / Site Name',
+                icon: Icons.business_rounded,
+                context: context,
+              ),
               style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
               validator: (val) => (val == null || val.trim().isEmpty) ? 'Required' : null,
+              textInputAction: TextInputAction.next,
             ),
-            const SizedBox(height: 24),
-
-            // ─── GPS Location ──────────────────────────────────────
-            _buildSectionHeader(Icons.location_on_rounded, 'Location Check-in'),
+            const SizedBox(height: 16),
+            
+            // Location Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: context.surfaceColor,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: context.borderSubtleColor),
+                color: _currentPosition != null ? AppTheme.successGreen.withValues(alpha: 0.1) : context.surfaceColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _currentPosition != null ? AppTheme.successGreen.withValues(alpha: 0.3) : context.borderSubtleColor,
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        _currentPosition != null ? Icons.check_circle_rounded : Icons.location_searching_rounded,
-                        color: _currentPosition != null ? AppTheme.accentGreen : context.textMutedColor,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _currentPosition != null
-                              ? _addressText ?? 'Location captured'
-                              : 'Location not captured',
-                          style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: _isGettingLocation ? null : _getLocation,
-                        child: _isGettingLocation
-                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Text('Capture', style: TextStyle(color: AppTheme.accentTeal)),
-                      ),
-                    ],
+                  Icon(
+                    _currentPosition != null ? Icons.check_circle : Icons.location_on_outlined,
+                    color: _currentPosition != null ? AppTheme.successGreen : context.textSecondaryColor,
+                    size: 28,
                   ),
-                  if (_currentPosition != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      '${_currentPosition!.latitude.toStringAsFixed(4)}, ${_currentPosition!.longitude.toStringAsFixed(4)}',
-                      style: AppTheme.bodySmall.copyWith(color: context.textMutedColor),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _currentPosition != null ? 'Location Captured' : 'Location Required',
+                          style: AppTheme.bodyLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: _currentPosition != null ? AppTheme.successGreen : context.textPrimaryColor,
+                          ),
+                        ),
+                        if (_addressText != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            _addressText!,
+                            style: AppTheme.bodySmall.copyWith(color: context.textSecondaryColor),
+                          ),
+                        ]
+                      ],
                     ),
-                  ],
+                  ),
+                  if (_currentPosition == null)
+                    ElevatedButton(
+                      onPressed: _isGettingLocation ? null : _getLocation,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.textPrimaryColor,
+                        foregroundColor: context.surfaceColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: _isGettingLocation
+                          ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: context.surfaceColor, strokeWidth: 2))
+                          : const Text('Capture'),
+                    ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
 
-            // ─── Site Image ────────────────────────────────────────
-            _buildSectionHeader(Icons.camera_alt_rounded, 'Site Image'),
+            // ─── 2. Photo Evidence ────────────────────────────────────────────
+            _buildSectionTitle('2. Site Photo'),
             GestureDetector(
               onTap: _isUploadingImage ? null : _pickImage,
               child: Container(
-                height: 120,
+                height: 160,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: context.surfaceColor,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: context.borderSubtleColor),
                 ),
                 child: _isUploadingImage
                     ? const Center(child: CircularProgressIndicator())
                     : _imageBytes != null
                         ? ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.memory(_imageBytes!, fit: BoxFit.cover),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Image.memory(_imageBytes!, fit: BoxFit.cover),
+                                Positioned(
+                                  bottom: 8, right: 8,
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.black54,
+                                    child: Icon(Icons.edit, color: Colors.white, size: 20),
+                                  ),
+                                ),
+                              ],
+                            ),
                           )
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.add_a_photo_rounded, color: context.textMutedColor, size: 32),
-                              const SizedBox(height: 8),
-                              Text('Tap to capture photo', style: AppTheme.bodySmall.copyWith(color: context.textMutedColor)),
+                              Icon(Icons.add_a_photo_outlined, color: context.textSecondaryColor, size: 40),
+                              const SizedBox(height: 12),
+                              Text('Tap to take photo', style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor)),
                             ],
                           ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
 
-            // ─── Materials ─────────────────────────────────────────
-            _buildSectionHeader(Icons.inventory_2_rounded, 'Materials Supplied'),
-            ..._materials.map((m) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: TextFormField(
-                      controller: m.nameController,
-                      decoration: AppTheme.inputDecoration(label: 'Material Name', context: context),
-                      style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 2,
-                    child: TextFormField(
-                      controller: m.quantityController,
-                      keyboardType: TextInputType.number,
-                      decoration: AppTheme.inputDecoration(label: 'Qty', context: context),
-                      style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline, color: AppTheme.accentPink),
-                    onPressed: () => setState(() => _materials.remove(m)),
-                  ),
-                ],
-              ),
-            )),
-            GestureDetector(
-              onTap: _addMaterial,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: context.surfaceColor,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: context.borderSubtleColor, style: BorderStyle.solid),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_rounded, color: AppTheme.accentTeal, size: 20),
-                    const SizedBox(width: 8),
-                    Text('Add Material', style: AppTheme.bodyMedium.copyWith(color: AppTheme.accentTeal, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // ─── Follow-up ─────────────────────────────────────────
-            _buildSectionHeader(Icons.event_rounded, 'Next Follow-up (Optional)'),
+            // ─── 3. Visit Notes ───────────────────────────────────────────────
+            _buildSectionTitle('3. Visit Details'),
             TextFormField(
-              controller: _followUpDateController,
-              readOnly: true,
-              onTap: _selectDate,
+              controller: _notesController,
               decoration: AppTheme.inputDecoration(
-                label: 'Due Date',
-                icon: Icons.calendar_today_rounded,
+                label: 'Discussion / Notes',
                 context: context,
               ),
               style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _followUpNotesController,
-              decoration: AppTheme.inputDecoration(label: 'Follow-up Notes', context: context),
-              style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
-              maxLines: 2,
-            ),
-            const SizedBox(height: 24),
-
-            // ─── Remarks ───────────────────────────────────────────
-            _buildSectionHeader(Icons.notes_rounded, 'Visit Remarks'),
-            TextFormField(
-              controller: _remarksController,
-              decoration: AppTheme.inputDecoration(label: 'General remarks or notes', context: context),
-              style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
-              maxLines: 3,
+              maxLines: 4,
+              textInputAction: TextInputAction.next,
             ),
             const SizedBox(height: 32),
 
-            // ─── Submit ────────────────────────────────────────────
-            SizedBox(
-              height: 54,
-              child: ElevatedButton(
-                onPressed: _isSubmitting || _isUploadingImage ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accentCoral,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: _isSubmitting
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('SUBMIT ENTRY', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+            // ─── 4. Follow Up ────────────────────────────────────────────────
+            _buildSectionTitle('4. Next Action'),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.surfaceColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.borderSubtleColor),
+              ),
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: _followUpDateController,
+                    readOnly: true,
+                    onTap: _selectDate,
+                    decoration: AppTheme.inputDecoration(
+                      label: 'Follow-up Date',
+                      icon: Icons.calendar_today_rounded,
+                      context: context,
+                    ),
+                    style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _followUpNotesController,
+                    decoration: AppTheme.inputDecoration(
+                      label: 'Follow-up Task',
+                      context: context,
+                    ),
+                    style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
+                    maxLines: 2,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 48),
+
+            // ─── Submit Button ────────────────────────────────────────────────
+            ElevatedButton(
+              onPressed: _isSubmitting || _isUploadingImage ? null : _submit,
+              style: AppTheme.primaryButton,
+              child: _isSubmitting
+                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('SAVE VISIT RECORD'),
+            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(IconData icon, String title) {
+  Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(icon, color: AppTheme.accentTeal, size: 20),
-          const SizedBox(width: 8),
-          Text(title, style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.w600, color: AppTheme.accentTeal)),
-        ],
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        title,
+        style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor),
       ),
     );
   }

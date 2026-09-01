@@ -23,7 +23,7 @@ class _VisitsPageState extends ConsumerState<VisitsPage> {
       appBar: AppBar(
         backgroundColor: context.surfaceColor,
         title: Text('My Visits', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
-        centerTitle: true,
+        centerTitle: false,
         elevation: 0,
         actions: [
           IconButton(
@@ -36,14 +36,14 @@ class _VisitsPageState extends ConsumerState<VisitsPage> {
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(visitsProvider(1)),
-        color: AppTheme.accentCoral,
+        color: AppTheme.primaryBlue,
         backgroundColor: context.surfaceColor,
         child: visitsAsyncValue.when(
           data: (data) {
             final List visits = data['visits'];
             if (visits.isEmpty) {
               return Center(
-                child: Text('No field visits logged yet.', style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
+                child: Text('No field visits logged yet.', style: AppTheme.bodyLarge.copyWith(color: context.textMutedColor)),
               );
             }
             return ListView.builder(
@@ -52,6 +52,8 @@ class _VisitsPageState extends ConsumerState<VisitsPage> {
               itemBuilder: (context, index) {
                 final visit = visits[index];
                 final timeStr = DateFormat('MMM d, yyyy - h:mm a').format(visit.timestamp);
+                final bool hasFollowUp = visit.followUps.isNotEmpty;
+                final bool isPendingFollowUp = visit.followUps.any((f) => f.status == 'pending');
                 
                 return GestureDetector(
                   onTap: () {
@@ -63,9 +65,10 @@ class _VisitsPageState extends ConsumerState<VisitsPage> {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: context.surfaceColor.withValues(alpha: 0.8),
-                      borderRadius: BorderRadius.circular(16),
+                      color: context.surfaceColor,
+                      borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: context.borderSubtleColor),
+                      boxShadow: AppTheme.subtleShadow,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,13 +84,20 @@ class _VisitsPageState extends ConsumerState<VisitsPage> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            Icon(Icons.chevron_right_rounded, color: context.textMutedColor),
+                            if (hasFollowUp)
+                              Icon(
+                                Icons.flag,
+                                color: isPendingFollowUp ? AppTheme.warningOrange : AppTheme.successGreen,
+                                size: 20,
+                              )
+                            else
+                              Icon(Icons.chevron_right_rounded, color: context.textMutedColor),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(Icons.access_time_rounded, color: context.textMutedColor, size: 14),
+                            Icon(Icons.access_time_rounded, color: context.textSecondaryColor, size: 16),
                             const SizedBox(width: 6),
                             Text(timeStr, style: AppTheme.bodySmall.copyWith(color: context.textSecondaryColor)),
                           ],
@@ -96,7 +106,7 @@ class _VisitsPageState extends ConsumerState<VisitsPage> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              Icon(Icons.inventory_2_rounded, color: context.textMutedColor, size: 14),
+                              Icon(Icons.inventory_2_rounded, color: context.textSecondaryColor, size: 16),
                               const SizedBox(width: 6),
                               Text('${visit.materials.length} material(s)', style: AppTheme.bodySmall.copyWith(color: context.textSecondaryColor)),
                             ],
@@ -109,8 +119,8 @@ class _VisitsPageState extends ConsumerState<VisitsPage> {
               },
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.accentTeal)),
-          error: (error, _) => Center(child: Text('Error: $error', style: const TextStyle(color: Colors.red))),
+          loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primaryBlue)),
+          error: (error, _) => Center(child: Text('Error: $error', style: const TextStyle(color: AppTheme.dangerRed))),
         ),
       ),
     );

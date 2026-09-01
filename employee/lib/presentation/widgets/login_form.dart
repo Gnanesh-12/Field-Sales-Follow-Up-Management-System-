@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../app_theme.dart';
 import '../providers/auth_provider.dart';
 import '../../data/auth_repository.dart';
-import 'gradient_button.dart';
 
 class UpperCaseTextFormatter extends TextInputFormatter {
   @override
@@ -79,8 +78,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             decoration: AppTheme.inputDecoration(
               label: 'Employee ID',
               icon: Icons.badge_rounded,
+              context: context,
             ),
-            style: AppTheme.bodyLarge,
+            style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
             textCapitalization: TextCapitalization.characters,
             inputFormatters: [UpperCaseTextFormatter()],
             validator: (value) {
@@ -105,6 +105,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             decoration: AppTheme.inputDecoration(
               label: 'PIN',
               icon: Icons.lock_rounded,
+              context: context,
             ).copyWith(
               suffixIcon: GestureDetector(
                 onTap: () => setState(() => _obscurePin = !_obscurePin),
@@ -117,7 +118,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                 ),
               ),
             ),
-            style: AppTheme.bodyLarge,
+            style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
             keyboardType: TextInputType.number,
             obscureText: _obscurePin,
             inputFormatters: [
@@ -136,30 +137,20 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             enabled: !authState.isLoading,
             onFieldSubmitted: (_) => _submit(),
           ),
-          const SizedBox(height: 10),
-
-          // ─── Forgot PIN ───────────────────────────────────────
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () {},
-              child: Text(
-                'Forgot PIN?',
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.accentTeal,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
 
           // ─── Login Button ─────────────────────────────────────
-          GradientButton(
+          ElevatedButton(
             key: const Key('loginButton'),
-            text: 'LOGIN',
+            style: AppTheme.primaryButton,
             onPressed: authState.isLoading ? null : _submit,
-            isLoading: authState.isLoading,
+            child: authState.isLoading
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
+                : const Text('Sign In'),
           ),
         ],
       ),
@@ -167,7 +158,6 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   }
 }
 
-/// Animated error banner that slides in from the top.
 class _AnimatedErrorBanner extends StatelessWidget {
   final IconData icon;
   final String message;
@@ -181,62 +171,37 @@ class _AnimatedErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOut,
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.translate(
-            offset: Offset(0, -10 * (1 - value)),
-            child: child,
-          ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppTheme.accentCoral.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(14),
-          border:
-              Border.all(color: AppTheme.accentCoral.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppTheme.accentPink, size: 22),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                message,
-                style: AppTheme.bodySmall.copyWith(
-                  color: AppTheme.accentPink,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 13,
-                ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.dangerRed.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.dangerRed.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppTheme.dangerRed, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTheme.bodyMedium.copyWith(
+                color: AppTheme.dangerRed,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            if (onRetry != null)
-              GestureDetector(
-                onTap: onRetry,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentCoral.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text('RETRY',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.accentPink,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
-                      )),
-                ),
-              ),
-          ],
-        ),
+          ),
+          if (onRetry != null)
+            TextButton(
+              onPressed: onRetry,
+              child: Text('RETRY',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.dangerRed,
+                    fontWeight: FontWeight.w700,
+                  )),
+            ),
+        ],
       ),
     );
   }

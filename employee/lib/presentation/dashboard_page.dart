@@ -2,569 +2,207 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'app_theme.dart';
-import 'login_page.dart';
 import 'providers/dashboard_provider.dart';
-import 'providers/theme_provider.dart';
 import 'pages/new_visit_page.dart';
 import '../../data/models/models.dart';
 
-class DashboardPage extends ConsumerStatefulWidget {
+class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
   @override
-  ConsumerState<DashboardPage> createState() => _DashboardPageState();
-}
-
-class _DashboardPageState extends ConsumerState<DashboardPage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animController;
-
-  @override
-  void initState() {
-    super.initState();
-    _animController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    )..forward();
-  }
-
-  @override
-  void dispose() {
-    _animController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final dashboardAsyncValue = ref.watch(dashboardProvider);
 
     return Scaffold(
       backgroundColor: context.backgroundColor,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async => ref.refresh(dashboardProvider),
-          color: AppTheme.accentCoral,
-          backgroundColor: context.surfaceColor,
-          child: CustomScrollView(
-            slivers: [
-              // ─── Custom App Bar ─────────────────────────────────────
-              SliverToBoxAdapter(
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, -0.3),
-                    end: Offset.zero,
-                  ).animate(CurvedAnimation(
-                    parent: _animController,
-                    curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
-                  )),
-                  child: FadeTransition(
-                    opacity: CurvedAnimation(
-                      parent: _animController,
-                      curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
-                    ),
-                    child: _buildAppBar(),
-                  ),
-                ),
-              ),
-
-              dashboardAsyncValue.when(
-                data: (data) => _buildDashboardContent(data),
-                loading: () => const SliverFillRemaining(
-                  child: Center(
-                    child: CircularProgressIndicator(color: AppTheme.accentTeal),
-                  ),
-                ),
-                error: (error, stack) => SliverFillRemaining(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, color: AppTheme.accentPink, size: 48),
-                        const SizedBox(height: 16),
-                        Text('Failed to load dashboard', style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
-                        Text(error.toString(), style: AppTheme.bodySmall.copyWith(color: context.textMutedColor)),
-                        const SizedBox(height: 24),
-                        ElevatedButton(
-                          onPressed: () => ref.refresh(dashboardProvider),
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      appBar: AppBar(
+        title: Text('Today\'s Overview', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
+        centerTitle: false,
+        backgroundColor: context.surfaceColor,
+        elevation: 0,
       ),
-    );
-  }
-
-  Widget _buildDashboardContent(Map<String, dynamic> data) {
-    final stats = data['stats'];
-    final List recentVisits = data['recentVisits'];
-    
-    return SliverList(
-      delegate: SliverChildListDelegate([
-        // ─── Welcome Card ───────────────────────────────────────
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.3),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: _animController,
-            curve: const Interval(0.15, 0.5, curve: Curves.easeOut),
-          )),
-          child: FadeTransition(
-            opacity: CurvedAnimation(
-              parent: _animController,
-              curve: const Interval(0.15, 0.5, curve: Curves.easeOut),
-            ),
-            child: _buildWelcomeCard(stats),
-          ),
-        ),
-
-        // ─── Stat Cards ────────────────────────────────────────
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.3),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: _animController,
-            curve: const Interval(0.3, 0.65, curve: Curves.easeOut),
-          )),
-          child: FadeTransition(
-            opacity: CurvedAnimation(
-              parent: _animController,
-              curve: const Interval(0.3, 0.65, curve: Curves.easeOut),
-            ),
-            child: _buildStatCards(stats),
-          ),
-        ),
-
-        // ─── Quick Actions ─────────────────────────────────────
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.3),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: _animController,
-            curve: const Interval(0.6, 0.95, curve: Curves.easeOut),
-          )),
-          child: FadeTransition(
-            opacity: CurvedAnimation(
-              parent: _animController,
-              curve: const Interval(0.6, 0.95, curve: Curves.easeOut),
-            ),
-            child: _buildQuickActions(),
-          ),
-        ),
-
-        // ─── Recent Activity ───────────────────────────────────
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.3),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: _animController,
-            curve: const Interval(0.45, 0.8, curve: Curves.easeOut),
-          )),
-          child: FadeTransition(
-            opacity: CurvedAnimation(
-              parent: _animController,
-              curve: const Interval(0.45, 0.8, curve: Curves.easeOut),
-            ),
-            child: _buildRecentActivity(recentVisits),
-          ),
-        ),
-
-        const SizedBox(height: 100),
-      ]),
-    );
-  }
-
-  Widget _buildAppBar() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      child: Row(
-        children: [
-          // Avatar
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: AppTheme.accentGradient,
-              boxShadow: AppTheme.glowShadow(AppTheme.accentCoral),
-            ),
-            child: const Center(
-              child: Icon(Icons.person, color: Colors.white),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
+      body: RefreshIndicator(
+        onRefresh: () async => ref.refresh(dashboardProvider),
+        color: AppTheme.primaryBlue,
+        backgroundColor: context.surfaceColor,
+        child: dashboardAsyncValue.when(
+          data: (data) => _buildContent(context, data, ref),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => Center(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Good Morning 👋',
-                    style: AppTheme.bodySmall
-                        .copyWith(fontSize: 13, color: context.textMutedColor)),
-                const SizedBox(height: 2),
-                Text('Field Sales Rep',
-                    style: AppTheme.headingSmall.copyWith(fontSize: 17, color: context.textPrimaryColor)),
+                const Icon(Icons.error_outline, color: AppTheme.dangerRed, size: 48),
+                const SizedBox(height: 16),
+                Text('Failed to load dashboard', style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref.refresh(dashboardProvider),
+                  style: AppTheme.primaryButton,
+                  child: const Text('Retry'),
+                ),
               ],
             ),
           ),
-          // Theme Toggle
-          _buildIconButton(
-            context.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-            onTap: () {
-              ref.read(themeProvider.notifier).toggleTheme(context);
-            },
-          ),
-          const SizedBox(width: 8),
-          // Logout
-          _buildIconButton(Icons.logout_rounded, onTap: () {
-            Navigator.of(context, rootNavigator: true).pushReplacement(
-              MaterialPageRoute(builder: (_) => const LoginPage()),
-            );
-          }),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildIconButton(IconData icon, {int? badge, VoidCallback? onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: context.surfaceColor.withValues(alpha: 0.8),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.borderSubtleColor),
+  Widget _buildContent(BuildContext context, Map<String, dynamic> data, WidgetRef ref) {
+    final stats = data['stats'];
+    final List recentVisitsRaw = data['recentVisits'];
+    final recentVisits = recentVisitsRaw.map((e) => FieldVisit.fromJson(e)).toList();
+
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        // Primary Action
+        ElevatedButton.icon(
+          onPressed: () {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const NewVisitPage(),
+            ));
+          },
+          style: AppTheme.primaryButton.copyWith(
+            padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 20)),
+          ),
+          icon: const Icon(Icons.add_location_alt_rounded, size: 28),
+          label: const Text('START NEW VISIT', style: TextStyle(fontSize: 18, letterSpacing: 1.2)),
         ),
-        child: Stack(
+        const SizedBox(height: 32),
+
+        // Stats Summary
+        Text('Summary', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
+        const SizedBox(height: 16),
+        Row(
           children: [
-            Center(child: Icon(icon, color: context.textSecondaryColor, size: 22)),
-            if (badge != null && badge > 0)
-              Positioned(
-                top: 6,
-                right: 6,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.accentCoral,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text('$badge',
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                ),
+            Expanded(
+              child: _buildStatCard(
+                context,
+                title: 'Visits Today',
+                value: '${stats['todayVisits'] ?? 0}',
+                icon: Icons.map_rounded,
+                color: AppTheme.primaryBlue,
               ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildStatCard(
+                context,
+                title: 'Follow-ups',
+                value: '${stats['pendingFollowUps'] ?? 0}',
+                icon: Icons.pending_actions_rounded,
+                color: AppTheme.warningOrange,
+              ),
+            ),
           ],
         ),
-      ),
+        const SizedBox(height: 32),
+
+        // Recent Activity
+        Text('Recent Activity', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
+        const SizedBox(height: 16),
+        if (recentVisits.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: context.surfaceColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: context.borderSubtleColor),
+            ),
+            child: Center(
+              child: Text(
+                'No visits recorded today.',
+                style: AppTheme.bodyMedium.copyWith(color: context.textMutedColor),
+              ),
+            ),
+          )
+        else
+          ...recentVisits.map((v) => _buildActivityTile(context, v)),
+      ],
     );
   }
 
-  Widget _buildWelcomeCard(Map<String, dynamic> stats) {
-    final todayVisits = stats['todayVisits'] ?? 0;
-    final pendingFollowUps = stats['pendingFollowUps'] ?? 0;
-
+  Widget _buildStatCard(BuildContext context, {required String title, required String value, required IconData icon, required Color color}) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 12, 20, 8),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: context.isDarkMode
-            ? const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF1E3A5F), Color(0xFF0F3460)],
-              )
-            : const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-              ),
+        color: context.surfaceColor,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.borderSubtleColor),
-        boxShadow: [
-          BoxShadow(
-            color: (context.isDarkMode ? const Color(0xFF0F3460) : const Color(0xFF4F46E5)).withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: AppTheme.subtleShadow,
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Today's Overview",
-                    style: AppTheme.headingSmall.copyWith(fontSize: 16)),
-                const SizedBox(height: 6),
-                Text(
-                  'You have $todayVisits visits logged today and $pendingFollowUps follow-ups pending.',
-                  style: AppTheme.bodyMedium.copyWith(height: 1.4),
-                ),
-                const SizedBox(height: 14),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const NewVisitPage(),
-                    ));
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      gradient: AppTheme.accentGradient,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text('Start Day',
-                        style: AppTheme.bodySmall.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppTheme.accentTeal.withValues(alpha: 0.15),
-            ),
-            child: const Icon(Icons.trending_up_rounded,
-                color: AppTheme.accentTeal, size: 36),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCards(Map<String, dynamic> stats) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-      child: Row(
-        children: [
-          Expanded(
-              child: _StatCard(
-                  title: 'Visits\nToday',
-                  value: '${stats['todayVisits'] ?? 0}',
-                  gradient: AppTheme.tealGradient,
-                  icon: Icons.location_on_rounded)),
-          const SizedBox(width: 12),
-          Expanded(
-              child: _StatCard(
-                  title: 'Pending\nFollow-ups',
-                  value: '${stats['pendingFollowUps'] ?? 0}',
-                  gradient: AppTheme.goldGradient,
-                  icon: Icons.pending_actions_rounded)),
-          const SizedBox(width: 12),
-          Expanded(
-              child: _StatCard(
-                  title: 'Completed\nThis Week',
-                  value: '${stats['completedThisWeek'] ?? 0}',
-                  gradient: AppTheme.greenGradient,
-                  icon: Icons.check_circle_outline_rounded)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecentActivity(List recentVisitsRaw) {
-    final visits = recentVisitsRaw.map((e) => FieldVisit.fromJson(e)).toList();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Recent Activity', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
-          const SizedBox(height: 14),
-          if (visits.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Center(
-                child: Text("No recent activity", style: AppTheme.bodyMedium.copyWith(color: context.textMutedColor)),
-              ),
-            ),
-          ...visits.map((v) => _buildActivityTile(v)),
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 16),
+          Text(
+            value,
+            style: AppTheme.headingLarge.copyWith(color: context.textPrimaryColor, fontSize: 32),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor, fontWeight: FontWeight.w500),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildActivityTile(FieldVisit visit) {
-    final timeStr = DateFormat('MMM d, h:mm a').format(visit.timestamp);
+  Widget _buildActivityTile(BuildContext context, FieldVisit visit) {
+    final timeStr = DateFormat('h:mm a').format(visit.timestamp);
     final followUpPending = visit.followUps.any((f) => f.status == 'pending');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.surfaceColor.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16),
+        color: context.surfaceColor,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: context.borderSubtleColor),
       ),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: AppTheme.accentTeal.withValues(alpha: 0.15),
+              color: AppTheme.primaryBlue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.storefront_rounded, color: AppTheme.accentTeal, size: 22),
+            child: const Icon(Icons.storefront_rounded, color: AppTheme.primaryBlue),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Visited ${visit.site?.name ?? 'Unknown Site'}',
-                    style: AppTheme.bodyLarge
-                        .copyWith(fontWeight: FontWeight.w600, fontSize: 14, color: context.textPrimaryColor),
-                    maxLines: 1, overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 3),
-                Text(followUpPending ? 'Follow-up pending' : 'Completed', 
-                  style: AppTheme.bodySmall.copyWith(
-                    color: followUpPending ? AppTheme.accentGold : AppTheme.accentGreen,
-                  )),
-              ],
-            ),
-          ),
-          Text(timeStr,
-              style: AppTheme.bodySmall.copyWith(color: context.textMutedColor, fontSize: 11)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickActions() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Quick Actions', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => const NewVisitPage(),
-                    ));
-                  },
-                  child: _buildQuickActionCard(
-                      Icons.add_location_alt_rounded,
-                      'New Visit',
-                      AppTheme.accentTeal),
+                Text(
+                  visit.site?.name ?? 'Unknown Site',
+                  style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.w600, color: context.textPrimaryColor),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickActionCard(IconData icon, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        color: context.surfaceColor.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: color, size: 24),
-          ),
-          const SizedBox(height: 10),
-          Text(label,
-              style: AppTheme.bodySmall.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: context.textSecondaryColor,
-                  fontSize: 12)),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final LinearGradient gradient;
-  final IconData icon;
-
-  const _StatCard({
-    required this.title,
-    required this.value,
-    required this.gradient,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: context.surfaceColor.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: context.borderSubtleColor),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              gradient: gradient,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: gradient.colors.first.withValues(alpha: 0.35),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.access_time, size: 14, color: context.textMutedColor),
+                    const SizedBox(width: 4),
+                    Text(timeStr, style: AppTheme.bodySmall.copyWith(color: context.textMutedColor)),
+                    if (followUpPending) ...[
+                      const SizedBox(width: 12),
+                      Icon(Icons.flag, size: 14, color: AppTheme.warningOrange),
+                      const SizedBox(width: 4),
+                      Text('Follow-up', style: AppTheme.bodySmall.copyWith(color: AppTheme.warningOrange)),
+                    ]
+                  ],
                 ),
               ],
             ),
-            child: Icon(icon, color: Colors.white, size: 20),
           ),
-          const SizedBox(height: 12),
-          Text(value,
-              style: AppTheme.headingMedium
-                  .copyWith(fontSize: 26, letterSpacing: -0.5, color: context.textPrimaryColor)),
-          const SizedBox(height: 4),
-          Text(title,
-              textAlign: TextAlign.center,
-              style: AppTheme.bodySmall.copyWith(
-                  fontSize: 11, height: 1.3, color: context.textMutedColor)),
         ],
       ),
     );

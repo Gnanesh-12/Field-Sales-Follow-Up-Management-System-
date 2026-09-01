@@ -8,7 +8,6 @@ import '../providers/profile_provider.dart';
 import '../../data/models/models.dart';
 import '../providers/theme_provider.dart';
 import '../../data/api_repository.dart';
-
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
@@ -21,7 +20,7 @@ class ProfilePage extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: context.surfaceColor,
         title: Text('Profile', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
-        centerTitle: true,
+        centerTitle: false,
         elevation: 0,
         actions: [
           IconButton(
@@ -35,12 +34,12 @@ class ProfilePage extends ConsumerWidget {
       body: profileAsyncValue.when(
         data: (profile) => _buildProfileContent(context, ref, profile),
         loading: () => const Center(
-          child: CircularProgressIndicator(color: AppTheme.accentTeal),
+          child: CircularProgressIndicator(color: AppTheme.primaryBlue),
         ),
         error: (error, _) => Center(
           child: Text(
             'Error: $error',
-            style: const TextStyle(color: Colors.red),
+            style: const TextStyle(color: AppTheme.dangerRed),
           ),
         ),
       ),
@@ -59,8 +58,8 @@ class ProfilePage extends ConsumerWidget {
                 height: 100,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: AppTheme.accentGradient,
-                  boxShadow: AppTheme.glowShadow(AppTheme.accentCoral),
+                  color: AppTheme.primaryBlueLight,
+                  border: Border.all(color: AppTheme.primaryBlue, width: 2),
                   image: profile.profilePicture != null
                       ? DecorationImage(
                           image: NetworkImage('$baseUrl${profile.profilePicture}'),
@@ -70,7 +69,7 @@ class ProfilePage extends ConsumerWidget {
                 ),
                 child: profile.profilePicture == null
                     ? const Center(
-                        child: Icon(Icons.person, color: Colors.white, size: 50),
+                        child: Icon(Icons.person, color: AppTheme.primaryBlue, size: 50),
                       )
                     : null,
               ),
@@ -88,10 +87,9 @@ class ProfilePage extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentTeal,
+                      color: AppTheme.primaryBlue,
                       shape: BoxShape.circle,
                       border: Border.all(color: context.surfaceColor, width: 2),
-                      boxShadow: AppTheme.glowShadow(AppTheme.accentTeal),
                     ),
                     child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
                   ),
@@ -106,22 +104,22 @@ class ProfilePage extends ConsumerWidget {
           textAlign: TextAlign.center,
           style: AppTheme.headingMedium.copyWith(color: context.textPrimaryColor),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         Text(
           profile.role.replaceAll('-', ' ').toUpperCase(),
           textAlign: TextAlign.center,
           style: AppTheme.bodySmall.copyWith(
-            color: AppTheme.accentGold,
+            color: context.textSecondaryColor,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.2,
           ),
         ),
         const SizedBox(height: 40),
         _buildInfoTile(context, Icons.badge_rounded, 'Employee ID', profile.id),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         if (profile.phone != null) ...[
           _buildInfoTile(context, Icons.phone_rounded, 'Phone Number', profile.phone!),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
         ],
         _buildInfoTile(
           context,
@@ -129,7 +127,7 @@ class ProfilePage extends ConsumerWidget {
           'Status',
           profile.status.toUpperCase(),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         _buildInfoTile(
           context,
           Icons.calendar_today_rounded,
@@ -141,19 +139,18 @@ class ProfilePage extends ConsumerWidget {
           width: double.infinity,
           height: 50,
           child: ElevatedButton.icon(
-            icon: const Icon(Icons.logout_rounded, color: Colors.white),
-            label: const Text(
+            icon: const Icon(Icons.logout_rounded, color: AppTheme.dangerRed),
+            label: Text(
               'LOGOUT',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+              style: AppTheme.buttonText.copyWith(color: AppTheme.dangerRed),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentPink,
+              backgroundColor: context.surfaceColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: AppTheme.dangerRed),
               ),
+              elevation: 0,
             ),
             onPressed: () {
               Navigator.of(context, rootNavigator: true).pushReplacement(
@@ -170,8 +167,8 @@ class ProfilePage extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.surfaceColor.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(16),
+        color: context.surfaceColor,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: context.borderSubtleColor),
       ),
       child: Row(
@@ -182,7 +179,7 @@ class ProfilePage extends ConsumerWidget {
               color: context.backgroundColor,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: context.textMutedColor, size: 20),
+            child: Icon(icon, color: context.textSecondaryColor, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -191,7 +188,7 @@ class ProfilePage extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: AppTheme.bodySmall.copyWith(color: context.textMutedColor),
+                  style: AppTheme.bodySmall.copyWith(color: context.textSecondaryColor),
                 ),
                 const SizedBox(height: 4),
                 Text(

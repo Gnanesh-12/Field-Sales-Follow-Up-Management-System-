@@ -24,7 +24,7 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
       appBar: AppBar(
         backgroundColor: context.surfaceColor,
         title: Text('Follow-ups', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
-        centerTitle: true,
+        centerTitle: false,
         elevation: 0,
         actions: [
           IconButton(
@@ -40,9 +40,9 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                _buildFilterChip(context, 'pending', 'Pending'),
+                _buildFilterChip(context, 'pending', 'Pending Tasks'),
                 const SizedBox(width: 12),
-                _buildFilterChip(context, 'completed', 'Completed'),
+                _buildFilterChip(context, 'completed', 'Completed Tasks'),
               ],
             ),
           ),
@@ -50,13 +50,13 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
       ),
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(followUpsProvider(_filter)),
-        color: AppTheme.accentCoral,
+        color: AppTheme.primaryBlue,
         backgroundColor: context.surfaceColor,
         child: followUpsAsyncValue.when(
           data: (followUps) {
             if (followUps.isEmpty) {
               return Center(
-                child: Text('No follow-ups found.', style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor)),
+                child: Text('No follow-ups found.', style: AppTheme.bodyLarge.copyWith(color: context.textMutedColor)),
               );
             }
             return ListView.builder(
@@ -66,14 +66,19 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                 final followUp = followUps[index];
                 final dateStr = DateFormat('MMM d, yyyy').format(followUp.dueDate);
                 final isOverdue = followUp.dueDate.isBefore(DateTime.now()) && followUp.status == 'pending';
+                
+                final Color statusColor = followUp.status == 'completed' 
+                    ? AppTheme.successGreen 
+                    : (isOverdue ? AppTheme.dangerRed : AppTheme.warningOrange);
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: context.surfaceColor.withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: isOverdue ? AppTheme.accentPink : context.borderSubtleColor),
+                    color: context.surfaceColor,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: isOverdue ? statusColor : context.borderSubtleColor),
+                    boxShadow: AppTheme.subtleShadow,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -84,7 +89,7 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                           Expanded(
                             child: Text(
                               followUp.visit?.site?.name ?? 'Unknown Site',
-                              style: AppTheme.headingSmall.late().copyWith(fontSize: 16, color: context.textPrimaryColor),
+                              style: AppTheme.headingSmall.copyWith(fontSize: 16, color: context.textPrimaryColor),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -92,9 +97,7 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: followUp.status == 'completed' 
-                                  ? AppTheme.accentGreen.withValues(alpha: 0.2)
-                                  : (isOverdue ? AppTheme.accentPink.withValues(alpha: 0.2) : AppTheme.accentGold.withValues(alpha: 0.2)),
+                              color: statusColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
@@ -102,9 +105,7 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                               style: AppTheme.bodySmall.copyWith(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: followUp.status == 'completed' 
-                                    ? AppTheme.accentGreen 
-                                    : (isOverdue ? AppTheme.accentPink : AppTheme.accentGold),
+                                color: statusColor,
                               ),
                             ),
                           ),
@@ -113,10 +114,11 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          Icon(Icons.event_rounded, size: 16, color: isOverdue ? AppTheme.accentPink : context.textMutedColor),
+                          Icon(Icons.event_rounded, size: 16, color: statusColor),
                           const SizedBox(width: 6),
                           Text('Due: $dateStr', style: AppTheme.bodySmall.copyWith(
-                            color: isOverdue ? AppTheme.accentPink : context.textPrimaryColor,
+                            color: isOverdue ? AppTheme.dangerRed : context.textPrimaryColor,
+                            fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
                           )),
                         ],
                       ),
@@ -126,10 +128,11 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.2),
+                            color: context.backgroundColor,
                             borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: context.borderSubtleColor),
                           ),
-                          child: Text(followUp.notes!, style: AppTheme.bodySmall.copyWith(fontStyle: FontStyle.italic, color: context.textSecondaryColor)),
+                          child: Text(followUp.notes!, style: AppTheme.bodySmall.copyWith(color: context.textSecondaryColor)),
                         ),
                       ],
                       if (followUp.status == 'pending') ...[
@@ -141,8 +144,8 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                               ref.read(followUpStatusProvider.notifier).updateStatus(followUp.id, 'completed');
                             },
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.accentGreen,
-                              side: const BorderSide(color: AppTheme.accentGreen),
+                              foregroundColor: AppTheme.successGreen,
+                              side: const BorderSide(color: AppTheme.successGreen),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                             ),
                             child: const Text('MARK COMPLETED'),
@@ -155,8 +158,8 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
               },
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.accentTeal)),
-          error: (error, _) => Center(child: Text('Error: $error', style: const TextStyle(color: Colors.red))),
+          loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primaryBlue)),
+          error: (error, _) => Center(child: Text('Error: $error', style: const TextStyle(color: AppTheme.dangerRed))),
         ),
       ),
     );
@@ -169,24 +172,18 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.accentCoral : context.surfaceColor,
+          color: isSelected ? AppTheme.primaryBlue : context.surfaceColor,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? AppTheme.accentCoral : context.borderSubtleColor),
+          border: Border.all(color: isSelected ? AppTheme.primaryBlue : context.borderSubtleColor),
         ),
         child: Text(
           label,
           style: AppTheme.bodySmall.copyWith(
-            color: isSelected ? Colors.white : context.textMutedColor,
+            color: isSelected ? Colors.white : context.textSecondaryColor,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ),
     );
-  }
-}
-
-extension on TextStyle {
-  TextStyle late() {
-    return this;
   }
 }
