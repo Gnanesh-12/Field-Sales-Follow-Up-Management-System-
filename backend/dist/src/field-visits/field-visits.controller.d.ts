@@ -91,6 +91,13 @@ export declare class FieldVisitsController {
         })[];
     }>;
     createVisit(req: any, body: any): Promise<({
+        location: {
+            id: string;
+            fieldVisitId: string;
+            lat: number;
+            lng: number;
+            accuracy: number | null;
+        } | null;
         site: {
             id: string;
             createdAt: Date;
@@ -108,13 +115,6 @@ export declare class FieldVisitsController {
             dueDate: Date;
             fieldVisitId: string;
         }[];
-        location: {
-            id: string;
-            fieldVisitId: string;
-            lat: number;
-            lng: number;
-            accuracy: number | null;
-        } | null;
         attachments: {
             id: string;
             createdAt: Date;
@@ -148,6 +148,13 @@ export declare class FieldVisitsController {
     }) | null>;
     listVisits(req: any, page?: string, limit?: string): Promise<{
         visits: ({
+            location: {
+                id: string;
+                fieldVisitId: string;
+                lat: number;
+                lng: number;
+                accuracy: number | null;
+            } | null;
             site: {
                 id: string;
                 createdAt: Date;
@@ -165,13 +172,6 @@ export declare class FieldVisitsController {
                 dueDate: Date;
                 fieldVisitId: string;
             }[];
-            location: {
-                id: string;
-                fieldVisitId: string;
-                lat: number;
-                lng: number;
-                accuracy: number | null;
-            } | null;
             attachments: {
                 id: string;
                 createdAt: Date;
@@ -208,6 +208,13 @@ export declare class FieldVisitsController {
         limit: number;
     }>;
     getVisit(req: any, id: string): Promise<{
+        location: {
+            id: string;
+            fieldVisitId: string;
+            lat: number;
+            lng: number;
+            accuracy: number | null;
+        } | null;
         site: {
             id: string;
             createdAt: Date;
@@ -225,13 +232,6 @@ export declare class FieldVisitsController {
             dueDate: Date;
             fieldVisitId: string;
         }[];
-        location: {
-            id: string;
-            fieldVisitId: string;
-            lat: number;
-            lng: number;
-            accuracy: number | null;
-        } | null;
         attachments: {
             id: string;
             createdAt: Date;
