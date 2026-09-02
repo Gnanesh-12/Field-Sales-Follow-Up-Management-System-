@@ -202,8 +202,8 @@ let AdminService = class AdminService {
         const exportMapping = [
             { header: 'EMP ID', key: (e) => e.employee?.id || '' },
             { header: 'Employee Name', key: (e) => e.employee?.name || '' },
-            { header: 'Date', key: (e) => new Date(e.createdAt).toLocaleDateString('en-GB') },
-            { header: 'Time', key: (e) => new Date(e.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) },
+            { header: 'Date', key: (e) => new Date(e.createdAt).toLocaleDateString('en-GB'), forceText: true },
+            { header: 'Time', key: (e) => new Date(e.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }), forceText: true },
             { header: 'Geographical Location', key: (e) => e.location || '' },
             { header: 'Items & Quantity Needed', key: (e) => e.itemsNeeded || '' },
             { header: 'Additional Notes', key: (e) => e.notes || '' },
@@ -213,8 +213,8 @@ let AdminService = class AdminService {
         const headers = exportMapping.map(m => m.header).join(',');
         const rows = entries.map((entry) => {
             return exportMapping.map(m => {
-                const value = m.key(entry) || '';
-                return `"${String(value).replace(/"/g, '""')}"`;
+                const value = String(m.key(entry) || '').replace(/"/g, '""');
+                return m.forceText ? `"=""${value}"""` : `"${value}"`;
             }).join(',');
         });
         return {
