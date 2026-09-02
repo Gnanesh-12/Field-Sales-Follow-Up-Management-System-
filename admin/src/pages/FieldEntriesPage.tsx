@@ -8,6 +8,7 @@ import {
   Download,
   Radio,
   RefreshCw,
+  Check,
 } from 'lucide-react';
 import { apiClient } from '../api';
 import { FieldEntry } from '../types';
@@ -21,9 +22,13 @@ export const FieldEntriesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
 
-  // Date filter states
-  const [selectedMonth, setSelectedMonth] = useState<string>('ALL');
-  const [selectedYear, setSelectedYear] = useState<string>('ALL');
+  // Date filter states (multi-select: empty array = "All")
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
+  const [selectedYears, setSelectedYears] = useState<string[]>([]);
+  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
+  const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
+  const monthDropdownRef = useRef<HTMLDivElement>(null);
+  const yearDropdownRef = useRef<HTMLDivElement>(null);
 
   const [sortBy, setSortBy] = useState<SortField>('date');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
@@ -64,6 +69,32 @@ export const FieldEntriesPage: React.FC = () => {
 
     return () => clearInterval(intervalId);
   }, [isAutoSync]);
+
+  // Close month/year dropdowns when clicking outside of them
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (monthDropdownRef.current && !monthDropdownRef.current.contains(event.target as Node)) {
+        setIsMonthDropdownOpen(false);
+      }
+      if (yearDropdownRef.current && !yearDropdownRef.current.contains(event.target as Node)) {
+        setIsYearDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const toggleMonthSelection = (value: string) => {
+    setSelectedMonths((prev) =>
+      prev.includes(value) ? prev.filter((m) => m !== value) : [...prev, value]
+    );
+  };
+
+  const toggleYearSelection = (value: string) => {
+    setSelectedYears((prev) =>
+      prev.includes(value) ? prev.filter((y) => y !== value) : [...prev, value]
+    );
+  };
 
   const handleStatusUpdate = async (id: any, status: 'APPROVED' | 'REJECTED') => {
     try {
@@ -109,8 +140,8 @@ export const FieldEntriesPage: React.FC = () => {
       const entryMonth = dateObj.getMonth().toString();
       const entryYear = dateObj.getFullYear().toString();
 
-      const matchesMonth = selectedMonth === 'ALL' ? true : entryMonth === selectedMonth;
-      const matchesYear = selectedYear === 'ALL' ? true : entryYear === selectedYear;
+      const matchesMonth = selectedMonths.length === 0 ? true : selectedMonths.includes(entryMonth);
+      const matchesYear = selectedYears.length === 0 ? true : selectedYears.includes(entryYear);
 
       return matchesSearch && matchesStatus && matchesMonth && matchesYear;
     });
@@ -137,7 +168,7 @@ export const FieldEntriesPage: React.FC = () => {
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-  }, [entries, searchQuery, statusFilter, selectedMonth, selectedYear, sortBy, sortOrder]);
+  }, [entries, searchQuery, statusFilter, selectedMonths, selectedYears, sortBy, sortOrder]);
 
   const exportToCSV = async () => {
     if (processedEntries.length === 0) {
@@ -150,8 +181,8 @@ export const FieldEntriesPage: React.FC = () => {
       const res = await apiClient.post<{ csvData: string }>('/exports', {
         searchQuery,
         statusFilter,
-        selectedMonth,
-        selectedYear,
+        selectedMonths,
+        selectedYears,
       });
 
       if (res.data && res.data.csvData) {
@@ -179,8 +210,8 @@ export const FieldEntriesPage: React.FC = () => {
   const resetFilters = () => {
     setSearchQuery('');
     setStatusFilter('ALL');
-    setSelectedMonth('ALL');
-    setSelectedYear('ALL');
+    setSelectedMonths([]);
+    setSelectedYears([]);
     setSortBy('date');
     setSortOrder('desc');
   };
@@ -237,7 +268,7 @@ export const FieldEntriesPage: React.FC = () => {
             {isAutoSync ? 'Auto-Sync ON' : 'Auto-Sync OFF'}
           </button>
 
-          {(selectedMonth !== 'ALL' || selectedYear !== 'ALL' || statusFilter !== 'ALL' || searchQuery) && (
+          {(selectedMonths.length > 0 || selectedYears.length > 0 || statusFilter !== 'ALL' || searchQuery) && (
             <button
               onClick={resetFilters}
               className="flex items-center gap-2 text-xs bg-[var(--status-error-subtle)] text-[var(--status-error)] hover:bg-[var(--status-error)] hover:text-white px-3 py-1.5 rounded-md font-semibold transition-colors cursor-pointer"
@@ -271,41 +302,92 @@ export const FieldEntriesPage: React.FC = () => {
           />
         </div>
 
-        {/* Month Picker */}
-        <div className="relative w-full">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-tertiary)]">
-            <Calendar size={14} />
-          </div>
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] appearance-none cursor-pointer focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
+        {/* Month Picker (multi-select) */}
+        <div className="relative w-full" ref={monthDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsMonthDropdownOpen((prev) => !prev)}
+            className="w-full flex items-center pl-9 pr-8 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] text-left cursor-pointer focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
           >
-            <option value="ALL">All Months</option>
-            {months.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
-          <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-[var(--text-tertiary)]">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-          </div>
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[var(--text-tertiary)]">
+              <Calendar size={14} />
+            </div>
+            <span className="truncate">
+              {selectedMonths.length === 0
+                ? 'All Months'
+                : selectedMonths.length === 1
+                  ? months.find((m) => m.value === selectedMonths[0])?.label
+                  : `${selectedMonths.length} Months Selected`}
+            </span>
+            <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-[var(--text-tertiary)]">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+            </div>
+          </button>
+
+          {isMonthDropdownOpen && (
+            <div className="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded-md shadow-lg py-1">
+              {months.map((m) => {
+                const checked = selectedMonths.includes(m.value);
+                return (
+                  <button
+                    type="button"
+                    key={m.value}
+                    onClick={() => toggleMonthSelection(m.value)}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] cursor-pointer text-left"
+                  >
+                    <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${checked ? 'bg-[var(--brand-primary)] border-[var(--brand-primary)]' : 'border-[var(--border-strong)]'}`}>
+                      {checked && <Check size={12} className="text-white" />}
+                    </span>
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Year Picker */}
-        <div className="relative w-full">
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
-            className="w-full pl-3 pr-8 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] appearance-none cursor-pointer focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
+        {/* Year Picker (multi-select) */}
+        <div className="relative w-full" ref={yearDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsYearDropdownOpen((prev) => !prev)}
+            className="w-full flex items-center pl-3 pr-8 py-2 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] text-left cursor-pointer focus:outline-none focus:border-[var(--brand-primary)] focus:ring-1 focus:ring-[var(--brand-primary)] transition-all"
           >
-            <option value="ALL">All Years</option>
-            {availableYears.map((yr) => (
-              <option key={yr} value={yr}>{yr}</option>
-            ))}
-          </select>
-          <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-[var(--text-tertiary)]">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-          </div>
+            <span className="truncate">
+              {selectedYears.length === 0
+                ? 'All Years'
+                : selectedYears.length === 1
+                  ? selectedYears[0]
+                  : `${selectedYears.length} Years Selected`}
+            </span>
+            <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-[var(--text-tertiary)]">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+            </div>
+          </button>
+
+          {isYearDropdownOpen && (
+            <div className="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto bg-[var(--bg-surface)] border border-[var(--border-strong)] rounded-md shadow-lg py-1">
+              {availableYears.length === 0 && (
+                <div className="px-3 py-1.5 text-sm text-[var(--text-tertiary)]">No years available</div>
+              )}
+              {availableYears.map((yr) => {
+                const checked = selectedYears.includes(yr);
+                return (
+                  <button
+                    type="button"
+                    key={yr}
+                    onClick={() => toggleYearSelection(yr)}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] cursor-pointer text-left"
+                  >
+                    <span className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${checked ? 'bg-[var(--brand-primary)] border-[var(--brand-primary)]' : 'border-[var(--border-strong)]'}`}>
+                      {checked && <Check size={12} className="text-white" />}
+                    </span>
+                    {yr}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Status Filter */}
