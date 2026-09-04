@@ -19,6 +19,7 @@ const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const employee_service_1 = require("./employee.service");
 const multer_1 = require("multer");
 const path_1 = require("path");
+const blob_1 = require("@vercel/blob");
 let EmployeeController = class EmployeeController {
     employeeService;
     constructor(employeeService) {
@@ -31,9 +32,21 @@ let EmployeeController = class EmployeeController {
         if (!file) {
             throw new common_1.BadRequestException('File is required');
         }
-        const profilePictureUrl = `/uploads/${file.filename}`;
-        const updatedEmployee = await this.employeeService.updateProfilePicture(req.user.sub, profilePictureUrl);
-        return updatedEmployee;
+        try {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+            const ext = (0, path_1.extname)(file.originalname);
+            const filename = `profile-pictures/${req.user['sub']}-${uniqueSuffix}${ext}`;
+            const blob = await (0, blob_1.put)(filename, file.buffer, {
+                access: 'public',
+                addRandomSuffix: false,
+            });
+            const profilePictureUrl = blob.url;
+            const updatedEmployee = await this.employeeService.updateProfilePicture(req.user.sub, profilePictureUrl);
+            return updatedEmployee;
+        }
+        catch (error) {
+            throw new common_1.BadRequestException(`Failed to upload to Blob storage: ${error.message}`);
+        }
     }
 };
 exports.EmployeeController = EmployeeController;
@@ -49,14 +62,7 @@ __decorate([
     (0, common_1.Put)('me/profile-picture'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
-        storage: (0, multer_1.diskStorage)({
-            destination: process.env.STORAGE_PATH,
-            filename: (req, file, callback) => {
-                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-                const ext = (0, path_1.extname)(file.originalname);
-                callback(null, `${req.user['sub']}-${uniqueSuffix}${ext}`);
-            },
-        }),
+        storage: (0, multer_1.memoryStorage)(),
         fileFilter: (req, file, callback) => {
             const isImage = file.mimetype.match(/\/(jpg|jpeg|png|webp|gif)$/) || file.originalname.match(/\.(jpg|jpeg|png|webp|gif)$/i);
             if (!isImage) {

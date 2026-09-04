@@ -1,11 +1,11 @@
 export declare class UploadsController {
-    uploadImage(file: any): Promise<{
+    uploadImage(req: any, file: any): Promise<{
         error: string;
         url?: undefined;
         filename?: undefined;
     } | {
         url: string;
-        filename: any;
+        filename: string;
         error?: undefined;
     }>;
 }

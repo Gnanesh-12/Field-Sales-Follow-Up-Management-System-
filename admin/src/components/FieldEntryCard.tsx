@@ -64,7 +64,8 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
       return src;
     }
     const cleanPath = src.startsWith('/') ? src : `/${src}`;
-    return `http://localhost:3000${cleanPath}`;
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    return `${baseUrl.replace(/\/$/, '')}${cleanPath}`;
   };
 
   const photoUrl = formatImageUrl(rawPhoto);
