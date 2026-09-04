@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: field-sales-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: node dist/src/main.js
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 3000
+      - key: BLOB_READ_WRITE_TOKEN
+        sync: false
