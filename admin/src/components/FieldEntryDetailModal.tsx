@@ -92,7 +92,14 @@ export const FieldEntryDetailModal: React.FC<FieldEntryDetailModalProps> = ({
                   alt="Site Visit"
                   className="w-full h-full object-cover"
                   onError={(e) => {
+                    const parent = (e.target as HTMLElement).parentElement!;
                     (e.target as HTMLElement).style.display = 'none';
+                    if (!parent.querySelector('.img-error-fallback')) {
+                      const fallback = document.createElement('div');
+                      fallback.className = 'img-error-fallback flex flex-col items-center justify-center gap-2 text-gray-400 text-xs p-4 text-center';
+                      fallback.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Unable to load site photo</span>';
+                      parent.appendChild(fallback);
+                    }
                   }}
                 />
               </div>

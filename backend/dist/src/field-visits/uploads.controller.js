@@ -18,30 +18,37 @@ const platform_express_1 = require("@nestjs/platform-express");
 const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
 const multer_1 = require("multer");
 const path_1 = require("path");
+const blob_1 = require("@vercel/blob");
 let UploadsController = class UploadsController {
-    async uploadImage(file) {
+    async uploadImage(req, file) {
         if (!file) {
             return { error: 'No file uploaded' };
         }
-        return {
-            url: `/uploads/${file.filename}`,
-            filename: file.filename,
-        };
+        try {
+            const employeeId = req.user?.sub || 'UNKNOWN';
+            const recordId = req.body?.recordId || 'NO-RECORD';
+            const timestamp = Date.now();
+            const ext = (0, path_1.extname)(file.originalname);
+            const filename = `site-photos/${employeeId}_${recordId}_${timestamp}${ext}`;
+            const blob = await (0, blob_1.put)(filename, file.buffer, {
+                access: 'public',
+                addRandomSuffix: false,
+            });
+            return {
+                url: blob.url,
+                filename: blob.pathname,
+            };
+        }
+        catch (error) {
+            throw new common_1.BadRequestException(`Failed to upload to Blob storage: ${error.message}`);
+        }
     }
 };
 exports.UploadsController = UploadsController;
 __decorate([
     (0, common_1.Post)('image'),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
-        storage: (0, multer_1.diskStorage)({
-            destination: process.env.STORAGE_PATH,
-            filename: (req, file, cb) => {
-                const employeeId = req.user?.sub || 'UNKNOWN';
-                const recordId = req.body?.recordId || 'NO-RECORD';
-                const timestamp = Date.now();
-                cb(null, `${employeeId}_${recordId}_${timestamp}${(0, path_1.extname)(file.originalname)}`);
-            },
-        }),
+        storage: (0, multer_1.memoryStorage)(),
         fileFilter: (req, file, cb) => {
             const isImage = file.mimetype.match(/\/(jpg|jpeg|png|webp)$/) || file.originalname.match(/\.(jpg|jpeg|png|webp|gif)$/i);
             if (!isImage) {
@@ -51,9 +58,10 @@ __decorate([
         },
         limits: { fileSize: 5 * 1024 * 1024 },
     })),
-    __param(0, (0, common_1.UploadedFile)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.UploadedFile)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], UploadsController.prototype, "uploadImage", null);
 exports.UploadsController = UploadsController = __decorate([

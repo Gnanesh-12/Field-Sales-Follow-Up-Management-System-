@@ -52,7 +52,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'Field Sales Pro',
+                      'Kshetra',
                       textAlign: TextAlign.center,
                       style: AppTheme.headingLarge.copyWith(color: context.textPrimaryColor),
                     ),

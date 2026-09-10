@@ -62,7 +62,11 @@ class ProfilePage extends ConsumerWidget {
                   border: Border.all(color: AppTheme.primaryBlue, width: 2),
                   image: profile.profilePicture != null
                       ? DecorationImage(
-                          image: NetworkImage('$baseUrl${profile.profilePicture}'),
+                          image: NetworkImage(
+                            profile.profilePicture!.startsWith('http')
+                                ? profile.profilePicture!
+                                : '$baseUrl${profile.profilePicture}',
+                          ),
                           fit: BoxFit.cover,
                         )
                       : null,

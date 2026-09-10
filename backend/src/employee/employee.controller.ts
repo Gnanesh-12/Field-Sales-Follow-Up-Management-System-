@@ -11,8 +11,9 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { EmployeeService } from './employee.service';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import { extname } from 'path';
+import { put } from '@vercel/blob';
 
 @Controller('employees')
 export class EmployeeController {
@@ -28,14 +29,7 @@ export class EmployeeController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: process.env.STORAGE_PATH,
-        filename: (req: any, file, callback) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          callback(null, `${req.user['sub']}-${uniqueSuffix}${ext}`);
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (req, file, callback) => {
         const isImage = file.mimetype.match(/\/(jpg|jpeg|png|webp|gif)$/) || file.originalname.match(/\.(jpg|jpeg|png|webp|gif)$/i);
         if (!isImage) {
@@ -53,13 +47,26 @@ export class EmployeeController {
       throw new BadRequestException('File is required');
     }
 
-    const profilePictureUrl = `/uploads/${file.filename}`;
+    try {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      const ext = extname(file.originalname);
+      const filename = `profile-pictures/${req.user['sub']}-${uniqueSuffix}${ext}`;
 
-    const updatedEmployee = await this.employeeService.updateProfilePicture(
-      req.user.sub,
-      profilePictureUrl,
-    );
+      const blob = await put(filename, file.buffer, {
+        access: 'public',
+        addRandomSuffix: false,
+      });
 
-    return updatedEmployee;
+      const profilePictureUrl = blob.url;
+
+      const updatedEmployee = await this.employeeService.updateProfilePicture(
+        req.user.sub,
+        profilePictureUrl,
+      );
+
+      return updatedEmployee;
+    } catch (error: any) {
+      throw new BadRequestException(`Failed to upload to Blob storage: ${error.message}`);
+    }
   }
 }

@@ -123,8 +123,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess, isDarkMode, t
               {mode === 'change-password' ? <KeyRound size={24} /> : <ShieldCheck size={24} />}
             </div>
             <h2 className="text-xl font-bold tracking-tight text-[var(--text-primary)]">
-              {mode === 'login' && 'Admin Portal Login'}
-              {mode === 'signup' && 'Create Admin Account'}
+              {mode === 'login' && 'Kshetra Login'}
+              {mode === 'signup' && 'Create Kshetra Account'}
               {mode === 'change-password' && 'Change Password'}
             </h2>
             <p className="text-sm text-[var(--text-secondary)] mt-2 font-medium">

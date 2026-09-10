@@ -110,7 +110,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Join the Field Sales team',
+                  'Join the Kshetra team',
                   style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor),
                 ),
                 const SizedBox(height: 36),
