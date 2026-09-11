@@ -1,6 +1,6 @@
 {
-    "name": "employee_app",
-    "short_name": "employee_app",
+    "name": "Kshetra Employee App",
+    "short_name": "Kshetra",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

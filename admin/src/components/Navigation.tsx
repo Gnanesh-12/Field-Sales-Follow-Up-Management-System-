@@ -45,7 +45,7 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
     <div className="w-full h-full flex flex-col justify-between">
       {/* Mobile Top App Bar */}
       <div className="md:hidden flex items-center justify-between p-4 bg-[var(--bg-surface)] border-b border-[var(--border-subtle)] w-full sticky top-0 z-50">
-        <h1 className="text-lg font-bold text-[var(--text-primary)]">Admin Portal</h1>
+        <h1 className="text-lg font-bold text-[var(--text-primary)]">Kshetra Portal</h1>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -64,7 +64,7 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
               S
             </div>
             <div>
-              <h1 className="text-sm font-bold text-[var(--text-primary)] leading-none">Sales Admin</h1>
+              <h1 className="text-sm font-bold text-[var(--text-primary)] leading-none">Kshetra</h1>
               <p className="text-[11px] text-[var(--text-tertiary)] font-medium mt-1 uppercase tracking-wider">Field Operations</p>
             </div>
           </div>
