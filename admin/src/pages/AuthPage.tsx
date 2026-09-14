@@ -134,6 +134,32 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess, isDarkMode, t
             </p>
           </div>
 
+          {/* Sign In / Sign Up Toggle */}
+          {mode !== 'change-password' && (
+            <div className="px-8 pt-6">
+              <div className="flex bg-[var(--bg-app)] p-1 rounded-lg border border-[var(--border-subtle)]">
+                <button
+                  type="button"
+                  onClick={() => handleModeChange('login')}
+                  className={`flex-1 py-2 rounded-md text-sm font-semibold transition-colors cursor-pointer ${
+                    mode === 'login' ? 'bg-[var(--brand-primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModeChange('signup')}
+                  className={`flex-1 py-2 rounded-md text-sm font-semibold transition-colors cursor-pointer ${
+                    mode === 'signup' ? 'bg-[var(--brand-primary)] text-white shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  Sign Up
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Alerts */}
           {(errorMessage || successMessage) && (
             <div className="px-8 pt-6">
@@ -163,6 +189,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess, isDarkMode, t
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] group-focus-within:text-[var(--brand-primary)] transition-colors" size={18} />
                 <input
                   type="email"
+                  name="email"
                   required
                   placeholder="admin@company.com"
                   value={email}
@@ -181,6 +208,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess, isDarkMode, t
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] group-focus-within:text-[var(--brand-primary)] transition-colors" size={18} />
                   <input
                     type="password"
+                    name="oldPassword"
                     required
                     placeholder="••••••••"
                     value={oldPassword}
@@ -199,6 +227,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess, isDarkMode, t
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] group-focus-within:text-[var(--brand-primary)] transition-colors" size={18} />
                 <input
                   type="password"
+                  name={mode === 'change-password' ? 'newPassword' : 'password'}
                   required
                   placeholder="••••••••"
                   value={password}
@@ -217,6 +246,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess, isDarkMode, t
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] group-focus-within:text-[var(--brand-primary)] transition-colors" size={18} />
                   <input
                     type="password"
+                    name="confirmPassword"
                     required
                     placeholder="••••••••"
                     value={confirmPassword}
@@ -247,9 +277,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess, isDarkMode, t
           </form>
 
           {/* Footer Actions */}
-          <div className="px-8 py-5 bg-[var(--bg-surface-hover)] border-t border-[var(--border-subtle)] flex flex-col gap-3 text-center">
-            {mode === 'login' ? (
-              <>
+          {mode !== 'signup' && (
+            <div className="px-8 py-5 bg-[var(--bg-surface-hover)] border-t border-[var(--border-subtle)] flex flex-col gap-3 text-center">
+              {mode === 'login' && (
                 <button
                   type="button"
                   onClick={() => handleModeChange('change-password')}
@@ -257,24 +287,18 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess, isDarkMode, t
                 >
                   Need to change your password?
                 </button>
+              )}
+              {mode === 'change-password' && (
                 <button
                   type="button"
-                  onClick={() => handleModeChange('signup')}
-                  className="text-sm font-medium text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)] transition-colors cursor-pointer"
+                  onClick={() => handleModeChange('login')}
+                  className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
                 >
-                  Don't have an account? Create one
+                  Return to Login
                 </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => handleModeChange('login')}
-                className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-              >
-                Return to Login
-              </button>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

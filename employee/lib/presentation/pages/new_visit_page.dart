@@ -272,7 +272,7 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
           else
             TextButton(
               onPressed: _submit,
-              child: Text('SAVE', style: AppTheme.buttonText.copyWith(color: AppTheme.primaryBlue)),
+              child: Text('SAVE', style: AppTheme.buttonText.copyWith(color: context.accentColor)),
             ),
         ],
       ),
@@ -395,8 +395,86 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
             ),
             const SizedBox(height: 32),
 
-            // ─── 3. Visit Notes ───────────────────────────────────────────────
-            _buildSectionTitle('3. Visit Details'),
+            // ─── 3. Materials Needed ──────────────────────────────────────────
+            _buildSectionTitle('3. Materials Needed'),
+            if (_materials.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: context.surfaceColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: context.borderSubtleColor),
+                ),
+                child: Text(
+                  'No materials added yet.',
+                  style: AppTheme.bodyMedium.copyWith(color: context.textMutedColor),
+                ),
+              )
+            else
+              ..._materials.asMap().entries.map((entry) {
+                final index = entry.key;
+                final material = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextFormField(
+                          controller: material.nameController,
+                          decoration: AppTheme.inputDecoration(
+                            label: 'Material Name',
+                            icon: Icons.inventory_2_outlined,
+                            context: context,
+                          ),
+                          style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
+                          textInputAction: TextInputAction.next,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: TextFormField(
+                          controller: material.quantityController,
+                          decoration: AppTheme.inputDecoration(
+                            label: 'Qty',
+                            context: context,
+                          ),
+                          style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor),
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          textInputAction: TextInputAction.done,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.remove_circle_outline, color: AppTheme.dangerRed.withValues(alpha: 0.8)),
+                        onPressed: () {
+                          setState(() {
+                            _materials.removeAt(index);
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  _materials.add(_ManualMaterialEntry());
+                });
+              },
+              icon: Icon(Icons.add_circle_outline, color: context.accentColor),
+              label: Text(
+                'Add Material',
+                style: AppTheme.bodyMedium.copyWith(color: context.accentColor, fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // ─── 4. Visit Notes ───────────────────────────────────────────────
+            _buildSectionTitle('4. Visit Details'),
             TextFormField(
               controller: _notesController,
               decoration: AppTheme.inputDecoration(
@@ -410,7 +488,7 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
             const SizedBox(height: 32),
 
             // ─── 4. Follow Up ────────────────────────────────────────────────
-            _buildSectionTitle('4. Next Action'),
+            _buildSectionTitle('5. Next Action'),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(

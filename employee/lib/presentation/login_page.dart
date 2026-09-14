@@ -34,58 +34,98 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return Scaffold(
       backgroundColor: context.backgroundColor,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // ─── Header ─────────────────────────────────────────
-                    Icon(
-                      Icons.storefront_rounded,
-                      size: 64,
-                      color: AppTheme.primaryBlue,
+      body: Stack(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ─── Gradient Hero Header ───────────────────────────
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: context.headerGradientColors,
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(32),
+                        bottomRight: Radius.circular(32),
+                      ),
                     ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Kshetra',
-                      textAlign: TextAlign.center,
-                      style: AppTheme.headingLarge.copyWith(color: context.textPrimaryColor),
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'K',
+                              style: TextStyle(
+                                fontSize: 30,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Welcome back',
+                          textAlign: TextAlign.center,
+                          style: AppTheme.headingLarge.copyWith(color: Colors.white),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Kshetra · Employee Portal',
+                          textAlign: TextAlign.center,
+                          style: AppTheme.bodyLarge.copyWith(color: Colors.white.withValues(alpha: 0.85)),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Sign in to access your itinerary',
-                      textAlign: TextAlign.center,
-                      style: AppTheme.bodyLarge.copyWith(color: context.textSecondaryColor),
-                    ),
-                    const SizedBox(height: 40),
+                  ),
 
-                    // ─── Login Form ─────────────────────────────────────
-                    const LoginForm(),
-                    const SizedBox(height: 40),
-                  ],
-                ),
+                  // ─── Login Form Card ─────────────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: context.surfaceColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: context.borderSubtleColor),
+                        boxShadow: AppTheme.subtleShadow,
+                      ),
+                      child: const LoginForm(),
+                    ),
+                  ),
+                ],
               ),
             ),
-            
-            // ─── Theme Toggle ───────────────────────────────────────
-            Positioned(
-              top: 8,
-              right: 16,
+          ),
+
+          // ─── Theme Toggle ───────────────────────────────────────
+          Positioned(
+            top: 8,
+            right: 8,
+            child: SafeArea(
               child: IconButton(
                 icon: Icon(context.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-                color: context.textSecondaryColor,
+                color: Colors.white,
                 onPressed: () {
                   ref.read(themeProvider.notifier).toggleTheme(context);
                 },
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

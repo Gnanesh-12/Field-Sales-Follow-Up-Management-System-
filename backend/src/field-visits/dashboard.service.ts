@@ -19,6 +19,9 @@ export class DashboardService {
       recentVisits,
       recentFollowUps,
       totalVisits,
+      approvedVisits,
+      rejectedVisits,
+      pendingVisits,
     ] = await Promise.all([
       // Today's visit count
       this.prisma.fieldVisit.count({
@@ -76,6 +79,18 @@ export class DashboardService {
       this.prisma.fieldVisit.count({
         where: { employeeId },
       }),
+      // Approved visit count (all-time)
+      this.prisma.fieldVisit.count({
+        where: { employeeId, status: 'APPROVED' },
+      }),
+      // Rejected/denied visit count (all-time)
+      this.prisma.fieldVisit.count({
+        where: { employeeId, status: 'REJECTED' },
+      }),
+      // Pending review visit count (all-time)
+      this.prisma.fieldVisit.count({
+        where: { employeeId, status: 'PENDING' },
+      }),
     ]);
 
     return {
@@ -85,6 +100,9 @@ export class DashboardService {
         pendingFollowUps,
         completedThisWeek,
         totalVisits,
+        approvedVisits,
+        rejectedVisits,
+        pendingVisits,
       },
       recentVisits,
       recentFollowUps,

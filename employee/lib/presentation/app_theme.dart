@@ -10,6 +10,8 @@ extension ThemeExtension on BuildContext {
   Color get textSecondaryColor => isDarkMode ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight;
   Color get textMutedColor => isDarkMode ? AppTheme.textMutedDark : AppTheme.textMutedLight;
   Color get borderSubtleColor => isDarkMode ? AppTheme.borderDark : AppTheme.borderLight;
+  Color get accentColor => isDarkMode ? AppTheme.accentPurpleDark : AppTheme.accentPurple;
+  List<Color> get headerGradientColors => AppTheme.headerGradient(isDarkMode);
 }
 
 /// Centralized design system for the Field Sales app.
@@ -25,6 +27,16 @@ class AppTheme {
   static const Color successGreen = Color(0xFF00875A);
   static const Color warningOrange = Color(0xFFFF991F);
   static const Color dangerRed = Color(0xFFDE350B);
+
+  // ─── Brand Accent (Kshetra purple) ────────────────────────────
+  static const Color accentPurple = Color(0xFF4F46E5); // Indigo-600, light-mode primary
+  static const Color accentPurpleDark = Color(0xFF6366F1); // Indigo-500, refined for dark bg
+  static const Color accentPurpleDeep = Color(0xFF3730A3); // Indigo-800, gradient end (light)
+  static const Color accentPurpleDeepDark = Color(0xFF1E1B4B); // Indigo-950, gradient end (dark)
+
+  static List<Color> headerGradient(bool isDark) => isDark
+      ? [accentPurpleDeepDark, const Color(0xFF312E81)]
+      : [accentPurple, accentPurpleDeep];
 
   // ─── Light Mode Colors ─────────────────────────────────────────
   static const Color backgroundLight = Color(0xFFF4F5F7);
@@ -124,7 +136,7 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: primaryBlue, width: 2),
+        borderSide: BorderSide(color: isDark ? accentPurpleDark : accentPurple, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -139,7 +151,7 @@ class AppTheme {
 
   // ─── Button Styles ─────────────────────────────────────────────
   static ButtonStyle get primaryButton => ElevatedButton.styleFrom(
-        backgroundColor: primaryBlue,
+        backgroundColor: accentPurple,
         foregroundColor: Colors.white,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -154,8 +166,8 @@ class AppTheme {
       brightness: Brightness.light,
       scaffoldBackgroundColor: backgroundLight,
       colorScheme: const ColorScheme.light(
-        primary: primaryBlue,
-        secondary: primaryBlueDark,
+        primary: accentPurple,
+        secondary: accentPurpleDeep,
         surface: surfaceLight,
         error: dangerRed,
       ),
@@ -197,8 +209,8 @@ class AppTheme {
       brightness: Brightness.dark,
       scaffoldBackgroundColor: backgroundDark,
       colorScheme: const ColorScheme.dark(
-        primary: primaryBlue,
-        secondary: primaryBlueLight,
+        primary: accentPurpleDark,
+        secondary: accentPurple,
         surface: surfaceDark,
         error: dangerRed,
       ),

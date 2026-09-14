@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, FileText, BarChart3, User, Lock, LogOut, Menu, X, Sun, Moon } from 'lucide-react';
+import { Users, FileText, LayoutDashboard, User, Lock, LogOut, Menu, X, Sun, Moon } from 'lucide-react';
 
 interface NavigationProps {
   activeTab: 'employees' | 'entries' | 'activity';
@@ -36,7 +36,7 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
   };
 
   const navItems = [
-    { id: 'activity', label: 'Sales Operations', icon: BarChart3 },
+    { id: 'activity', label: 'Sales Operations', icon: LayoutDashboard },
     { id: 'employees', label: 'Employee Roster', icon: Users },
     { id: 'entries', label: 'Field Entries', icon: FileText },
   ] as const;
@@ -44,9 +44,9 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
   return (
     <div className="w-full h-full flex flex-col justify-between">
       {/* Mobile Top App Bar */}
-      <div className="md:hidden flex items-center justify-between p-4 bg-[var(--bg-surface)] border-b border-[var(--border-subtle)] w-full sticky top-0 z-50">
-        <h1 className="text-lg font-bold text-[var(--text-primary)]">Kshetra Portal</h1>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+      <div className={`md:hidden flex items-center justify-between p-4 border-b w-full sticky top-0 z-50 ${isDarkMode ? 'bg-[var(--bg-surface)] border-[var(--border-subtle)]' : 'bg-indigo-900 border-indigo-950/20'}`}>
+        <h1 className={`text-lg font-bold ${isDarkMode ? 'text-[var(--text-primary)]' : 'text-white'}`}>Kshetra</h1>
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className={isDarkMode ? 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors' : 'text-indigo-200 hover:text-white transition-colors'}>
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
@@ -54,18 +54,18 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
       {/* Sidebar Panel */}
       <aside
         className={`
-          ${isMobileMenuOpen ? 'flex absolute inset-0 z-40 bg-[var(--bg-surface)]' : 'hidden'} md:flex flex-col
+          ${isMobileMenuOpen ? `flex absolute inset-0 z-40 ${isDarkMode ? 'bg-[var(--bg-surface)]' : 'bg-indigo-900'}` : 'hidden'} md:flex flex-col
           w-full h-full p-4 lg:p-6 justify-between overflow-y-auto
         `}
       >
         <div>
           <div className="hidden md:flex items-center gap-3 mb-8 px-2">
             <div className="w-8 h-8 rounded-lg bg-[var(--brand-primary)] flex items-center justify-center text-white font-bold text-lg shadow-sm">
-              S
+              K
             </div>
             <div>
-              <h1 className="text-sm font-bold text-[var(--text-primary)] leading-none">Kshetra</h1>
-              <p className="text-[11px] text-[var(--text-tertiary)] font-medium mt-1 uppercase tracking-wider">Field Operations</p>
+              <h1 className={`text-sm font-bold leading-none ${isDarkMode ? 'text-[var(--text-primary)]' : 'text-white'}`}>Kshetra</h1>
+              <p className={`text-[11px] font-medium mt-1 uppercase tracking-wider ${isDarkMode ? 'text-[var(--text-tertiary)]' : 'text-indigo-200'}`}>Field Operations</p>
             </div>
           </div>
 
@@ -83,11 +83,13 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                     isActive
-                      ? 'bg-[var(--brand-subtle)] text-[var(--brand-primary)]'
-                      : 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)]'
+                      ? 'bg-[var(--brand-primary)] text-white shadow-sm'
+                      : isDarkMode
+                        ? 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)]'
+                        : 'text-indigo-100 hover:bg-white/10 hover:text-white'
                   }`}
                 >
-                  <Icon size={18} className={isActive ? 'text-[var(--brand-primary)]' : 'text-[var(--text-tertiary)]'} />
+                  <Icon size={18} className={isActive ? 'text-white' : isDarkMode ? 'text-[var(--text-tertiary)]' : 'text-indigo-300'} />
                   <span>{item.label}</span>
                 </button>
               );
@@ -96,14 +98,16 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
         </div>
 
         {/* Bottom Actions */}
-        <div className="pt-4 mt-8 border-t border-[var(--border-subtle)] space-y-2">
+        <div className={`pt-4 mt-8 border-t space-y-2 ${isDarkMode ? 'border-[var(--border-subtle)]' : 'border-white/10'}`}>
           {/* Theme Toggle */}
           {toggleTheme && (
             <button
               onClick={toggleTheme}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)] transition-colors cursor-pointer"
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                isDarkMode ? 'text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)]' : 'text-indigo-100 hover:bg-white/10'
+              }`}
             >
-              <div className="text-[var(--text-tertiary)]">
+              <div className={isDarkMode ? 'text-[var(--text-tertiary)]' : 'text-indigo-300'}>
                 {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
               </div>
               <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
@@ -114,14 +118,18 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
           <div className="relative mt-2">
             <button
               onClick={() => setIsAccountOpen(!isAccountOpen)}
-              className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--bg-surface-hover)] transition-colors text-left cursor-pointer"
+              className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left cursor-pointer ${
+                isDarkMode ? 'hover:bg-[var(--bg-surface-hover)]' : 'hover:bg-white/10'
+              }`}
             >
-              <div className="w-8 h-8 rounded-full bg-[var(--bg-surface-hover)] border border-[var(--border-strong)] flex items-center justify-center text-[var(--text-secondary)] shrink-0">
+              <div className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 ${
+                isDarkMode ? 'bg-[var(--bg-surface-hover)] border-[var(--border-strong)] text-[var(--text-secondary)]' : 'bg-white/10 border-white/20 text-white'
+              }`}>
                 <User size={16} />
               </div>
               <div className="overflow-hidden flex-1">
-                <p className="text-sm font-medium text-[var(--text-primary)] truncate">{adminName}</p>
-                <p className="text-xs text-[var(--text-tertiary)] truncate">{adminEmail}</p>
+                <p className={`text-sm font-medium truncate ${isDarkMode ? 'text-[var(--text-primary)]' : 'text-white'}`}>{adminName}</p>
+                <p className={`text-xs truncate ${isDarkMode ? 'text-[var(--text-tertiary)]' : 'text-indigo-200'}`}>{adminEmail}</p>
               </div>
             </button>
 

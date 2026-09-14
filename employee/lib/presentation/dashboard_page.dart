@@ -3,124 +3,165 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'app_theme.dart';
 import 'providers/dashboard_provider.dart';
+import 'providers/profile_provider.dart';
 import 'pages/new_visit_page.dart';
 import '../../data/models/models.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
 
+  String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardAsyncValue = ref.watch(dashboardProvider);
+    final profileAsyncValue = ref.watch(profileProvider);
+    final name = profileAsyncValue.asData?.value.name.split(' ').first ?? '';
 
     return Scaffold(
       backgroundColor: context.backgroundColor,
-      appBar: AppBar(
-        title: Text('Today\'s Overview', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
-        centerTitle: false,
-        backgroundColor: context.surfaceColor,
-        elevation: 0,
-      ),
       body: RefreshIndicator(
         onRefresh: () async => ref.refresh(dashboardProvider),
-        color: AppTheme.primaryBlue,
+        color: context.accentColor,
         backgroundColor: context.surfaceColor,
-        child: dashboardAsyncValue.when(
-          data: (data) => _buildContent(context, data, ref),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, color: AppTheme.dangerRed, size: 48),
-                const SizedBox(height: 16),
-                Text(error.toString(), style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor), textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => ref.refresh(dashboardProvider),
-                  style: AppTheme.primaryButton,
-                  child: const Text('Retry'),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 56, 20, 32),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: context.headerGradientColors,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(28),
+                    bottomRight: Radius.circular(28),
+                  ),
                 ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContent(BuildContext context, Map<String, dynamic> data, WidgetRef ref) {
-    final stats = data['stats'];
-    final List recentVisitsRaw = data['recentVisits'];
-    final recentVisits = recentVisitsRaw.map((e) => FieldVisit.fromJson(e)).toList();
-
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        // Primary Action
-        ElevatedButton.icon(
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(
-              builder: (_) => const NewVisitPage(),
-            ));
-          },
-          style: AppTheme.primaryButton.copyWith(
-            padding: const WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 20)),
-          ),
-          icon: const Icon(Icons.add_location_alt_rounded, size: 28),
-          label: const Text('START NEW VISIT', style: TextStyle(fontSize: 18, letterSpacing: 1.2)),
-        ),
-        const SizedBox(height: 32),
-
-        // Stats Summary
-        Text('Summary', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                context,
-                title: 'Visits Today',
-                value: '${stats['todayVisits'] ?? 0}',
-                icon: Icons.map_rounded,
-                color: AppTheme.primaryBlue,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      DateFormat('EEEE, d MMM').format(DateTime.now()),
+                      style: AppTheme.bodyMedium.copyWith(color: Colors.white.withValues(alpha: 0.75)),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      name.isEmpty ? _greeting() : '${_greeting()}, $name',
+                      style: AppTheme.headingLarge.copyWith(color: Colors.white),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildStatCard(
-                context,
-                title: 'Follow-ups',
-                value: '${stats['pendingFollowUps'] ?? 0}',
-                icon: Icons.pending_actions_rounded,
-                color: AppTheme.warningOrange,
+            SliverToBoxAdapter(
+              child: dashboardAsyncValue.when(
+                data: (data) => _buildContent(context, data),
+                loading: () => const Padding(
+                  padding: EdgeInsets.all(40),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (error, stack) => Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.error_outline, color: AppTheme.dangerRed, size: 48),
+                      const SizedBox(height: 16),
+                      Text(error.toString(), style: AppTheme.bodyLarge.copyWith(color: context.textPrimaryColor), textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => ref.refresh(dashboardProvider),
+                        style: AppTheme.primaryButton,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 32),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: context.accentColor,
+        foregroundColor: Colors.white,
+        onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => const NewVisitPage(),
+          ));
+        },
+        child: const Icon(Icons.add_rounded, size: 32),
+      ),
+    );
+  }
 
-        // Recent Activity
-        Text('Recent Activity', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
-        const SizedBox(height: 16),
-        if (recentVisits.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: context.surfaceColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.borderSubtleColor),
-            ),
-            child: Center(
-              child: Text(
-                'No visits recorded today.',
-                style: AppTheme.bodyMedium.copyWith(color: context.textMutedColor),
+  Widget _buildContent(BuildContext context, Map<String, dynamic> data) {
+    final stats = data['stats'];
+    final List recentVisitsRaw = data['recentVisits'];
+    final recentVisits = recentVisitsRaw.map((e) => FieldVisit.fromJson(e)).toList();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Stats Summary
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  context,
+                  title: 'Visits Today',
+                  value: '${stats['todayVisits'] ?? 0}',
+                  icon: Icons.map_rounded,
+                  color: context.accentColor,
+                ),
               ),
-            ),
-          )
-        else
-          ...recentVisits.map((v) => _buildActivityTile(context, v)),
-      ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildStatCard(
+                  context,
+                  title: 'Follow-ups',
+                  value: '${stats['pendingFollowUps'] ?? 0}',
+                  icon: Icons.pending_actions_rounded,
+                  color: AppTheme.warningOrange,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+
+          // Recent Activity
+          Text('Recent Activity', style: AppTheme.headingSmall.copyWith(color: context.textPrimaryColor)),
+          const SizedBox(height: 16),
+          if (recentVisits.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: context.surfaceColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.borderSubtleColor),
+              ),
+              child: Center(
+                child: Text(
+                  'No visits recorded today.',
+                  style: AppTheme.bodyMedium.copyWith(color: context.textMutedColor),
+                ),
+              ),
+            )
+          else
+            ...recentVisits.map((v) => _buildActivityTile(context, v)),
+        ],
+      ),
     );
   }
 
@@ -136,7 +177,14 @@ class DashboardPage extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 28),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
           const SizedBox(height: 16),
           Text(
             value,
@@ -161,7 +209,7 @@ class DashboardPage extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.surfaceColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: context.borderSubtleColor),
       ),
       child: Row(
@@ -170,10 +218,10 @@ class DashboardPage extends ConsumerWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+              color: context.accentColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.storefront_rounded, color: AppTheme.primaryBlue),
+            child: Icon(Icons.storefront_rounded, color: context.accentColor),
           ),
           const SizedBox(width: 16),
           Expanded(

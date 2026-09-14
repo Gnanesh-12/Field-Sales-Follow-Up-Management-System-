@@ -37,6 +37,16 @@ export const EmployeeActivityPage: React.FC = () => {
     fetchActivityData();
   }, [timeframe]);
 
+
+  const todayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  const greeting = (() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  })();
+
   const fetchActivityData = async () => {
     try {
       // Fetches aggregated field entries & employees from the backend
@@ -146,10 +156,10 @@ export const EmployeeActivityPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-            Sales Operations Command Center
+            {greeting}
           </h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1 font-medium">
-            Monitor submission rates, approval percentages, and field activities.
+            {todayLabel}
           </p>
         </div>
 

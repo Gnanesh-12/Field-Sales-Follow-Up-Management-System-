@@ -50,28 +50,29 @@ class _HomeShellState extends State<HomeShell> {
           elevation: 0,
           indicatorColor: Colors.black.withValues(alpha: 0.05),
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          destinations: const [
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined),
-              selectedIcon: Icon(Icons.dashboard_rounded, color: AppTheme.primaryBlue),
+              icon: const Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard_rounded, color: context.accentColor),
               label: 'Today',
             ),
             NavigationDestination(
-              icon: Icon(Icons.map_outlined),
-              selectedIcon: Icon(Icons.map_rounded, color: AppTheme.primaryBlue),
+              icon: const Icon(Icons.map_outlined),
+              selectedIcon: Icon(Icons.map_rounded, color: context.accentColor),
               label: 'Visits',
             ),
             NavigationDestination(
-              icon: Icon(Icons.pending_actions_outlined),
-              selectedIcon: Icon(Icons.pending_actions_rounded, color: AppTheme.primaryBlue),
+              icon: const Icon(Icons.pending_actions_outlined),
+              selectedIcon: Icon(Icons.pending_actions_rounded, color: context.accentColor),
               label: 'Follow-ups',
             ),
             NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person_rounded, color: AppTheme.primaryBlue),
+              icon: const Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person_rounded, color: context.accentColor),
               label: 'Profile',
             ),
           ],
+
         ),
       ),
     );
