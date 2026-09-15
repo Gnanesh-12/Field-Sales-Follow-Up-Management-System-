@@ -80,8 +80,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess, isDarkMode, t
       const token = res.data.token || res.data.access_token;
 
       if (token) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(res.data.user));
+        sessionStorage.setItem('token', token);
+        sessionStorage.setItem('user', JSON.stringify(res.data.user));
       }
 
       setSuccessMessage(mode === 'signup' ? 'Account created successfully!' : 'Welcome back!');

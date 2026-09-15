@@ -8,7 +8,10 @@ import { AuthPage } from './pages/AuthPage';
 export default function App() {
   const [token, setToken] = useState<string | null>(() => {
     try {
-      return localStorage.getItem('token');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
+      return sessionStorage.getItem('token');
     } catch {
       return null;
     }
@@ -35,9 +38,14 @@ export default function App() {
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   const handleLogout = () => {
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+
     setToken(null);
+    setActiveTab('activity');
   };
 
   if (!token) {

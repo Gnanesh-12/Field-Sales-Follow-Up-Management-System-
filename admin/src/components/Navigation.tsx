@@ -15,7 +15,7 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, setActiveTab,
 
   const user = (() => {
     try {
-      const stored = localStorage.getItem('user');
+      const stored = sessionStorage.getItem('user');
       return stored ? JSON.parse(stored) : null;
     } catch {
       return null;

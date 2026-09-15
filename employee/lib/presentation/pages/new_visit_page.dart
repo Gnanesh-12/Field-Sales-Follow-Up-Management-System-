@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 import 'dart:convert';
 import 'dart:typed_data';
@@ -32,9 +33,8 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
   bool _isGettingLocation = false;
   
 
-  Uint8List? _imageBytes; // For web display
-  bool _isUploadingImage = false;
-  String? _uploadedImageUrl;
+  final List<_PhotoEntry> _photos = [];
+  bool get _isUploadingImage => _photos.any((p) => p.uploading);
 
   final List<_ManualMaterialEntry> _materials = [];
   
@@ -106,18 +106,24 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.camera, imageQuality: 70);
-    
+
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
+      final entry = _PhotoEntry(bytes: bytes);
       setState(() {
-        _imageBytes = bytes;
+        _photos.add(entry);
       });
-      _uploadImage(pickedFile, bytes);
+      _uploadImage(pickedFile, entry);
     }
   }
-  
-  Future<void> _uploadImage(XFile file, Uint8List bytes) async {
-    setState(() => _isUploadingImage = true);
+
+  void _removePhotoAt(int index) {
+    setState(() {
+      _photos.removeAt(index);
+    });
+  }
+
+  Future<void> _uploadImage(XFile file, _PhotoEntry entry) async {
     try {
       final secureStorage = ref.read(secureStorageProvider);
       final token = await secureStorage.read(key: 'jwt_token');
@@ -128,8 +134,9 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
         ..fields['recordId'] = _recordId
         ..files.add(http.MultipartFile.fromBytes(
           'file',
-          bytes,
+          entry.bytes,
           filename: file.name,
+          contentType: MediaType.parse(file.mimeType ?? 'image/jpeg'),
         ));
         
       final response = await request.send();
@@ -137,19 +144,21 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
         final responseData = await response.stream.bytesToString();
         final data = jsonDecode(responseData);
         setState(() {
-          _uploadedImageUrl = data['url'];
+          entry.url = data['url'];
+          entry.uploading = false;
         });
       } else {
         throw Exception('Upload failed with status ${response.statusCode}');
       }
     } catch (e) {
       if (mounted) {
+        setState(() {
+          entry.uploading = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error uploading image: $e')),
         );
       }
-    } finally {
-      if (mounted) setState(() => _isUploadingImage = false);
     }
   }
 
@@ -214,6 +223,11 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
               })
           .toList();
 
+      final imageUrls = _photos
+          .map((p) => p.url)
+          .whereType<String>()
+          .toList();
+
       await repository.createVisit({
         'id': _recordId,
         'customerSiteName': _siteNameController.text.trim(),
@@ -222,7 +236,7 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
         'lat': _currentPosition?.latitude,
         'lng': _currentPosition?.longitude,
         'accuracy': _currentPosition?.accuracy,
-        'imageUrl': _uploadedImageUrl,
+        'imageUrls': imageUrls.isNotEmpty ? imageUrls : null,
         'materials': materialsData.isNotEmpty ? materialsData : null,
         'followUp': followUpData,
       });
@@ -353,44 +367,81 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
             const SizedBox(height: 32),
 
             // ─── 2. Photo Evidence ────────────────────────────────────────────
-            _buildSectionTitle('2. Site Photo'),
-            GestureDetector(
-              onTap: _isUploadingImage ? null : _pickImage,
-              child: Container(
-                height: 160,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: context.surfaceColor,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: context.borderSubtleColor),
-                ),
-                child: _isUploadingImage
-                    ? const Center(child: CircularProgressIndicator())
-                    : _imageBytes != null
-                        ? ClipRRect(
+            _buildSectionTitle('2. Site Photos'),
+            SizedBox(
+              height: 104,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  ..._photos.asMap().entries.map((e) {
+                    final index = e.key;
+                    final photo = e.value;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Stack(
+                        children: [
+                          ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Image.memory(_imageBytes!, fit: BoxFit.cover),
-                                Positioned(
-                                  bottom: 8, right: 8,
-                                  child: CircleAvatar(
-                                    backgroundColor: Colors.black54,
-                                    child: Icon(Icons.edit, color: Colors.white, size: 20),
-                                  ),
-                                ),
-                              ],
+                            child: Image.memory(
+                              photo.bytes,
+                              width: 96,
+                              height: 96,
+                              fit: BoxFit.cover,
                             ),
-                          )
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.add_a_photo_outlined, color: context.textSecondaryColor, size: 40),
-                              const SizedBox(height: 12),
-                              Text('Tap to take photo', style: AppTheme.bodyMedium.copyWith(color: context.textSecondaryColor)),
-                            ],
                           ),
+                          if (photo.uploading)
+                            Container(
+                              width: 96,
+                              height: 96,
+                              decoration: BoxDecoration(
+                                color: Colors.black45,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Center(
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => _removePhotoAt(index),
+                              child: Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                                child: const Icon(Icons.close, color: Colors.white, size: 14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        color: context.surfaceColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: context.borderSubtleColor),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_a_photo_outlined, color: context.textSecondaryColor, size: 26),
+                          const SizedBox(height: 6),
+                          Text('Add', style: AppTheme.bodySmall.copyWith(color: context.textSecondaryColor)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 32),
@@ -553,4 +604,11 @@ class _NewVisitPageState extends ConsumerState<NewVisitPage> {
 class _ManualMaterialEntry {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController quantityController = TextEditingController();
+}
+
+class _PhotoEntry {
+  final Uint8List bytes;
+  String? url;
+  bool uploading;
+  _PhotoEntry({required this.bytes, this.url, this.uploading = true});
 }

@@ -24,6 +24,7 @@ export interface FieldEntry {
   gpsAccuracy?: number | null;
   photoUrl?: string;
   imageUrl?: string;
+  imageUrls?: string[];
   attachments?: { id: string; fileUrl: string; type: string }[];
   itemsNeeded?: string | string[];
   materials?: string | string[];
