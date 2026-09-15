@@ -8,7 +8,10 @@ import { AuthPage } from './pages/AuthPage';
 export default function App() {
   const [token, setToken] = useState<string | null>(() => {
     try {
-      return localStorage.getItem('token');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
+      return sessionStorage.getItem('token');
     } catch {
       return null;
     }
@@ -35,9 +38,14 @@ export default function App() {
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   const handleLogout = () => {
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+
     setToken(null);
+    setActiveTab('activity');
   };
 
   if (!token) {
@@ -46,8 +54,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-app)]">
-      {/* Left Sidebar */}
-      <div className="hidden md:flex md:w-64 lg:w-72 h-full shrink-0 border-r border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+      <div className={`hidden md:flex md:w-64 lg:w-72 h-full shrink-0 border-r ${isDarkMode ? 'border-[var(--border-subtle)] bg-[var(--bg-surface)]' : 'border-indigo-950/20 bg-indigo-900'}`}>
         <Navigation
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -71,9 +78,15 @@ export default function App() {
         </div>
         
         <div className="flex-1 p-4 md:p-8 w-full max-w-7xl mx-auto">
-          {activeTab === 'employees' && <EmployeesPage />}
-          {activeTab === 'entries' && <FieldEntriesPage />}
-          {activeTab === 'activity' && <EmployeeActivityPage />}
+          <div className={activeTab === 'employees' ? 'block' : 'hidden'}>
+            <EmployeesPage />
+          </div>
+          <div className={activeTab === 'entries' ? 'block' : 'hidden'}>
+            <FieldEntriesPage />
+          </div>
+          <div className={activeTab === 'activity' ? 'block' : 'hidden'}>
+            <EmployeeActivityPage />
+          </div>
         </div>
       </main>
     </div>

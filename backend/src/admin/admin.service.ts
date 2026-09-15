@@ -132,13 +132,10 @@ export class AdminService {
 
     return entries.map((entry: any) => {
       const siteObj = entry.site || {};
-      const photo =
-        entry.attachments?.[0]?.fileUrl ||
-        entry.attachments?.[0]?.url ||
-        entry.attachments?.[0]?.filePath ||
-        entry.imageUrl ||
-        entry.photoUrl ||
-        null;
+      const imageUrls: string[] = (entry.attachments || [])
+        .map((a: any) => a.fileUrl || a.url || a.filePath)
+        .filter(Boolean);
+      const photo = imageUrls[0] || entry.imageUrl || entry.photoUrl || null;
 
       const remarks = entry.remarks || '';
       const status = entry.status || 'PENDING';
@@ -159,6 +156,7 @@ export class AdminService {
         gpsAccuracy: entry.location?.accuracy || null,
         imageUrl: photo,
         photoUrl: photo,
+        imageUrls,
         materialsFormatted,
         itemsNeeded: materialsFormatted.length > 0
           ? materialsFormatted.map((m: any) => `${m.name}: ${m.quantity} ${m.unit}`).join(', ')
@@ -182,37 +180,63 @@ export class AdminService {
     });
   }
 
-async exportRecords(filters: any) {
-  // In a real scenario, we'd apply filters here (e.g. date ranges, employee IDs).
-  // For now, we fetch all to map to the company template.
-  const entries = await this.getFieldEntries();
+  async exportRecords(filters: any) {
+    // In a real scenario, we'd apply filters here (e.g. date ranges, employee IDs).
+    // For now, we fetch all to map to the company template.
+    const entries = await this.getFieldEntries();
 
-  // Configurable mapping layer for the 'company template'
-  const exportMapping = [
-    { header: 'EMP ID', key: (e: any) => e.employee?.id || '' },
-    { header: 'Employee Name', key: (e: any) => e.employee?.name || '' },
-    { header: 'Date', key: (e: any) => new Date(e.createdAt).toLocaleDateString('en-GB'), forceText: true },
-    { header: 'Time', key: (e: any) => new Date(e.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }), forceText: true },
-    { header: 'Geographical Location', key: (e: any) => e.location || '' },
-    { header: 'Items & Quantity Needed', key: (e: any) => e.itemsNeeded || '' },
-    { header: 'Additional Notes', key: (e: any) => e.notes || '' },
-    { header: 'Status', key: (e: any) => e.status },
-    { header: 'Image URL', key: (e: any) => e.imageUrl || '' },
-  ];
+    // Configurable mapping layer for the 'company template'
+    const exportMapping = [
+      { header: 'EMP ID', key: (e: any) => e.employee?.id || '' },
+      { header: 'Employee Name', key: (e: any) => e.employee?.name || '' },
+      { header: 'Date', key: (e: any) => new Date(e.createdAt).toLocaleDateString('en-GB'), forceText: true },
+      { header: 'Time', key: (e: any) => new Date(e.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }), forceText: true },
+      { header: 'Follow Up Date', key: (e: any) => {
+          const followUps = Array.isArray(e.followUps) ? e.followUps : [];
 
-  const headers = exportMapping.map(m => m.header).join(',');
-  const rows = entries.map((entry: any) => {
-    return exportMapping.map(m => {
-      const value = String(m.key(entry) || '').replace(/"/g, '""');
-      // Date/Time columns: wrap as an Excel text-formula (="value") so Excel
-      // never auto-converts them to a date/number and shows #### when the
-      // column is too narrow. Other columns keep the normal quoted string.
-      return (m as any).forceText ? `"=""${value}"""` : `"${value}"`;
-    }).join(',');
-  });
+          const pendingFollowUps = followUps
+            .filter((f: any) => String(f.status || '').toLowerCase() === 'pending')
+            .sort(
+              (a: any, b: any) =>
+                new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+            );
 
-  return {
-    csvData: [headers, ...rows].join('\n')
-  };
-}
+          const followUp =
+            pendingFollowUps[0] ||
+            followUps
+              .slice()
+              .sort(
+                (a: any, b: any) =>
+                  new Date(b.createdAt || b.dueDate).getTime() -
+                  new Date(a.createdAt || a.dueDate).getTime()
+              )[0];
+
+          return followUp?.dueDate
+            ? new Date(followUp.dueDate).toLocaleDateString('en-GB')
+            : '';
+        },
+        forceText: true,
+      },
+      { header: 'Geographical Location', key: (e: any) => e.location || '' },
+      { header: 'Items & Quantity Needed', key: (e: any) => e.itemsNeeded || '' },
+      { header: 'Additional Notes', key: (e: any) => e.notes || '' },
+      { header: 'Status', key: (e: any) => e.status },
+      { header: 'Photos', key: (e: any) => `${(e.imageUrls?.length || (e.imageUrl ? 1 : 0))}` },
+    ];
+
+    const headers = exportMapping.map(m => m.header).join(',');
+    const rows = entries.map((entry: any) => {
+      return exportMapping.map(m => {
+        const value = String(m.key(entry) || '').replace(/"/g, '""');
+        // Date/Time columns: wrap as an Excel text-formula (="value") so Excel
+        // never auto-converts them to a date/number and shows #### when the
+        // column is too narrow. Other columns keep the normal quoted string.
+        return (m as any).forceText ? `"=""${value}"""` : `"${value}"`;
+      }).join(',');
+    });
+
+    return {
+      csvData: [headers, ...rows].join('\n')
+    };
+  }
 }

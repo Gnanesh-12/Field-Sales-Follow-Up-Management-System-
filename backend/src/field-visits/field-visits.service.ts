@@ -13,7 +13,7 @@ export class FieldVisitsService {
     lat?: number;
     lng?: number;
     accuracy?: number;
-    imageUrl?: string;
+    imageUrls?: string[];
     materials?: { materialName: string; unit?: string; quantity: number }[];
     followUp?: { notes: string; dueDate: string };
   }) {
@@ -58,11 +58,11 @@ export class FieldVisitsService {
               accuracy: data.accuracy,
             }
           } : undefined,
-          attachments: data.imageUrl ? {
-            create: {
-              fileUrl: data.imageUrl,
+          attachments: data.imageUrls?.length ? {
+            create: data.imageUrls.map((url) => ({
+              fileUrl: url,
               type: 'image',
-            }
+            })),
           } : undefined,
           materials: materialEntries.length > 0 ? {
             create: materialEntries.map(m => ({

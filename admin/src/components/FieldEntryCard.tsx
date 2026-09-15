@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Eye,
   X,
@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
   User,
   ExternalLink,
+  ChevronRight,
 } from 'lucide-react';
 
 interface FieldEntryCardProps {
@@ -21,6 +22,7 @@ interface FieldEntryCardProps {
 
 export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusUpdate }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [photoIndex, setPhotoIndex] = useState(0);
 
   const empId = entry.employee?.id || entry.employeeId || entry.employee_id || 'N/A';
   const empName = entry.employee?.name || entry.employeeName || entry.name || 'Sales Agent';
@@ -45,13 +47,17 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
     entry.address ||
     'Field Site';
 
-  const rawPhoto =
-    entry.attachments?.[0]?.fileUrl ||
-    entry.attachments?.[0]?.url ||
-    entry.attachments?.[0]?.filePath ||
-    entry.photoUrl ||
-    entry.imageUrl ||
-    (Array.isArray(entry.photos) ? entry.photos[0] : null);
+  const rawPhotos: string[] = (
+    entry.imageUrls?.length
+      ? entry.imageUrls
+      : (entry.attachments?.length
+          ? entry.attachments.map((a: any) => a.fileUrl || a.url || a.filePath).filter(Boolean)
+          : (Array.isArray(entry.photos) ? entry.photos : []))
+  );
+  // Legacy fallback for entries with only a single flat photoUrl/imageUrl field
+  if (rawPhotos.length === 0 && (entry.photoUrl || entry.imageUrl)) {
+    rawPhotos.push(entry.photoUrl || entry.imageUrl);
+  }
 
   const formatImageUrl = (src?: string | null) => {
     if (!src) return null;
@@ -64,11 +70,23 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
       return src;
     }
     const cleanPath = src.startsWith('/') ? src : `/${src}`;
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-    return `${baseUrl.replace(/\/$/, '')}${cleanPath}`;
+    return `http://localhost:3000${cleanPath}`;
   };
 
-  const photoUrl = formatImageUrl(rawPhoto);
+  const photoUrls = useMemo(
+    () => rawPhotos.map((p) => formatImageUrl(p)).filter(Boolean) as string[],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [entry.id, JSON.stringify(rawPhotos)]
+  );
+  const safeIndex = photoUrls.length > 0 ? photoIndex % photoUrls.length : 0;
+  const photoUrl = photoUrls[safeIndex] || null;
+  const hasMultiplePhotos = photoUrls.length > 1;
+
+  const advancePhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPhotoIndex((prev) => (prev + 1) % photoUrls.length);
+  };
+
   const notes = entry.notes || entry.additionalNotes || 'No notes added for this visit.';
   const status = (entry.status || 'PENDING').toUpperCase();
 
@@ -88,9 +106,10 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
       >
         <div className="flex flex-col sm:flex-row items-stretch">
           {/* Photo Thumbnail */}
-          <div className="sm:w-44 w-full h-32 sm:h-auto shrink-0 bg-[var(--bg-app)] overflow-hidden rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none border-b sm:border-b-0 sm:border-r border-[var(--border-subtle)]">
+          <div className="relative sm:w-44 w-full h-32 sm:h-auto shrink-0 bg-[var(--bg-app)] overflow-hidden rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none border-b sm:border-b-0 sm:border-r border-[var(--border-subtle)]">
             {photoUrl ? (
               <img
+                key={photoUrl}
                 src={photoUrl}
                 alt="Site visit"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -104,6 +123,21 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
               <div className="w-full h-full flex items-center justify-center text-[var(--text-tertiary)]">
                 <ImageIcon size={32} />
               </div>
+            )}
+            {hasMultiplePhotos && (
+              <>
+                <span className="absolute top-1.5 left-1.5 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                  {safeIndex + 1}/{photoUrls.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={advancePhoto}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1 transition-colors cursor-pointer"
+                  title="Next photo"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </>
             )}
           </div>
 
@@ -255,16 +289,32 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
               {/* Site Image */}
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2 flex items-center gap-2">
-                  <ImageIcon size={14} className="text-[var(--text-tertiary)]" /> Site Photo
+                  <ImageIcon size={14} className="text-[var(--text-tertiary)]" /> Site Photo{photoUrls.length > 1 ? 's' : ''}
                 </p>
                 {photoUrl ? (
-                  <div className="rounded-lg overflow-hidden border border-[var(--border-subtle)] shadow-sm aspect-video max-h-64 bg-[var(--bg-app)] flex items-center justify-center">
+                  <div className="relative rounded-lg overflow-hidden border border-[var(--border-subtle)] shadow-sm aspect-video max-h-64 bg-[var(--bg-app)] flex items-center justify-center">
                     <img
+                      key={photoUrl}
                       src={photoUrl}
                       alt="Field Visit"
                       className="w-full h-full object-contain"
                       onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
                     />
+                    {hasMultiplePhotos && (
+                      <>
+                        <span className="absolute top-2 left-2 bg-black/60 text-white text-xs font-bold px-2 py-0.5 rounded-md">
+                          {safeIndex + 1} / {photoUrls.length}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={advancePhoto}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors cursor-pointer"
+                          title="Next photo"
+                        >
+                          <ChevronRight size={18} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="p-8 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] text-sm font-medium">
