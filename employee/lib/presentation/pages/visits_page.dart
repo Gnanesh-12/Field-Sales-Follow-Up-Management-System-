@@ -54,7 +54,29 @@ class _VisitsPageState extends ConsumerState<VisitsPage> {
                 final timeStr = DateFormat('MMM d, yyyy - h:mm a').format(visit.timestamp);
                 final bool hasFollowUp = visit.followUps.isNotEmpty;
                 final bool isPendingFollowUp = visit.followUps.any((f) => f.status == 'pending');
-                
+
+                // Approval status colors and labels
+                final Color statusColor;
+                final String statusLabel;
+                final IconData statusIcon;
+                switch (visit.status) {
+                  case 'APPROVED':
+                    statusColor = AppTheme.successGreen;
+                    statusLabel = 'APPROVED';
+                    statusIcon = Icons.check_circle_rounded;
+                    break;
+                  case 'DENIED':
+                  case 'REJECTED':
+                    statusColor = AppTheme.dangerRed;
+                    statusLabel = 'DENIED';
+                    statusIcon = Icons.cancel_rounded;
+                    break;
+                  default: // PENDING
+                    statusColor = AppTheme.warningOrange;
+                    statusLabel = 'PENDING';
+                    statusIcon = Icons.hourglass_top_rounded;
+                }
+
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(
@@ -84,14 +106,30 @@ class _VisitsPageState extends ConsumerState<VisitsPage> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            if (hasFollowUp)
-                              Icon(
-                                Icons.flag,
-                                color: isPendingFollowUp ? AppTheme.warningOrange : AppTheme.successGreen,
-                                size: 20,
-                              )
-                            else
-                              Icon(Icons.chevron_right_rounded, color: context.textMutedColor),
+                            // Approval Status Badge
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: statusColor.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(statusIcon, size: 12, color: statusColor),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    statusLabel,
+                                    style: AppTheme.bodySmall.copyWith(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: statusColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -109,6 +147,25 @@ class _VisitsPageState extends ConsumerState<VisitsPage> {
                               Icon(Icons.inventory_2_rounded, color: context.textSecondaryColor, size: 16),
                               const SizedBox(width: 6),
                               Text('${visit.materials.length} material(s)', style: AppTheme.bodySmall.copyWith(color: context.textSecondaryColor)),
+                            ],
+                          ),
+                        ],
+                        if (hasFollowUp) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.flag,
+                                color: isPendingFollowUp ? AppTheme.warningOrange : AppTheme.successGreen,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                isPendingFollowUp ? 'Follow-up pending' : 'Follow-up completed',
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: isPendingFollowUp ? AppTheme.warningOrange : AppTheme.successGreen,
+                                ),
+                              ),
                             ],
                           ),
                         ],

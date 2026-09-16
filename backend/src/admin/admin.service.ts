@@ -163,6 +163,12 @@ export class AdminService {
           : remarks || 'None',
         followUps: entry.followUps || [],
         status,
+        // Approval metadata
+        approvedBy: entry.approvedBy || null,
+        approvedAt: entry.approvedAt || null,
+        deniedBy: entry.deniedBy || null,
+        deniedAt: entry.deniedAt || null,
+        denialReason: entry.denialReason || null,
       };
     });
   }
@@ -177,6 +183,68 @@ export class AdminService {
     return (this.prisma as any).fieldVisit.update({
       where: { id },
       data: { status: status.toUpperCase() },
+    });
+  }
+
+  async approveFieldVisit(id: string, adminId: string) {
+    const entry = await (this.prisma as any).fieldVisit.findUnique({
+      where: { id },
+    });
+
+    if (!entry) throw new BadRequestException('Field visit not found');
+    if (entry.status === 'APPROVED') throw new BadRequestException('Field visit is already approved');
+    if (entry.status === 'DENIED') throw new BadRequestException('Field visit is already denied. Cannot approve a denied visit.');
+
+    return (this.prisma as any).fieldVisit.update({
+      where: { id },
+      data: {
+        status: 'APPROVED',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        // Clear any previous denial metadata
+        deniedBy: null,
+        deniedAt: null,
+        denialReason: null,
+      },
+      include: {
+        employee: { select: { id: true, name: true, phone: true } },
+        site: true,
+        location: true,
+        attachments: true,
+        materials: { include: { material: true } },
+        followUps: true,
+      },
+    });
+  }
+
+  async denyFieldVisit(id: string, adminId: string, reason?: string) {
+    const entry = await (this.prisma as any).fieldVisit.findUnique({
+      where: { id },
+    });
+
+    if (!entry) throw new BadRequestException('Field visit not found');
+    if (entry.status === 'DENIED') throw new BadRequestException('Field visit is already denied');
+    if (entry.status === 'APPROVED') throw new BadRequestException('Field visit is already approved. Cannot deny an approved visit.');
+
+    return (this.prisma as any).fieldVisit.update({
+      where: { id },
+      data: {
+        status: 'DENIED',
+        deniedBy: adminId,
+        deniedAt: new Date(),
+        denialReason: reason || null,
+        // Clear any previous approval metadata
+        approvedBy: null,
+        approvedAt: null,
+      },
+      include: {
+        employee: { select: { id: true, name: true, phone: true } },
+        site: true,
+        location: true,
+        attachments: true,
+        materials: { include: { material: true } },
+        followUps: true,
+      },
     });
   }
 

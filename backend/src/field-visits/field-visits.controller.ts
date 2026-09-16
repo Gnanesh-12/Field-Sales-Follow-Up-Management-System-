@@ -42,8 +42,14 @@ export class FieldVisitsController {
     if (!body.customerSiteName) {
       throw new BadRequestException('customerSiteName is required');
     }
+
+    // SECURITY: Strip any employee-provided approval status.
+    // Approval status is ALWAYS set to PENDING on new submissions (enforced by DB default).
+    // Employees cannot approve their own visits by sending status in the request body.
+    const { status, approvalStatus, approvedBy, approvedAt, deniedBy, deniedAt, denialReason, ...safeBody } = body;
+
     try {
-      return await this.fieldVisitsService.createVisit(employeeId, body);
+      return await this.fieldVisitsService.createVisit(employeeId, safeBody);
     } catch (error) {
       console.error('CREATE VISIT ERROR:', error);
       throw new BadRequestException(error.message || 'Error creating visit');

@@ -57,7 +57,7 @@ model FieldVisit {
   timestamp      DateTime         @default(now())
   notes          String?
   remarks        String?
-  status         String           @default("PENDING") // 'PENDING' | 'APPROVED' | 'REJECTED'
+  status         String           @default("PENDING") // 'PENDING' | 'APPROVED' | 'DENIED'
   employeeId     String
   employee       Employee         @relation(fields: [employeeId], references: [id])
   customerSiteId String           
@@ -66,6 +66,12 @@ model FieldVisit {
   location       Location?
   attachments    Attachment[]
   materials      MaterialSupply[]
+  // Approval metadata
+  approvedBy     String?          // Admin ID who approved
+  approvedAt     DateTime?        // When approved
+  deniedBy       String?          // Admin ID who denied
+  deniedAt       DateTime?        // When denied
+  denialReason   String?          // Reason provided for denial
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 }

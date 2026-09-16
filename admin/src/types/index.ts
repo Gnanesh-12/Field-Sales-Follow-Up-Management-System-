@@ -32,11 +32,17 @@ export interface FieldEntry {
   followUps?: { id: string; dueDate: string; status: string; notes?: string }[];
   notes?: string;
   remarks?: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'DENIED' | 'REJECTED';
   createdAt?: string;
   timestamp?: string;
   customerSite?: { name: string };
   site?: { name: string };
+  // Approval metadata
+  approvedBy?: string | null;
+  approvedAt?: string | null;
+  deniedBy?: string | null;
+  deniedAt?: string | null;
+  denialReason?: string | null;
 }
 
 export interface AddEmployeeForm {

@@ -6,3 +6,14 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Attach the admin JWT token to every request automatically.
+// The token is stored in sessionStorage after login.
+apiClient.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem('token');
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+});

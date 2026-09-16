@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, HttpCode, HttpStatus, BadRequestException, UseGuards, Req } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuthService } from '../auth/auth.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('api/admin')
 export class AdminController {
@@ -56,12 +57,45 @@ export class AdminController {
     return this.adminService.getFieldEntries();
   }
 
+  // Legacy generic status update — kept for backward compatibility
   @Patch('field-entries/:id/status')
   updateEntryStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.adminService.updateEntryStatus(id, status);
   }
 
-  // Add this inside AdminController in backend/src/admin/admin.controller.ts
+  // ─── Approval Workflow ──────────────────────────────────────────────────────
+
+  /**
+   * POST /api/admin/field-entries/:id/approve
+   * Admin-only: Approve a pending field visit.
+   * Requires valid admin JWT. Records which admin approved and when.
+   */
+  @Post('field-entries/:id/approve')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async approveFieldVisit(@Param('id') id: string, @Req() req: any) {
+    // Extract admin identity from JWT
+    const adminId = req.user?.sub || req.user?.id || req.user?.email || 'admin';
+    return this.adminService.approveFieldVisit(id, adminId);
+  }
+
+  /**
+   * POST /api/admin/field-entries/:id/deny
+   * Admin-only: Deny a pending field visit.
+   * Requires valid admin JWT. Records which admin denied, when, and optional reason.
+   */
+  @Post('field-entries/:id/deny')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async denyFieldVisit(@Param('id') id: string, @Body() body: any, @Req() req: any) {
+    // Extract admin identity from JWT
+    const adminId = req.user?.sub || req.user?.id || req.user?.email || 'admin';
+    const reason = body?.reason?.trim() || undefined;
+    return this.adminService.denyFieldVisit(id, adminId, reason);
+  }
+
+  // ─── Other ─────────────────────────────────────────────────────────────────
+
   @Patch('auth/change-password')
   @HttpCode(HttpStatus.OK)
   async changePassword(@Body() body: any) {

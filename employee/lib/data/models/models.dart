@@ -171,6 +171,9 @@ class FieldVisit {
   final List<Attachment> attachments;
   final List<MaterialSupply> materials;
   final List<FollowUp> followUps;
+  // Approval workflow fields
+  final String status; // 'PENDING' | 'APPROVED' | 'DENIED'
+  final String? denialReason;
 
   FieldVisit({
     required this.id,
@@ -184,6 +187,8 @@ class FieldVisit {
     this.attachments = const [],
     this.materials = const [],
     this.followUps = const [],
+    this.status = 'PENDING',
+    this.denialReason,
   });
 
   factory FieldVisit.fromJson(Map<String, dynamic> json) {
@@ -205,6 +210,12 @@ class FieldVisit {
       followUps: json['followUps'] != null
           ? (json['followUps'] as List).map((i) => FollowUp.fromJson(i)).toList()
           : [],
+      status: (json['status'] as String? ?? 'PENDING').toUpperCase(),
+      denialReason: json['denialReason'],
     );
   }
+
+  bool get isPending => status == 'PENDING';
+  bool get isApproved => status == 'APPROVED';
+  bool get isDenied => status == 'DENIED' || status == 'REJECTED';
 }

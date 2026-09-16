@@ -13,16 +13,25 @@ import {
   User,
   ExternalLink,
   ChevronRight,
+  AlertTriangle,
+  Ban,
 } from 'lucide-react';
 
 interface FieldEntryCardProps {
   entry: any;
-  onStatusUpdate: (id: any, status: 'APPROVED' | 'REJECTED') => void;
+  onApprove: (id: any) => void;
+  onDeny: (id: any, reason?: string) => void;
 }
 
-export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusUpdate }) => {
+export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onApprove, onDeny }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
+
+  // ─── Confirmation / Denial dialog state ──────────────────────────────────
+  const [showApproveConfirm, setShowApproveConfirm] = useState(false);
+  const [showDenyDialog, setShowDenyDialog] = useState(false);
+  const [denialReason, setDenialReason] = useState('');
+  const [isActioning, setIsActioning] = useState(false);
 
   const empId = entry.employee?.id || entry.employeeId || entry.employee_id || 'N/A';
   const empName = entry.employee?.name || entry.employeeName || entry.name || 'Sales Agent';
@@ -51,10 +60,9 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
     entry.imageUrls?.length
       ? entry.imageUrls
       : (entry.attachments?.length
-          ? entry.attachments.map((a: any) => a.fileUrl || a.url || a.filePath).filter(Boolean)
-          : (Array.isArray(entry.photos) ? entry.photos : []))
+        ? entry.attachments.map((a: any) => a.fileUrl || a.url || a.filePath).filter(Boolean)
+        : (Array.isArray(entry.photos) ? entry.photos : []))
   );
-  // Legacy fallback for entries with only a single flat photoUrl/imageUrl field
   if (rawPhotos.length === 0 && (entry.photoUrl || entry.imageUrl)) {
     rawPhotos.push(entry.photoUrl || entry.imageUrl);
   }
@@ -89,13 +97,52 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
 
   const notes = entry.notes || entry.additionalNotes || 'No notes added for this visit.';
   const status = (entry.status || 'PENDING').toUpperCase();
+  const isPending = status === 'PENDING';
+  const isApproved = status === 'APPROVED';
+  const isDenied = status === 'DENIED' || status === 'REJECTED';
 
   const statusConfig: Record<string, { bg: string; text: string; border: string; label: string }> = {
     APPROVED: { bg: 'bg-[var(--status-success-subtle)]', text: 'text-[var(--status-success)]', border: 'border-[var(--status-success-subtle)]', label: 'APPROVED' },
-    REJECTED: { bg: 'bg-[var(--status-error-subtle)]', text: 'text-[var(--status-error)]', border: 'border-[var(--status-error-subtle)]', label: 'DECLINED' },
+    DENIED: { bg: 'bg-[var(--status-error-subtle)]', text: 'text-[var(--status-error)]', border: 'border-[var(--status-error-subtle)]', label: 'DENIED' },
+    REJECTED: { bg: 'bg-[var(--status-error-subtle)]', text: 'text-[var(--status-error)]', border: 'border-[var(--status-error-subtle)]', label: 'DENIED' },
     PENDING: { bg: 'bg-[var(--status-warning-subtle)]', text: 'text-[var(--status-warning)]', border: 'border-[var(--status-warning-subtle)]', label: 'PENDING' },
   };
   const st = statusConfig[status] || statusConfig['PENDING'];
+
+  // ─── Action Handlers ───────────────────────────────────────────────────────
+  const handleApproveConfirmed = async () => {
+    setIsActioning(true);
+    try {
+      onApprove(entry.id);
+      setShowApproveConfirm(false);
+      setIsOpen(false);
+    } finally {
+      setIsActioning(false);
+    }
+  };
+
+  const handleDenyConfirmed = async () => {
+    setIsActioning(true);
+    try {
+      onDeny(entry.id, denialReason.trim() || undefined);
+      setShowDenyDialog(false);
+      setDenialReason('');
+      setIsOpen(false);
+    } finally {
+      setIsActioning(false);
+    }
+  };
+
+  const openDenyDialog = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setDenialReason('');
+    setShowDenyDialog(true);
+  };
+
+  const openApproveConfirm = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setShowApproveConfirm(true);
+  };
 
   return (
     <>
@@ -239,6 +286,47 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
 
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto space-y-6">
+
+              {/* ─── Approval Status Banner ─────────────────────────────────── */}
+              {isPending && (
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-[var(--status-warning-subtle)] border border-[var(--status-warning-subtle)]">
+                  <AlertTriangle size={18} className="text-[var(--status-warning)] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-[var(--status-warning)]">Awaiting Approval</p>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">This field visit is pending your review. The employee cannot proceed with follow-up work until you approve.</p>
+                  </div>
+                </div>
+              )}
+              {isApproved && (
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-[var(--status-success-subtle)] border border-[var(--status-success-subtle)]">
+                  <CheckCircle size={18} className="text-[var(--status-success)] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-[var(--status-success)]">Field Visit Approved</p>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                      Employee can proceed with follow-up work.
+                      {entry.approvedAt && <> Approved on {new Date(entry.approvedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}.</>}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {isDenied && (
+                <div className="flex items-start gap-3 p-4 rounded-lg bg-[var(--status-error-subtle)] border border-[var(--status-error-subtle)]">
+                  <Ban size={18} className="text-[var(--status-error)] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-[var(--status-error)]">Field Visit Denied</p>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                      Employee cannot proceed with follow-up work.
+                      {entry.deniedAt && <> Denied on {new Date(entry.deniedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}.</>}
+                    </p>
+                    {entry.denialReason && (
+                      <p className="text-xs text-[var(--status-error)] mt-2 font-medium">
+                        <span className="font-bold">Reason:</span> {entry.denialReason}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Date, Time & Location */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-3 p-4 rounded-lg bg-[var(--bg-app)] border border-[var(--border-subtle)]">
@@ -392,27 +480,138 @@ export const FieldEntryCard: React.FC<FieldEntryCardProps> = ({ entry, onStatusU
               </div>
             </div>
 
-            {/* Modal Actions */}
-            <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] flex flex-col sm:flex-row items-center justify-end gap-3">
+            {/* Modal Actions — Only shown for PENDING visits */}
+            {isPending && (
+              <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p className="text-xs text-[var(--text-tertiary)] font-medium">Review this field visit and take action:</p>
+                <div className="flex items-center gap-3">
+                  <button
+                    id={`deny-btn-${entry.id}`}
+                    type="button"
+                    onClick={() => openDenyDialog()}
+                    className="flex items-center justify-center gap-2 px-5 py-2.5 border border-[var(--status-error)]/30 text-[var(--status-error)] bg-[var(--status-error-subtle)] hover:bg-[var(--status-error)] hover:text-white rounded-md text-sm font-semibold transition-colors cursor-pointer"
+                  >
+                    <XCircle size={16} /> Deny
+                  </button>
+                  <button
+                    id={`approve-btn-${entry.id}`}
+                    type="button"
+                    onClick={() => openApproveConfirm()}
+                    className="flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--status-success-subtle)] border border-[var(--status-success)]/30 text-[var(--status-success)] hover:bg-[var(--status-success)] hover:text-white rounded-md text-sm font-semibold transition-colors cursor-pointer"
+                  >
+                    <CheckCircle size={16} /> Approve
+                  </button>
+                </div>
+              </div>
+            )}
+            {!isPending && (
+              <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="px-5 py-2.5 bg-[var(--bg-app)] border border-[var(--border-strong)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)] rounded-md text-sm font-semibold transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ─── Approve Confirmation Dialog ──────────────────── */}
+      {showApproveConfirm && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150" onClick={() => setShowApproveConfirm(false)}>
+          <div
+            className="bg-[var(--bg-surface)] w-full max-w-md rounded-xl shadow-2xl border border-[var(--border-strong)] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-[var(--status-success-subtle)] border border-[var(--status-success-subtle)] flex items-center justify-center">
+                  <CheckCircle size={22} className="text-[var(--status-success)]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[var(--text-primary)]">Approve Field Visit?</h3>
+                  <p className="text-sm text-[var(--text-secondary)]">{empName} · {siteName}</p>
+                </div>
+              </div>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                Approving this field visit will allow <strong className="text-[var(--text-primary)]">{empName}</strong> to proceed with the associated follow-up work. This action cannot be easily undone.
+              </p>
+            </div>
+            <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[var(--bg-app)] flex justify-end gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  onStatusUpdate(entry.id, 'REJECTED');
-                  setIsOpen(false);
-                }}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 border border-[var(--status-error)]/30 text-[var(--status-error)] bg-[var(--status-error-subtle)] hover:bg-[var(--status-error)] hover:text-white rounded-md text-sm font-semibold transition-colors cursor-pointer"
+                onClick={() => setShowApproveConfirm(false)}
+                className="px-4 py-2 bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-md text-sm font-semibold transition-colors cursor-pointer"
               >
-                <XCircle size={16} /> Decline
+                Cancel
               </button>
               <button
+                id={`confirm-approve-${entry.id}`}
                 type="button"
-                onClick={() => {
-                  onStatusUpdate(entry.id, 'APPROVED');
-                  setIsOpen(false);
-                }}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-[var(--status-success-subtle)] border border-[var(--status-success)]/30 text-[var(--status-success)] hover:bg-[var(--status-success)] hover:text-white rounded-md text-sm font-semibold transition-colors cursor-pointer"
+                disabled={isActioning}
+                onClick={handleApproveConfirmed}
+                className="flex items-center gap-2 px-5 py-2 bg-[var(--status-success)] text-white hover:opacity-90 rounded-md text-sm font-semibold transition-opacity cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <CheckCircle size={16} /> Approve
+                <CheckCircle size={16} /> {isActioning ? 'Approving...' : 'Yes, Approve'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Deny Dialog (with reason input) ─────────────── */}
+      {showDenyDialog && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150" onClick={() => setShowDenyDialog(false)}>
+          <div
+            className="bg-[var(--bg-surface)] w-full max-w-md rounded-xl shadow-2xl border border-[var(--border-strong)] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-[var(--status-error-subtle)] border border-[var(--status-error-subtle)] flex items-center justify-center">
+                  <Ban size={22} className="text-[var(--status-error)]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[var(--text-primary)]">Deny Field Visit?</h3>
+                  <p className="text-sm text-[var(--text-secondary)]">{empName} · {siteName}</p>
+                </div>
+              </div>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-4">
+                Denying this field visit will block <strong className="text-[var(--text-primary)]">{empName}</strong> from proceeding with follow-up work. The employee will see the denied status.
+              </p>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
+                  Denial Reason <span className="text-[var(--text-tertiary)] font-normal normal-case">(optional)</span>
+                </label>
+                <textarea
+                  id={`denial-reason-${entry.id}`}
+                  value={denialReason}
+                  onChange={(e) => setDenialReason(e.target.value)}
+                  rows={3}
+                  placeholder="Explain why this visit is being denied..."
+                  className="w-full px-3 py-2.5 bg-[var(--bg-app)] border border-[var(--border-strong)] rounded-md text-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-[var(--status-error)] focus:ring-1 focus:ring-[var(--status-error)] transition-all resize-none"
+                />
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[var(--bg-app)] flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => { setShowDenyDialog(false); setDenialReason(''); }}
+                className="px-4 py-2 bg-[var(--bg-surface)] border border-[var(--border-strong)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-md text-sm font-semibold transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                id={`confirm-deny-${entry.id}`}
+                type="button"
+                disabled={isActioning}
+                onClick={handleDenyConfirmed}
+                className="flex items-center gap-2 px-5 py-2 bg-[var(--status-error)] text-white hover:opacity-90 rounded-md text-sm font-semibold transition-opacity cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <XCircle size={16} /> {isActioning ? 'Denying...' : 'Yes, Deny Visit'}
               </button>
             </div>
           </div>

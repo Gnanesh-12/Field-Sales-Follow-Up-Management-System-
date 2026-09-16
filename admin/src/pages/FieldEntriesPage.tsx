@@ -22,7 +22,7 @@ type SortOrder = 'asc' | 'desc';
 export const FieldEntriesPage: React.FC = () => {
   const [entries, setEntries] = useState<FieldEntry[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'DENIED' | 'REJECTED'>('ALL');
 
   // Date filter states (multi-select: empty array = "All")
   const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
@@ -124,12 +124,18 @@ export const FieldEntriesPage: React.FC = () => {
     );
   };
 
-  const handleStatusUpdate = async (id: any, status: 'APPROVED' | 'REJECTED') => {
+  const handleStatusUpdate = async (id: any, status: 'APPROVED' | 'DENIED', denialReason?: string) => {
     try {
-      await apiClient.patch(`/field-entries/${id}/status`, { status });
+      if (status === 'APPROVED') {
+        await apiClient.post(`/field-entries/${id}/approve`, {});
+      } else if (status === 'DENIED') {
+        await apiClient.post(`/field-entries/${id}/deny`, { reason: denialReason || '' });
+      }
       fetchEntries();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update status:', err);
+      const message = err?.response?.data?.message || 'Failed to update status. Please try again.';
+      alert(message);
     }
   };
 
@@ -460,7 +466,7 @@ export const FieldEntriesPage: React.FC = () => {
             <option value="ALL">All Statuses</option>
             <option value="PENDING">Pending Only</option>
             <option value="APPROVED">Approved Only</option>
-            <option value="REJECTED">Declined Only</option>
+            <option value="DENIED">Denied Only</option>
           </select>
           <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-[var(--text-tertiary)]">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
@@ -514,7 +520,8 @@ export const FieldEntriesPage: React.FC = () => {
             <FieldEntryCard
               key={entry.id}
               entry={entry}
-              onStatusUpdate={handleStatusUpdate}
+              onApprove={(id) => handleStatusUpdate(id, 'APPROVED')}
+              onDeny={(id, reason) => handleStatusUpdate(id, 'DENIED', reason)}
             />
           ))
         )}

@@ -180,7 +180,25 @@ class ApiRepository {
 
     if (response.statusCode == 200) {
       return FollowUp.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 403) {
+      // Backend approval enforcement — parse the error message
+      try {
+        final body = jsonDecode(response.body);
+        final message = body['message'] ?? 'Follow-up is not allowed: field visit not approved.';
+        throw ApiException(message);
+      } catch (e) {
+        if (e is ApiException) rethrow;
+        throw ApiException('Follow-up is not allowed: field visit not approved by Admin.');
+      }
     } else {
+      try {
+        final body = jsonDecode(response.body);
+        if (body['message'] != null) {
+          throw ApiException(body['message']);
+        }
+      } catch (e) {
+        if (e is ApiException) rethrow;
+      }
       throw ApiException('Failed to update follow-up status');
     }
   }

@@ -66,6 +66,13 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                 final followUp = followUps[index];
                 final dateStr = DateFormat('MMM d, yyyy').format(followUp.dueDate);
                 final isOverdue = followUp.dueDate.isBefore(DateTime.now()) && followUp.status == 'pending';
+
+                // ─── Approval gate check ────────────────────────────────────
+                // The parent FieldVisit must be APPROVED for follow-up work to be accessible.
+                final visitStatus = (followUp.visit?.status ?? 'PENDING').toUpperCase();
+                final bool visitApproved = visitStatus == 'APPROVED';
+                final bool visitDenied = visitStatus == 'DENIED' || visitStatus == 'REJECTED';
+                // ────────────────────────────────────────────────────────────
                 
                 final Color statusColor = followUp.status == 'completed' 
                     ? AppTheme.successGreen 
@@ -77,7 +84,11 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                   decoration: BoxDecoration(
                     color: context.surfaceColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isOverdue ? statusColor : context.borderSubtleColor),
+                    border: Border.all(
+                      color: visitDenied
+                          ? AppTheme.dangerRed.withValues(alpha: 0.3)
+                          : (isOverdue ? statusColor : context.borderSubtleColor),
+                    ),
                     boxShadow: AppTheme.subtleShadow,
                   ),
                   child: Column(
@@ -135,23 +146,68 @@ class _FollowUpsPageState extends ConsumerState<FollowUpsPage> {
                           child: Text(followUp.notes!, style: AppTheme.bodySmall.copyWith(color: context.textSecondaryColor)),
                         ),
                       ],
+
+                      // ─── Approval Status Gate ─────────────────────────────
                       if (followUp.status == 'pending') ...[
                         const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: () {
-                              ref.read(followUpStatusProvider.notifier).updateStatus(followUp.id, 'completed');
-                            },
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.successGreen,
-                              side: const BorderSide(color: AppTheme.successGreen),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+
+                        if (!visitApproved) ...[
+                          // Show approval status message — cannot proceed
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: visitDenied
+                                  ? AppTheme.dangerRed.withValues(alpha: 0.08)
+                                  : AppTheme.warningOrange.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: visitDenied
+                                    ? AppTheme.dangerRed.withValues(alpha: 0.3)
+                                    : AppTheme.warningOrange.withValues(alpha: 0.3),
+                              ),
                             ),
-                            child: const Text('MARK COMPLETED'),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  visitDenied ? Icons.cancel_rounded : Icons.hourglass_top_rounded,
+                                  size: 16,
+                                  color: visitDenied ? AppTheme.dangerRed : AppTheme.warningOrange,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    visitDenied
+                                        ? 'Visit Denied — Follow-up work is not allowed'
+                                        : 'Waiting for Admin Approval',
+                                    style: AppTheme.bodySmall.copyWith(
+                                      color: visitDenied ? AppTheme.dangerRed : AppTheme.warningOrange,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ]
+                        ] else ...[
+                          // Visit is APPROVED — show the MARK COMPLETED button
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                ref.read(followUpStatusProvider.notifier).updateStatus(followUp.id, 'completed');
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppTheme.successGreen,
+                                side: const BorderSide(color: AppTheme.successGreen),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                              child: const Text('MARK COMPLETED'),
+                            ),
+                          ),
+                        ],
+                      ],
+                      // ─────────────────────────────────────────────────────
                     ],
                   ),
                 );

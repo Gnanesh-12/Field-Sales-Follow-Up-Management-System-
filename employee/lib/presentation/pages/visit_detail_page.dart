@@ -96,6 +96,10 @@ class VisitDetailPage extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        // ─── Approval Status Banner ────────────────────────────────
+        _buildApprovalStatusBanner(context, visit),
+        const SizedBox(height: 20),
+
         // ─── Header ───────────────────────────────────────────
         Container(
           padding: const EdgeInsets.all(20),
@@ -276,6 +280,141 @@ class VisitDetailPage extends ConsumerWidget {
         const SizedBox(height: 40),
       ],
     );
+  }
+
+  /// Builds the approval status banner at the top of the detail view.
+  Widget _buildApprovalStatusBanner(BuildContext context, FieldVisit visit) {
+    if (visit.isApproved) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.successGreen.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.successGreen.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: AppTheme.successGreen, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Approved — Follow-up Work Unlocked',
+                    style: AppTheme.bodyLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.successGreen,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'This field visit has been approved by Admin. You can proceed with follow-up work.',
+                    style: AppTheme.bodySmall.copyWith(color: context.textSecondaryColor),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (visit.isDenied) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.dangerRed.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.dangerRed.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.cancel_rounded, color: AppTheme.dangerRed, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Denied — Follow-up Work Not Allowed',
+                    style: AppTheme.bodyLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.dangerRed,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'This field visit was denied by Admin. You cannot proceed with follow-up work.',
+                    style: AppTheme.bodySmall.copyWith(color: context.textSecondaryColor),
+                  ),
+                  if (visit.denialReason != null && visit.denialReason!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.dangerRed.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.info_outline, size: 14, color: AppTheme.dangerRed),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'Reason: ${visit.denialReason}',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.dangerRed,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // PENDING
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.warningOrange.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppTheme.warningOrange.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.hourglass_top_rounded, color: AppTheme.warningOrange, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Waiting for Admin Approval',
+                    style: AppTheme.bodyLarge.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.warningOrange,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Your field visit is under review. Follow-up work will be available once approved.',
+                    style: AppTheme.bodySmall.copyWith(color: context.textSecondaryColor),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Widget _buildSectionTitle(String title) {

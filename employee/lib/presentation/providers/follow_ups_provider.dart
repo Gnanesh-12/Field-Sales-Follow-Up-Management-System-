@@ -24,6 +24,8 @@ class FollowUpStatusNotifier extends StateNotifier<AsyncValue<FollowUp?>> {
       ref.invalidate(followUpsProvider);
       ref.invalidate(dashboardProvider);
     } catch (e, st) {
+      // Handle 403 Forbidden (approval not granted) gracefully
+      // The error message from ApiException is already user-friendly from the backend.
       state = AsyncValue.error(e, st);
     }
   }
@@ -32,6 +34,3 @@ class FollowUpStatusNotifier extends StateNotifier<AsyncValue<FollowUp?>> {
 final followUpStatusProvider = StateNotifierProvider<FollowUpStatusNotifier, AsyncValue<FollowUp?>>((ref) {
   return FollowUpStatusNotifier(ref);
 });
-
-// Avoid circular dependency by getting it directly in the function or ref.invalidate by name if it's imported
-// actually, I'll need to import dashboard_provider.dart
