@@ -9,6 +9,9 @@ import '../providers/dashboard_provider.dart';
 import '../../data/models/models.dart';
 import '../providers/theme_provider.dart';
 import '../../data/api_repository.dart';
+import '../providers/email_provider.dart';
+import 'gmail_settings_page.dart';
+import 'email_history_page.dart';
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
@@ -234,6 +237,59 @@ class ProfilePage extends ConsumerWidget {
                   'Joined',
                   DateFormat('MMM d, yyyy').format(profile.createdAt),
                 ),
+                const SizedBox(height: 24),
+
+                // ─── Email Integration Section ─────────────────────────
+                Text(
+                  'EMAIL',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: context.textMutedColor,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildNavTile(
+                  context,
+                  icon: Icons.email_outlined,
+                  title: 'Gmail Settings',
+                  subtitle: 'Connect or manage your Gmail',
+                  trailing: Consumer(
+                    builder: (context, ref, _) {
+                      final gmailStatus = ref.watch(gmailStatusProvider);
+                      return gmailStatus.when(
+                        data: (status) => Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: status.connected
+                                ? AppTheme.successGreen.withValues(alpha: 0.12)
+                                : Colors.grey.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            status.connected ? 'Connected' : 'Not Connected',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: status.connected ? AppTheme.successGreen : context.textMutedColor,
+                            ),
+                          ),
+                        ),
+                        loading: () => const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                        error: (_, __) => Icon(Icons.error_outline, size: 16, color: context.textMutedColor),
+                      );
+                    },
+                  ),
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GmailSettingsPage())),
+                ),
+                const SizedBox(height: 8),
+                _buildNavTile(
+                  context,
+                  icon: Icons.history_rounded,
+                  title: 'Email History',
+                  subtitle: 'View sent emails',
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const EmailHistoryPage())),
+                ),
                 const SizedBox(height: 32),
 
                 SizedBox(
@@ -326,6 +382,58 @@ class ProfilePage extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNavTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.surfaceColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.borderSubtleColor),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: context.backgroundColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: context.textSecondaryColor, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.w500, color: context.textPrimaryColor)),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: AppTheme.bodySmall.copyWith(color: context.textSecondaryColor)),
+                  ],
+                ],
+              ),
+            ),
+            if (trailing != null) ...[
+              const SizedBox(width: 8),
+              trailing,
+            ],
+            const SizedBox(width: 8),
+            Icon(Icons.chevron_right, size: 20, color: context.textMutedColor),
+          ],
+        ),
       ),
     );
   }

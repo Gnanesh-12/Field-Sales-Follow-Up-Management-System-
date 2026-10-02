@@ -11,17 +11,19 @@ datasource db {
 }
 
 model Employee {
-  id             String       @id @map("_id") // Employee ID like SE-FS-001
-  name           String
-  phone          String?
-  profilePicture String?
-  password       String       // For basic auth (PIN)
-  isFirstLogin   Boolean      @default(true)
-  role           String       @default("employee-role")
-  status         String       @default("active") // 'active' | 'deactivated'
-  fieldVisits    FieldVisit[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id              String            @id @map("_id") // Employee ID like SE-FS-001
+  name            String
+  phone           String?
+  profilePicture  String?
+  password        String            // For basic auth (PIN)
+  isFirstLogin    Boolean           @default(true)
+  role            String            @default("employee-role")
+  status          String            @default("active") // 'active' | 'deactivated'
+  fieldVisits     FieldVisit[]
+  gmailConnection GmailConnection?
+  emailLogs       EmailLog[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 }
 
 model Admin {
@@ -38,10 +40,50 @@ model CustomerSite {
   id          String       @id @default(uuid()) @map("_id")
   name        String
   address     String
+  email       String?      // Customer email address for email communication
   geoTag      String?
   fieldVisits FieldVisit[]
+  emailLogs   EmailLog[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+}
+
+// ─── Email Integration (Phase 1) ─────────────────────────────────
+
+model GmailConnection {
+  id            String   @id @default(uuid()) @map("_id")
+  employeeId    String   @unique
+  employee      Employee @relation(fields: [employeeId], references: [id])
+  gmailAddress  String                    // The connected Gmail address
+  accessToken   String                    // Encrypted OAuth access token
+  refreshToken  String                    // Encrypted OAuth refresh token
+  tokenExpiry   DateTime                  // When the access token expires
+  scopes        String                    // Granted OAuth scopes
+  isActive      Boolean  @default(true)   // Whether connection is active
+  connectedAt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model EmailLog {
+  id              String        @id @default(uuid()) @map("_id")
+  employeeId      String
+  employee        Employee      @relation(fields: [employeeId], references: [id])
+  customerSiteId  String?
+  customerSite    CustomerSite? @relation(fields: [customerSiteId], references: [id])
+  fieldVisitId    String?
+  senderEmail     String        // The Gmail address used to send
+  recipientEmail  String        // To address
+  ccEmails        String[]      // CC addresses
+  subject         String
+  bodyPreview     String?       // First ~200 chars of body for history display
+  gmailMessageId  String?       // Gmail API message ID
+  status          String        @default("QUEUED") // QUEUED | SENT | FAILED
+  errorMessage    String?       // Error details if FAILED
+  attachmentCount Int           @default(0)
+  isVisitReport   Boolean       @default(false)
+  sentAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model Material {

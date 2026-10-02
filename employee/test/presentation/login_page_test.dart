@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:employee_app/presentation/login_page.dart';
-import 'package:employee_app/data/auth_repository.dart';
-import 'package:employee_app/presentation/providers/auth_provider.dart';
+import '../../lib/presentation/login_page.dart';
+import '../../lib/data/auth_repository.dart';
+import '../../lib/presentation/providers/auth_provider.dart';
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}

@@ -9,6 +9,7 @@ import { EmployeeModule } from './employee/employee.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { AdminModule } from './admin/admin.module'; //change made
+import { EmailModule } from './email/email.module'; // Phase 1 Email Integration
 
 @Module({
   imports: [
@@ -25,8 +26,10 @@ import { AdminModule } from './admin/admin.module'; //change made
     AuthModule,
     EmployeeModule,
     AdminModule, //change made
+    EmailModule, // Phase 1 Email Integration
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule { }
+

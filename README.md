@@ -131,6 +131,48 @@ The system relies on a well-structured relational database with the following co
 
 ---
 
+## 📧 Email Integration (Phase 1)
+
+Kshetra now includes secure, direct-from-employee email sending via the Gmail API. Employees can connect their existing Gmail accounts securely via Google OAuth to send emails and field visit reports directly from the app.
+
+### 1. Google Cloud Setup (Production)
+To enable Gmail API sending, you must configure a project in the Google Cloud Console:
+1. **Enable the Gmail API**: In your Google Cloud project, navigate to **APIs & Services > Library** and enable the "Gmail API".
+2. **OAuth Consent Screen**:
+   - Set the User Type to **External** (or Internal if using Google Workspace).
+   - Add the necessary scope: `https://www.googleapis.com/auth/gmail.send`.
+   - Add your application name, support email, and developer contact info.
+3. **Create OAuth Client**:
+   - Navigate to **APIs & Services > Credentials** and click **Create Credentials > OAuth client ID**.
+   - Select **Web application** as the application type.
+   - Add your authorized redirect URIs. For local development, this is typically `http://localhost:3000/email/gmail/callback/web`. For production, use your deployed backend URL.
+4. **Environment Variables**:
+   Add the generated Client ID and Client Secret to your backend environment (or Render dashboard):
+   ```env
+   GOOGLE_CLIENT_ID="your_client_id_here"
+   GOOGLE_CLIENT_SECRET="your_client_secret_here"
+   GOOGLE_REDIRECT_URI="https://your-backend.onrender.com/email/gmail/callback/web"
+   GMAIL_SCOPES="https://www.googleapis.com/auth/gmail.send"
+   EMAIL_PROVIDER="gmail" # Use 'gmail' in production
+   ```
+
+### 2. Local Testing with Mailpit (Development)
+For local development without needing real Gmail accounts or Google Cloud setup, you can use Mailpit to catch and inspect outgoing emails.
+1. **Install Mailpit**:
+   - Via Docker: `docker run -d -p 1025:1025 -p 8025:8025 axllent/mailpit`
+   - Via Homebrew (macOS): `brew install mailpit && mailpit`
+2. **Configure Backend**:
+   Update your backend `.env` file to use Mailpit:
+   ```env
+   EMAIL_PROVIDER="mailpit"
+   MAILPIT_HOST="localhost"
+   MAILPIT_PORT="1025"
+   ```
+3. **View Emails**:
+   Open the Mailpit web interface at `http://localhost:8025` to see all emails sent by the application during development.
+
+---
+
 ## 📝 License
 
 This project is proprietary and confidential. Unauthorized copying, distribution, or modification of this project is strictly prohibited.

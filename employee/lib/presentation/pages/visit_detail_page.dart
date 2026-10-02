@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import '../../data/api_repository.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/visits_provider.dart';
+import 'email_composer_page.dart';
 
 final addressProvider = FutureProvider.family<String, (double, double)>((ref, coords) async {
   try {
@@ -277,6 +278,40 @@ class VisitDetailPage extends ConsumerWidget {
             ),
           )),
         ],
+        const SizedBox(height: 24),
+        
+        // ─── Email Visit Report Button ─────────────────────────────────
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton.icon(
+            icon: const Icon(Icons.email_outlined, color: Colors.white),
+            label: Text(
+              'Email Visit Report',
+              style: AppTheme.buttonText.copyWith(color: Colors.white),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: context.accentColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EmailComposerPage(
+                    customerSiteId: visit.customerSiteId,
+                    recipientName: visit.site?.name,
+                    initialSubject: 'Field Visit Report - ${visit.site?.name ?? "Unknown"}',
+                    initialBody: 'Please find attached the field visit report for the recent visit.',
+                    attachmentUrls: visit.attachments.where((a) => a.type == 'image').map((a) => a.fileUrl).toList(),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        
         const SizedBox(height: 40),
       ],
     );
