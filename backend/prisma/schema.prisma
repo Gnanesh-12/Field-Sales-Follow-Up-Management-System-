@@ -11,19 +11,21 @@ datasource db {
 }
 
 model Employee {
-  id              String            @id @map("_id") // Employee ID like SE-FS-001
+  id              String           @id @map("_id") // Employee ID like SE-FS-001
   name            String
   phone           String?
   profilePicture  String?
-  password        String            // For basic auth (PIN)
-  isFirstLogin    Boolean           @default(true)
-  role            String            @default("employee-role")
-  status          String            @default("active") // 'active' | 'deactivated'
+  password        String // For basic auth (PIN)
+  isFirstLogin    Boolean          @default(true)
+  role            String           @default("employee-role")
+  status          String           @default("active") // 'active' | 'deactivated'
   fieldVisits     FieldVisit[]
   gmailConnection GmailConnection?
   emailLogs       EmailLog[]
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  emailThreads    EmailThread[]
+  emailMessages   EmailMessage[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }
 
 model Admin {
@@ -37,31 +39,34 @@ model Admin {
 }
 
 model CustomerSite {
-  id          String       @id @default(uuid()) @map("_id")
-  name        String
-  address     String
-  email       String?      // Customer email address for email communication
-  geoTag      String?
-  fieldVisits FieldVisit[]
-  emailLogs   EmailLog[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id           String        @id @default(uuid()) @map("_id")
+  name         String
+  address      String
+  email        String? // Customer email address for email communication
+  geoTag       String?
+  fieldVisits  FieldVisit[]
+  emailLogs    EmailLog[]
+  emailThreads EmailThread[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 // ─── Email Integration (Phase 1) ─────────────────────────────────
 
 model GmailConnection {
-  id            String   @id @default(uuid()) @map("_id")
-  employeeId    String   @unique
-  employee      Employee @relation(fields: [employeeId], references: [id])
-  gmailAddress  String                    // The connected Gmail address
-  accessToken   String                    // Encrypted OAuth access token
-  refreshToken  String                    // Encrypted OAuth refresh token
-  tokenExpiry   DateTime                  // When the access token expires
-  scopes        String                    // Granted OAuth scopes
-  isActive      Boolean  @default(true)   // Whether connection is active
-  connectedAt   DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String    @id @default(uuid()) @map("_id")
+  employeeId   String    @unique
+  employee     Employee  @relation(fields: [employeeId], references: [id])
+  gmailAddress String // The connected Gmail address
+  accessToken  String // Encrypted OAuth access token
+  refreshToken String // Encrypted OAuth refresh token
+  tokenExpiry  DateTime // When the access token expires
+  scopes       String // Granted OAuth scopes
+  isActive     Boolean   @default(true) // Whether connection is active
+  connectedAt  DateTime  @default(now())
+  historyId    String?
+  lastSyncedAt DateTime?
+  updatedAt    DateTime  @updatedAt
 }
 
 model EmailLog {
@@ -71,14 +76,14 @@ model EmailLog {
   customerSiteId  String?
   customerSite    CustomerSite? @relation(fields: [customerSiteId], references: [id])
   fieldVisitId    String?
-  senderEmail     String        // The Gmail address used to send
-  recipientEmail  String        // To address
-  ccEmails        String[]      // CC addresses
+  senderEmail     String // The Gmail address used to send
+  recipientEmail  String // To address
+  ccEmails        String[] // CC addresses
   subject         String
-  bodyPreview     String?       // First ~200 chars of body for history display
-  gmailMessageId  String?       // Gmail API message ID
+  bodyPreview     String? // First ~200 chars of body for history display
+  gmailMessageId  String? // Gmail API message ID
   status          String        @default("QUEUED") // QUEUED | SENT | FAILED
-  errorMessage    String?       // Error details if FAILED
+  errorMessage    String? // Error details if FAILED
   attachmentCount Int           @default(0)
   isVisitReport   Boolean       @default(false)
   sentAt          DateTime?
@@ -87,11 +92,11 @@ model EmailLog {
 }
 
 model Material {
-  id       String           @id @default(uuid()) @map("_id")
-  name     String
-  unit     String           // e.g. 'kg', 'units', 'litres'
-  supplies MaterialSupply[]
-  createdAt DateTime        @default(now())
+  id        String           @id @default(uuid()) @map("_id")
+  name      String
+  unit      String // e.g. 'kg', 'units', 'litres'
+  supplies  MaterialSupply[]
+  createdAt DateTime         @default(now())
 }
 
 model FieldVisit {
@@ -102,18 +107,18 @@ model FieldVisit {
   status         String           @default("PENDING") // 'PENDING' | 'APPROVED' | 'DENIED'
   employeeId     String
   employee       Employee         @relation(fields: [employeeId], references: [id])
-  customerSiteId String           
+  customerSiteId String
   site           CustomerSite     @relation(fields: [customerSiteId], references: [id])
   followUps      FollowUp[]
   location       Location?
   attachments    Attachment[]
   materials      MaterialSupply[]
   // Approval metadata
-  approvedBy     String?          // Admin ID who approved
-  approvedAt     DateTime?        // When approved
-  deniedBy       String?          // Admin ID who denied
-  deniedAt       DateTime?        // When denied
-  denialReason   String?          // Reason provided for denial
+  approvedBy     String? // Admin ID who approved
+  approvedAt     DateTime? // When approved
+  deniedBy       String? // Admin ID who denied
+  deniedAt       DateTime? // When denied
+  denialReason   String? // Reason provided for denial
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 }
@@ -123,7 +128,7 @@ model FollowUp {
   dueDate      DateTime
   status       String     @default("pending") // 'pending', 'completed'
   notes        String?
-  fieldVisitId String     
+  fieldVisitId String
   visit        FieldVisit @relation(fields: [fieldVisitId], references: [id])
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
@@ -134,7 +139,7 @@ model Location {
   lat          Float
   lng          Float
   accuracy     Float?
-  fieldVisitId String     @unique 
+  fieldVisitId String     @unique
   visit        FieldVisit @relation(fields: [fieldVisitId], references: [id])
 }
 
@@ -142,7 +147,7 @@ model Attachment {
   id           String     @id @default(uuid()) @map("_id")
   fileUrl      String
   type         String     @default("image") // 'image'
-  fieldVisitId String     
+  fieldVisitId String
   visit        FieldVisit @relation(fields: [fieldVisitId], references: [id])
   createdAt    DateTime   @default(now())
 }
@@ -150,8 +155,61 @@ model Attachment {
 model MaterialSupply {
   id           String     @id @default(uuid()) @map("_id")
   quantity     Float
-  materialId   String     
+  materialId   String
   material     Material   @relation(fields: [materialId], references: [id])
-  fieldVisitId String     
+  fieldVisitId String
   visit        FieldVisit @relation(fields: [fieldVisitId], references: [id])
+}
+
+model EmailThread {
+  id             String    @id @default(uuid()) @map("_id")
+  employeeId     String
+  customerSiteId String?
+  gmailThreadId  String
+  subject        String?
+  participants   String[]
+  lastMessageAt  DateTime?
+  unreadCount    Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  employee     Employee       @relation(fields: [employeeId], references: [id])
+  customerSite CustomerSite?  @relation(fields: [customerSiteId], references: [id])
+  messages     EmailMessage[]
+
+  @@unique([employeeId, gmailThreadId])
+}
+
+model EmailMessage {
+  id             String @id @default(uuid()) @map("_id")
+  threadId       String
+  employeeId     String
+  gmailMessageId String
+  gmailThreadId  String
+
+  direction String // INBOUND | OUTBOUND
+
+  fromEmail String
+  toEmails  String[]
+  ccEmails  String[]
+
+  subject  String?
+  bodyText String?
+  bodyHtml String?
+  snippet  String?
+
+  messageId  String?
+  inReplyTo  String?
+  references String?
+
+  isRead Boolean  @default(false)
+  sentAt DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  thread   EmailThread @relation(fields: [threadId], references: [id])
+  employee Employee    @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, gmailMessageId])
 }

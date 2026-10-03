@@ -1,10 +1,17 @@
-import { Injectable, Logger, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { GmailService } from './gmail.service';
 import { GmailOAuthService } from './gmail-oauth.service';
 import { MailpitService } from './mailpit.service';
 import { SendEmailDto, SendVisitReportDto } from './dto/send-email.dto';
+import { GmailSyncService } from './gmail-sync.service';
 
 /**
  * Email Service — orchestrates email sending, validation, and logging.
@@ -39,6 +46,7 @@ export class EmailService {
     private readonly gmailService: GmailService,
     private readonly gmailOAuthService: GmailOAuthService,
     private readonly mailpitService: MailpitService,
+    private readonly gmailSyncService: GmailSyncService,
   ) {
     this.emailProvider = this.configService.get<string>('EMAIL_PROVIDER') || 'gmail';
     this.logger.log(`Email provider: ${this.emailProvider}`);
@@ -494,5 +502,540 @@ export class EmailService {
     lines.push('Sent via Kshetra Field Sales Management System');
 
     return lines.join('\n');
+  }
+    // ============================================================
+  // PHASE 2 — EMAIL INBOX / THREADS
+  // ============================================================
+
+  async getEmployeeEmailThreads(
+    employeeId: string,
+  ) {
+    const employee =
+      await this.prisma.employee.findUnique({
+        where: {
+          id: employeeId,
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+
+    if (!employee) {
+      throw new NotFoundException(
+        'Employee not found.',
+      );
+    }
+
+    return this.prisma.emailThread.findMany({
+      where: {
+        employeeId,
+      },
+      include: {
+        customerSite: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        lastMessageAt: 'desc',
+      },
+    });
+  }
+
+  async getEmailThread(
+    employeeId: string,
+    threadId: string,
+  ) {
+    const thread =
+      await this.prisma.emailThread.findFirst({
+        where: {
+          id: threadId,
+          employeeId,
+        },
+        include: {
+          customerSite: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          messages: {
+            orderBy: {
+              sentAt: 'asc',
+            },
+          },
+        },
+      });
+
+    if (!thread) {
+      throw new NotFoundException(
+        'Email conversation not found.',
+      );
+    }
+
+    return thread;
+  }
+
+  async getThreadForAdmin(
+    threadId: string,
+  ) {
+    const thread =
+      await this.prisma.emailThread.findUnique({
+        where: {
+          id: threadId,
+        },
+        include: {
+          customerSite: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          messages: {
+            orderBy: {
+              sentAt: 'asc',
+            },
+          },
+        },
+      });
+
+    if (!thread) {
+      throw new NotFoundException(
+        'Email conversation not found.',
+      );
+    }
+
+    return thread;
+  }
+
+  async syncEmployeeEmail(
+    employeeId: string,
+  ) {
+    return this.gmailSyncService.syncEmployee(
+      employeeId,
+    );
+  }
+
+  async replyToThread(
+    employeeId: string,
+    threadId: string,
+    body: string,
+  ) {
+    if (!body?.trim()) {
+      throw new BadRequestException(
+        'Reply body is required.',
+      );
+    }
+
+    const thread =
+      await this.prisma.emailThread.findFirst({
+        where: {
+          id: threadId,
+          employeeId,
+        },
+        include: {
+          messages: {
+            orderBy: {
+              sentAt: 'desc',
+            },
+            take: 1,
+          },
+        },
+      });
+
+    if (!thread) {
+      throw new NotFoundException(
+        'Email conversation not found.',
+      );
+    }
+
+    const latestMessage =
+      thread.messages[0];
+
+    if (!latestMessage) {
+      throw new BadRequestException(
+        'This conversation has no messages.',
+      );
+    }
+
+    const to =
+      latestMessage.fromEmail;
+
+    if (!this.isValidEmail(to)) {
+      throw new BadRequestException(
+        'Customer email address is invalid.',
+      );
+    }
+
+    const subject =
+      latestMessage.subject ||
+      thread.subject ||
+      'Email conversation';
+
+    const replySubject =
+      subject
+        .toLowerCase()
+        .startsWith('re:')
+        ? subject
+        : `Re: ${subject}`;
+
+    const result =
+      await this.gmailService.replyToThread(
+        employeeId,
+        {
+          threadId:
+            thread.gmailThreadId,
+          to,
+          subject:
+            replySubject,
+          body,
+          inReplyTo:
+            latestMessage.messageId ||
+            undefined,
+          references:
+            latestMessage.references ||
+            latestMessage.messageId ||
+            undefined,
+        },
+      );
+
+    const senderConnection =
+      await this.prisma.gmailConnection.findUnique({
+        where: {
+          employeeId,
+        },
+        select: {
+          gmailAddress: true,
+        },
+      });
+
+    if (!senderConnection) {
+      throw new BadRequestException(
+        'Gmail connection not found.',
+      );
+    }
+
+    const sentAt =
+      new Date();
+
+    const message =
+      await this.prisma.emailMessage.create({
+        data: {
+          threadId:
+            thread.id,
+
+          employeeId,
+
+          gmailMessageId:
+            result.messageId,
+
+          gmailThreadId:
+            result.threadId ||
+            thread.gmailThreadId,
+
+          direction:
+            'OUTBOUND',
+
+          fromEmail:
+            senderConnection.gmailAddress,
+
+          toEmails: [
+            to,
+          ],
+
+          ccEmails: [],
+
+          subject:
+            replySubject,
+
+          bodyText:
+            body,
+
+          bodyHtml:
+            this.plainTextToHtml(
+              body,
+            ),
+
+          snippet:
+            body.substring(
+              0,
+              200,
+            ),
+
+          isRead:
+            true,
+
+          sentAt,
+        },
+      });
+
+    await this.prisma.emailThread.update({
+      where: {
+        id: thread.id,
+      },
+      data: {
+        subject:
+          replySubject,
+
+        lastMessageAt:
+          sentAt,
+
+        unreadCount: 0,
+      },
+    });
+
+    return {
+      success: true,
+      message,
+    };
+  }
+
+  async forwardMessage(
+    employeeId: string,
+    messageId: string,
+    to: string,
+    body: string,
+  ) {
+    if (!this.isValidEmail(to)) {
+      throw new BadRequestException(
+        'Invalid recipient email address.',
+      );
+    }
+
+    const original =
+      await this.prisma.emailMessage.findFirst({
+        where: {
+          id: messageId,
+          employeeId,
+        },
+      });
+
+    if (!original) {
+      throw new NotFoundException(
+        'Email message not found.',
+      );
+    }
+
+    const subject =
+      original.subject ||
+      'Email';
+
+    const originalBody =
+      original.bodyText ||
+      '';
+
+    const result =
+      await this.gmailService.forwardMessage(
+        employeeId,
+        {
+          to,
+          subject,
+          body,
+          originalBody,
+        },
+      );
+
+    const senderConnection =
+      await this.prisma.gmailConnection.findUnique({
+        where: {
+          employeeId,
+        },
+        select: {
+          gmailAddress: true,
+        },
+      });
+
+    if (!senderConnection) {
+      throw new BadRequestException(
+        'Gmail connection not found.',
+      );
+    }
+
+    const sentAt =
+      new Date();
+
+    const forwardSubject =
+      subject
+        .toLowerCase()
+        .startsWith('fwd:')
+        ? subject
+        : `Fwd: ${subject}`;
+
+    const thread =
+      await this.prisma.emailThread.create({
+        data: {
+          employeeId,
+
+          customerSiteId:
+            null,
+
+          gmailThreadId:
+            result.threadId,
+
+          subject:
+            forwardSubject,
+
+          participants: [
+            senderConnection.gmailAddress,
+            to,
+          ],
+
+          lastMessageAt:
+            sentAt,
+
+          unreadCount: 0,
+        },
+      });
+
+    const message =
+      await this.prisma.emailMessage.create({
+        data: {
+          threadId:
+            thread.id,
+
+          employeeId,
+
+          gmailMessageId:
+            result.messageId,
+
+          gmailThreadId:
+            result.threadId,
+
+          direction:
+            'OUTBOUND',
+
+          fromEmail:
+            senderConnection.gmailAddress,
+
+          toEmails: [
+            to,
+          ],
+
+          ccEmails: [],
+
+          subject:
+            forwardSubject,
+
+          bodyText:
+            body,
+
+          bodyHtml:
+            this.plainTextToHtml(
+              body,
+            ),
+
+          snippet:
+            body.substring(
+              0,
+              200,
+            ),
+
+          isRead:
+            true,
+
+          sentAt,
+        },
+      });
+
+    return {
+      success: true,
+      message,
+    };
+  }
+
+  async markThreadRead(
+    employeeId: string,
+    threadId: string,
+  ) {
+    const thread =
+      await this.prisma.emailThread.findFirst({
+        where: {
+          id: threadId,
+          employeeId,
+        },
+        include: {
+          messages: true,
+        },
+      });
+
+    if (!thread) {
+      throw new NotFoundException(
+        'Email conversation not found.',
+      );
+    }
+
+    const unreadMessages =
+      thread.messages.filter(
+        (message) =>
+          !message.isRead &&
+          message.direction ===
+            'INBOUND',
+      );
+
+    for (
+      const message of
+        unreadMessages
+    ) {
+      try {
+        await this.gmailService.markMessageRead(
+          employeeId,
+          message.gmailMessageId,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `Could not mark Gmail message as read: ${error.message}`,
+        );
+      }
+
+      await this.prisma.emailMessage.update({
+        where: {
+          id: message.id,
+        },
+        data: {
+          isRead: true,
+        },
+      });
+    }
+
+    await this.prisma.emailThread.update({
+      where: {
+        id: thread.id,
+      },
+      data: {
+        unreadCount: 0,
+      },
+    });
+
+    return {
+      success: true,
+    };
+  }
+
+  private plainTextToHtml(
+    text: string,
+  ): string {
+    return text
+      .replace(
+        /&/g,
+        '&amp;',
+      )
+      .replace(
+        /</g,
+        '&lt;',
+      )
+      .replace(
+        />/g,
+        '&gt;',
+      )
+      .replace(
+        /\n/g,
+        '<br>',
+      );
   }
 }

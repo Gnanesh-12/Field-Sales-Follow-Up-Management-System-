@@ -1,92 +1,308 @@
-import { useState, useEffect } from 'react';
-import { Navigation } from './components/Navigation';
-import { EmployeesPage } from './pages/EmployeesPage';
-import { FieldEntriesPage } from './pages/FieldEntriesPage';
-import { EmployeeActivityPage } from './pages/EmployeeActivityPage';
-import { AuthPage } from './pages/AuthPage';
+// import { useState, useEffect } from 'react';
+// import { Navigation } from './components/Navigation';
+// import { EmployeesPage } from './pages/EmployeesPage';
+// import { FieldEntriesPage } from './pages/FieldEntriesPage';
+// import { EmployeeActivityPage } from './pages/EmployeeActivityPage';
+// import { AuthPage } from './pages/AuthPage';
+
+// export default function App() {
+//   const [token, setToken] = useState<string | null>(() => {
+//     try {
+//       localStorage.removeItem('token');
+//       localStorage.removeItem('user');
+
+//       return sessionStorage.getItem('token');
+//     } catch {
+//       return null;
+//     }
+//   });
+
+//   const [activeTab, setActiveTab] = useState<'employees' | 'entries' | 'activity'>('activity');
+
+//   // Theme State
+//   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+//     const savedTheme = localStorage.getItem('theme');
+//     return savedTheme ? savedTheme === 'dark' : true;
+//   });
+
+//   useEffect(() => {
+//     if (isDarkMode) {
+//       document.documentElement.classList.remove('light');
+//       localStorage.setItem('theme', 'dark');
+//     } else {
+//       document.documentElement.classList.add('light');
+//       localStorage.setItem('theme', 'light');
+//     }
+//   }, [isDarkMode]);
+
+//   const toggleTheme = () => setIsDarkMode(!isDarkMode);
+
+//   const handleLogout = () => {
+//     sessionStorage.removeItem('token');
+//     sessionStorage.removeItem('user');
+
+//     localStorage.removeItem('token');
+//     localStorage.removeItem('user');
+
+//     setToken(null);
+//     setActiveTab('activity');
+//   };
+
+//   if (!token) {
+//     return <AuthPage onAuthSuccess={(newToken) => setToken(newToken)} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />;
+//   }
+
+//   return (
+//     <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-app)]">
+//       <div className={`hidden md:flex md:w-64 lg:w-72 h-full shrink-0 border-r ${isDarkMode ? 'border-[var(--border-subtle)] bg-[var(--bg-surface)]' : 'border-indigo-950/20 bg-indigo-900'}`}>
+//         <Navigation
+//           activeTab={activeTab}
+//           setActiveTab={setActiveTab}
+//           onLogout={handleLogout}
+//           isDarkMode={isDarkMode}
+//           toggleTheme={toggleTheme}
+//         />
+//       </div>
+
+//       {/* Main Workspace */}
+//       <main className="flex-1 h-full overflow-y-auto min-w-0 bg-[var(--bg-app)] relative flex flex-col">
+//         {/* Mobile Header and Nav inside Navigation component, we can render it here for mobile */}
+//         <div className="md:hidden">
+//           <Navigation
+//             activeTab={activeTab}
+//             setActiveTab={setActiveTab}
+//             onLogout={handleLogout}
+//             isDarkMode={isDarkMode}
+//             toggleTheme={toggleTheme}
+//           />
+//         </div>
+        
+//         <div className="flex-1 p-4 md:p-8 w-full max-w-7xl mx-auto">
+//           <div className={activeTab === 'employees' ? 'block' : 'hidden'}>
+//             <EmployeesPage />
+//           </div>
+//           <div className={activeTab === 'entries' ? 'block' : 'hidden'}>
+//             <FieldEntriesPage />
+//           </div>
+//           <div className={activeTab === 'activity' ? 'block' : 'hidden'}>
+//             <EmployeeActivityPage />
+//           </div>
+//         </div>
+//       </main>
+//     </div>
+//   );
+// }
+
+
+import {
+  useEffect,
+  useState,
+} from 'react';
+
+import {
+  Navigation,
+} from './components/Navigation';
+
+import {
+  EmployeesPage,
+} from './pages/EmployeesPage';
+
+import {
+  FieldEntriesPage,
+} from './pages/FieldEntriesPage';
+
+import {
+  EmployeeActivityPage,
+} from './pages/EmployeeActivityPage';
+
+import {
+  EmailPage,
+} from './pages/EmailPage';
+
+import {
+  AuthPage,
+} from './pages/AuthPage';
 
 export default function App() {
-  const [token, setToken] = useState<string | null>(() => {
-    try {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+  const [token, setToken] =
+    useState<string | null>(() => {
+      try {
+        localStorage.removeItem(
+          'token',
+        );
 
-      return sessionStorage.getItem('token');
-    } catch {
-      return null;
-    }
-  });
+        localStorage.removeItem(
+          'user',
+        );
 
-  const [activeTab, setActiveTab] = useState<'employees' | 'entries' | 'activity'>('activity');
+        return sessionStorage.getItem(
+          'token',
+        );
+      } catch {
+        return null;
+      }
+    });
 
-  // Theme State
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    const savedTheme = localStorage.getItem('theme');
-    return savedTheme ? savedTheme === 'dark' : true;
+  const [
+    activeTab,
+    setActiveTab,
+  ] = useState<
+    'employees' |
+    'entries' |
+    'activity' |
+    'email'
+  >('activity');
+
+  const [
+    isDarkMode,
+    setIsDarkMode,
+  ] = useState<boolean>(() => {
+    const savedTheme =
+      localStorage.getItem(
+        'theme',
+      );
+
+    return savedTheme
+      ? savedTheme === 'dark'
+      : true;
   });
 
   useEffect(() => {
     if (isDarkMode) {
-      document.documentElement.classList.remove('light');
-      localStorage.setItem('theme', 'dark');
+      document.documentElement.classList.remove(
+        'light',
+      );
+
+      localStorage.setItem(
+        'theme',
+        'dark',
+      );
     } else {
-      document.documentElement.classList.add('light');
-      localStorage.setItem('theme', 'light');
+      document.documentElement.classList.add(
+        'light',
+      );
+
+      localStorage.setItem(
+        'theme',
+        'light',
+      );
     }
   }, [isDarkMode]);
 
-  const toggleTheme = () => setIsDarkMode(!isDarkMode);
+  const toggleTheme = () =>
+    setIsDarkMode(
+      !isDarkMode,
+    );
 
   const handleLogout = () => {
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('user');
+    sessionStorage.removeItem(
+      'token',
+    );
 
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem(
+      'user',
+    );
+
+    localStorage.removeItem(
+      'token',
+    );
+
+    localStorage.removeItem(
+      'user',
+    );
 
     setToken(null);
-    setActiveTab('activity');
+
+    setActiveTab(
+      'activity',
+    );
   };
 
   if (!token) {
-    return <AuthPage onAuthSuccess={(newToken) => setToken(newToken)} isDarkMode={isDarkMode} toggleTheme={toggleTheme} />;
+    return (
+      <AuthPage
+        onAuthSuccess={(newToken) =>
+          setToken(newToken)
+        }
+        isDarkMode={
+          isDarkMode
+        }
+        toggleTheme={
+          toggleTheme
+        }
+      />
+    );
   }
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[var(--bg-app)]">
-      <div className={`hidden md:flex md:w-64 lg:w-72 h-full shrink-0 border-r ${isDarkMode ? 'border-[var(--border-subtle)] bg-[var(--bg-surface)]' : 'border-indigo-950/20 bg-indigo-900'}`}>
+      <div
+        className={`hidden md:flex md:w-64 lg:w-72 h-full shrink-0 border-r ${
+          isDarkMode
+            ? 'border-[var(--border-subtle)] bg-[var(--bg-surface)]'
+            : 'border-indigo-950/20 bg-indigo-900'
+        }`}
+      >
         <Navigation
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          onLogout={handleLogout}
-          isDarkMode={isDarkMode}
-          toggleTheme={toggleTheme}
+          activeTab={
+            activeTab
+          }
+          setActiveTab={
+            setActiveTab
+          }
+          onLogout={
+            handleLogout
+          }
+          isDarkMode={
+            isDarkMode
+          }
+          toggleTheme={
+            toggleTheme
+          }
         />
       </div>
 
-      {/* Main Workspace */}
       <main className="flex-1 h-full overflow-y-auto min-w-0 bg-[var(--bg-app)] relative flex flex-col">
-        {/* Mobile Header and Nav inside Navigation component, we can render it here for mobile */}
         <div className="md:hidden">
           <Navigation
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            onLogout={handleLogout}
-            isDarkMode={isDarkMode}
-            toggleTheme={toggleTheme}
+            activeTab={
+              activeTab
+            }
+            setActiveTab={
+              setActiveTab
+            }
+            onLogout={
+              handleLogout
+            }
+            isDarkMode={
+              isDarkMode
+            }
+            toggleTheme={
+              toggleTheme
+            }
           />
         </div>
-        
+
         <div className="flex-1 p-4 md:p-8 w-full max-w-7xl mx-auto">
-          <div className={activeTab === 'employees' ? 'block' : 'hidden'}>
+          {activeTab ===
+            'employees' && (
             <EmployeesPage />
-          </div>
-          <div className={activeTab === 'entries' ? 'block' : 'hidden'}>
+          )}
+
+          {activeTab ===
+            'entries' && (
             <FieldEntriesPage />
-          </div>
-          <div className={activeTab === 'activity' ? 'block' : 'hidden'}>
+          )}
+
+          {activeTab ===
+            'activity' && (
             <EmployeeActivityPage />
-          </div>
+          )}
+
+          {activeTab ===
+            'email' && (
+            <EmailPage />
+          )}
         </div>
       </main>
     </div>
