@@ -333,17 +333,9 @@ export class GmailOAuthService {
     }
 
     this.oauth2Client.setCredentials(tokens);
-
-    const gmail = google.gmail({
-      version: 'v1',
-      auth: this.oauth2Client,
-    });
-
-    const profile = await gmail.users.getProfile({
-      userId: 'me',
-    });
-
-    const gmailAddress = profile.data.emailAddress;
+    const oauth2 = google.oauth2({ version: 'v2', auth: this.oauth2Client });
+    const profile = await oauth2.userinfo.get();
+    const gmailAddress = profile.data.email;
 
     if (!gmailAddress) {
       throw new Error('Could not retrieve Gmail address from Google.');
@@ -441,8 +433,7 @@ export class GmailOAuthService {
       }
     } catch (error) {
       this.logger.warn(
-        `Token revocation failed for employee ${employeeId}: ${
-          error?.message || error
+        `Token revocation failed for employee ${employeeId}: ${error?.message || error
         }`,
       );
     }
@@ -518,8 +509,8 @@ export class GmailOAuthService {
               : new Date(now + 3600 * 1000),
             ...(credentials.refresh_token
               ? {
-                  refreshToken: credentials.refresh_token,
-                }
+                refreshToken: credentials.refresh_token,
+              }
               : {}),
           },
         });
@@ -531,8 +522,7 @@ export class GmailOAuthService {
         );
       } catch (error) {
         this.logger.error(
-          `Token refresh failed for employee ${employeeId}: ${
-            error?.message || error
+          `Token refresh failed for employee ${employeeId}: ${error?.message || error
           }`,
         );
 
