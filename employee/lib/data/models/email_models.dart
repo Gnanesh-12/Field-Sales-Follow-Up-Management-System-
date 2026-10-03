@@ -212,10 +212,21 @@ class EmailLogEntry {
       createdAt: DateTime.parse(
         json['createdAt'],
       ).toLocal(),
+      // isVisitReport:
+      //     json['isVisitReport'] ?? false,
+      // attachmentCount:
+      //     json['attachmentCount'] ?? 0,
+      // customerSiteName:
+      //     json['customerSite']?['name'],
+      // customerSiteId:
+      //     json['customerSite']?['id'],
+      // fieldVisitId:
+      //     json['fieldVisitId'],
       isVisitReport:
           json['isVisitReport'] ?? false,
-      attachmentCount:
-          json['attachmentCount'] ?? 0,
+      attachmentCount: json['attachmentCount'] is String
+          ? int.tryParse(json['attachmentCount']) ?? 0
+          : (json['attachmentCount'] as int? ?? 0),
       customerSiteName:
           json['customerSite']?['name'],
       customerSiteId:
@@ -278,8 +289,12 @@ class EmailDetail {
       status: json['status'],
       errorMessage:
           json['errorMessage'],
-      attachmentCount:
-          json['attachmentCount'] ?? 0,
+      // attachmentCount:
+      //     json['attachmentCount'] ?? 0,
+      // isVisitReport:
+      attachmentCount: json['attachmentCount'] is String
+          ? int.tryParse(json['attachmentCount']) ?? 0
+          : (json['attachmentCount'] as int? ?? 0),
       isVisitReport:
           json['isVisitReport'] ?? false,
       fieldVisitId:
@@ -369,8 +384,11 @@ class EmailThreadModel {
                   json['lastMessageAt'],
                 ).toLocal()
               : null,
-      unreadCount:
-          json['unreadCount'] ?? 0,
+      // unreadCount:
+      //     json['unreadCount'] ?? 0,
+      unreadCount: json['unreadCount'] is String
+          ? int.tryParse(json['unreadCount']) ?? 0
+          : (json['unreadCount'] as int? ?? 0),
       customerSiteName:
           json['customerSite']?['name'],
       customerSiteEmail:

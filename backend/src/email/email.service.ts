@@ -507,8 +507,50 @@ export class EmailService {
   // PHASE 2 — EMAIL INBOX / THREADS
   // ============================================================
 
+  // async getEmployeeEmailThreads(
+  //   employeeId: string,
+  // ) {
+  //   const employee =
+  //     await this.prisma.employee.findUnique({
+  //       where: {
+  //         id: employeeId,
+  //       },
+  //       select: {
+  //         id: true,
+  //         name: true,
+  //       },
+  //     });
+
+  //   if (!employee) {
+  //     throw new NotFoundException(
+  //       'Employee not found.',
+  //     );
+  //   }
+
+  //   return this.prisma.emailThread.findMany({
+  //     where: {
+  //       employeeId,
+  //     },
+  //     include: {
+  //       customerSite: {
+  //         select: {
+  //           id: true,
+  //           name: true,
+  //           email: true,
+  //         },
+  //       },
+  //     },
+  //     orderBy: {
+  //       lastMessageAt: 'desc',
+  //     },
+  //   });
+  // }
+
   async getEmployeeEmailThreads(
     employeeId: string,
+    page = 1,
+    limit = 30,
+    customerSiteId?: string,
   ) {
     const employee =
       await this.prisma.employee.findUnique({
@@ -527,23 +569,38 @@ export class EmailService {
       );
     }
 
-    return this.prisma.emailThread.findMany({
-      where: {
-        employeeId,
-      },
-      include: {
-        customerSite: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
+    const where: any = { employeeId };
+    if (customerSiteId) {
+      where.customerSiteId = customerSiteId;
+    }
+
+    const [threads, total] = await Promise.all([
+      this.prisma.emailThread.findMany({
+        where,
+        include: {
+          customerSite: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
           },
         },
-      },
-      orderBy: {
-        lastMessageAt: 'desc',
-      },
-    });
+        orderBy: {
+          lastMessageAt: 'desc',
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.emailThread.count({ where }),
+    ]);
+
+    return {
+      threads,
+      total,
+      page,
+      limit,
+    };
   }
 
   async getEmailThread(

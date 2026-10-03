@@ -623,8 +623,23 @@ export class EmailController {
     'employee-role',
     'EMPLOYEE',
   )
+  // async getInbox(
+  //   @Req() req: any,
+  // ) {
+  //   const employeeId =
+  //     req.user.sub ||
+  //     req.user.employeeId;
+
+  //   return this.emailService.getEmployeeEmailThreads(
+  //     employeeId,
+  //   );
+  // }
+
   async getInbox(
     @Req() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('customerSiteId') customerSiteId?: string,
   ) {
     const employeeId =
       req.user.sub ||
@@ -632,6 +647,9 @@ export class EmailController {
 
     return this.emailService.getEmployeeEmailThreads(
       employeeId,
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 30,
+      customerSiteId,
     );
   }
 
