@@ -29,14 +29,13 @@ model Employee {
 }
 
 model Admin {
-  id              String                @id @map("_id")
-  name            String
-  email           String                @unique
-  password        String
-  role            String                @default("admin")
-  gmailConnection AdminGmailConnection?
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
+  id        String   @id @map("_id") // Admin ID
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model CustomerSite {
@@ -64,25 +63,6 @@ model GmailConnection {
   tokenExpiry  DateTime // When the access token expires
   scopes       String // Granted OAuth scopes
   isActive     Boolean   @default(true) // Whether connection is active
-  connectedAt  DateTime  @default(now())
-  historyId    String?
-  lastSyncedAt DateTime?
-  updatedAt    DateTime  @updatedAt
-}
-
-model AdminGmailConnection {
-  id      String @id @default(uuid()) @map("_id")
-  adminId String @unique
-  admin   Admin  @relation(fields: [adminId], references: [id])
-
-  gmailAddress String
-  accessToken  String
-  refreshToken String
-  tokenExpiry  DateTime
-  scopes       String
-
-  isActive Boolean @default(true)
-
   connectedAt  DateTime  @default(now())
   historyId    String?
   lastSyncedAt DateTime?

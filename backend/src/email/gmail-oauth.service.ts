@@ -245,721 +245,164 @@
 // }
 
 
-// import { Injectable, Logger } from '@nestjs/common';
-// import { ConfigService } from '@nestjs/config';
-// import { PrismaService } from '../prisma/prisma.service';
-// import { google, Auth } from 'googleapis';
-// import { JwtService } from '@nestjs/jwt';
-
-// @Injectable()
-// export class GmailOAuthService {
-//   private readonly logger = new Logger(GmailOAuthService.name);
-//   private oauth2Client: Auth.OAuth2Client;
-
-//   constructor(
-//     private readonly configService: ConfigService,
-//     private readonly prisma: PrismaService,
-//     private readonly jwtService: JwtService,
-//   ) {
-//     const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-//     const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET');
-//     const redirectUri = this.configService.get<string>('GOOGLE_REDIRECT_URI');
-
-//     if (clientId && clientSecret && redirectUri) {
-//       this.oauth2Client = new google.auth.OAuth2(
-//         clientId,
-//         clientSecret,
-//         redirectUri,
-//       );
-//     }
-//   }
-
-//   getAuthUrl(employeeId: string): string {
-//     if (!this.oauth2Client) {
-//       throw new Error(
-//         'Google OAuth is not configured. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REDIRECT_URI.',
-//       );
-//     }
-
-//     const scopes =
-//       this.configService.get<string>('GMAIL_SCOPES') ||
-//       'https://www.googleapis.com/auth/gmail.send,https://www.googleapis.com/auth/gmail.readonly';
-
-//     const stateToken = this.jwtService.sign(
-//       { sub: employeeId },
-//       { expiresIn: '15m' },
-//     );
-
-//     return this.oauth2Client.generateAuthUrl({
-//       access_type: 'offline',
-//       scope: scopes
-//         .split(',')
-//         .map((scope) => scope.trim())
-//         .filter(Boolean),
-//       prompt: 'consent',
-//       state: stateToken,
-//     });
-//   }
-
-//   async handleCallback(
-//     code: string,
-//     stateToken: string,
-//   ): Promise<{ gmailAddress: string }> {
-//     if (!this.oauth2Client) {
-//       throw new Error('Google OAuth is not configured.');
-//     }
-
-//     let employeeId: string;
-
-//     try {
-//       const decoded = this.jwtService.verify(stateToken);
-//       employeeId = decoded.sub;
-
-//       if (!employeeId) {
-//         throw new Error('Employee ID missing from OAuth state.');
-//       }
-//     } catch {
-//       throw new Error(
-//         'Invalid or expired OAuth state parameter. Please restart the connection process.',
-//       );
-//     }
-
-//     const { tokens } = await this.oauth2Client.getToken(code);
-
-//     if (!tokens.access_token || !tokens.refresh_token) {
-//       throw new Error(
-//         'Failed to obtain OAuth tokens. Please try connecting again.',
-//       );
-//     }
-
-//     this.oauth2Client.setCredentials(tokens);
-//     const oauth2 = google.oauth2({ version: 'v2', auth: this.oauth2Client });
-//     const profile = await oauth2.userinfo.get();
-//     const gmailAddress = profile.data.email;
-
-//     if (!gmailAddress) {
-//       throw new Error('Could not retrieve Gmail address from Google.');
-//     }
-
-//     const tokenExpiry = tokens.expiry_date
-//       ? new Date(tokens.expiry_date)
-//       : new Date(Date.now() + 3600 * 1000);
-
-//     const scopes =
-//       tokens.scope ||
-//       this.configService.get<string>('GMAIL_SCOPES') ||
-//       'https://www.googleapis.com/auth/gmail.send,https://www.googleapis.com/auth/gmail.readonly';
-
-//     await this.prisma.gmailConnection.upsert({
-//       where: {
-//         employeeId,
-//       },
-//       update: {
-//         gmailAddress,
-//         accessToken: tokens.access_token,
-//         refreshToken: tokens.refresh_token,
-//         tokenExpiry,
-//         scopes,
-//         isActive: true,
-//         historyId: null,
-//         lastSyncedAt: null,
-//       },
-//       create: {
-//         employeeId,
-//         gmailAddress,
-//         accessToken: tokens.access_token,
-//         refreshToken: tokens.refresh_token,
-//         tokenExpiry,
-//         scopes,
-//         isActive: true,
-//       },
-//     });
-
-//     this.logger.log(
-//       `Gmail connected for employee ${employeeId}: ${gmailAddress}`,
-//     );
-
-//     return {
-//       gmailAddress,
-//     };
-//   }
-
-//   async getConnectionStatus(employeeId: string): Promise<{
-//     connected: boolean;
-//     gmailAddress?: string;
-//     connectedAt?: Date;
-//     lastSyncedAt?: Date;
-//   }> {
-//     const connection = await this.prisma.gmailConnection.findUnique({
-//       where: {
-//         employeeId,
-//       },
-//       select: {
-//         gmailAddress: true,
-//         isActive: true,
-//         connectedAt: true,
-//         lastSyncedAt: true,
-//       },
-//     });
-
-//     if (!connection || !connection.isActive) {
-//       return {
-//         connected: false,
-//       };
-//     }
-
-//     return {
-//       connected: true,
-//       gmailAddress: connection.gmailAddress,
-//       connectedAt: connection.connectedAt,
-//       lastSyncedAt: connection.lastSyncedAt ?? undefined,
-//     };
-//   }
-
-//   async disconnect(employeeId: string): Promise<void> {
-//     const connection = await this.prisma.gmailConnection.findUnique({
-//       where: {
-//         employeeId,
-//       },
-//     });
-
-//     if (!connection) {
-//       return;
-//     }
-
-//     try {
-//       if (this.oauth2Client && connection.accessToken) {
-//         await this.oauth2Client.revokeToken(connection.accessToken);
-//       }
-//     } catch (error) {
-//       this.logger.warn(
-//         `Token revocation failed for employee ${employeeId}: ${error?.message || error
-//         }`,
-//       );
-//     }
-
-//     await this.prisma.gmailConnection.update({
-//       where: {
-//         employeeId,
-//       },
-//       data: {
-//         isActive: false,
-//         historyId: null,
-//         lastSyncedAt: null,
-//       },
-//     });
-
-//     this.logger.log(`Gmail disconnected for employee ${employeeId}`);
-//   }
-
-//   async getAuthenticatedClient(employeeId: string): Promise<{
-//     client: Auth.OAuth2Client;
-//     gmailAddress: string;
-//   }> {
-//     const connection = await this.prisma.gmailConnection.findUnique({
-//       where: {
-//         employeeId,
-//       },
-//     });
-
-//     if (!connection || !connection.isActive) {
-//       throw new Error(
-//         'Gmail is not connected. Please connect your Gmail account first.',
-//       );
-//     }
-
-//     const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
-//     const clientSecret =
-//       this.configService.get<string>('GOOGLE_CLIENT_SECRET');
-//     const redirectUri =
-//       this.configService.get<string>('GOOGLE_REDIRECT_URI');
-
-//     if (!clientId || !clientSecret || !redirectUri) {
-//       throw new Error('Google OAuth is not configured on the server.');
-//     }
-
-//     const client = new google.auth.OAuth2(
-//       clientId,
-//       clientSecret,
-//       redirectUri,
-//     );
-
-//     client.setCredentials({
-//       access_token: connection.accessToken,
-//       refresh_token: connection.refreshToken,
-//       expiry_date: connection.tokenExpiry.getTime(),
-//     });
-
-//     const now = Date.now();
-//     const expiryBuffer = 5 * 60 * 1000;
-
-//     if (connection.tokenExpiry.getTime() - now < expiryBuffer) {
-//       try {
-//         const { credentials } = await client.refreshAccessToken();
-
-//         await this.prisma.gmailConnection.update({
-//           where: {
-//             employeeId,
-//           },
-//           data: {
-//             accessToken:
-//               credentials.access_token || connection.accessToken,
-//             tokenExpiry: credentials.expiry_date
-//               ? new Date(credentials.expiry_date)
-//               : new Date(now + 3600 * 1000),
-//             ...(credentials.refresh_token
-//               ? {
-//                 refreshToken: credentials.refresh_token,
-//               }
-//               : {}),
-//           },
-//         });
-
-//         client.setCredentials(credentials);
-
-//         this.logger.log(
-//           `Gmail token refreshed for employee ${employeeId}`,
-//         );
-//       } catch (error) {
-//         this.logger.error(
-//           `Token refresh failed for employee ${employeeId}: ${error?.message || error
-//           }`,
-//         );
-
-//         await this.prisma.gmailConnection.update({
-//           where: {
-//             employeeId,
-//           },
-//           data: {
-//             isActive: false,
-//           },
-//         });
-
-//         throw new Error(
-//           'Gmail authorization has expired or been revoked. Please reconnect your Gmail account.',
-//         );
-//       }
-//     }
-
-//     return {
-//       client,
-//       gmailAddress: connection.gmailAddress,
-//     };
-//   }
-// }
-
-import {
-  Injectable,
-  Logger,
-} from '@nestjs/common';
-
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-
 import { PrismaService } from '../prisma/prisma.service';
-
-import {
-  google,
-  Auth,
-} from 'googleapis';
-
+import { google, Auth } from 'googleapis';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class GmailOAuthService {
-  private readonly logger =
-    new Logger(GmailOAuthService.name);
-
-  private oauth2Client?: Auth.OAuth2Client;
+  private readonly logger = new Logger(GmailOAuthService.name);
+  private oauth2Client: Auth.OAuth2Client;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
   ) {
-    const clientId =
-      this.configService.get<string>(
-        'GOOGLE_CLIENT_ID',
-      );
+    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    const clientSecret = this.configService.get<string>('GOOGLE_CLIENT_SECRET');
+    const redirectUri = this.configService.get<string>('GOOGLE_REDIRECT_URI');
 
-    const clientSecret =
-      this.configService.get<string>(
-        'GOOGLE_CLIENT_SECRET',
-      );
-
-    const redirectUri =
-      this.configService.get<string>(
-        'GOOGLE_REDIRECT_URI',
-      );
-
-    if (
-      clientId &&
-      clientSecret &&
-      redirectUri
-    ) {
-      this.oauth2Client =
-        new google.auth.OAuth2(
-          clientId,
-          clientSecret,
-          redirectUri,
-        );
-    }
-  }
-
-  // ============================================================
-  // COMMON
-  // ============================================================
-
-  private getScopes(): string[] {
-    const scopes =
-      this.configService.get<string>(
-        'GMAIL_SCOPES',
-      ) ||
-      [
-        'https://www.googleapis.com/auth/gmail.modify',
-        'https://www.googleapis.com/auth/gmail.send',
-      ].join(',');
-
-    return scopes
-      .split(',')
-      .map((scope) => scope.trim())
-      .filter(Boolean);
-  }
-
-  private createOAuthClient(): Auth.OAuth2Client {
-    const clientId =
-      this.configService.get<string>(
-        'GOOGLE_CLIENT_ID',
-      );
-
-    const clientSecret =
-      this.configService.get<string>(
-        'GOOGLE_CLIENT_SECRET',
-      );
-
-    const redirectUri =
-      this.configService.get<string>(
-        'GOOGLE_REDIRECT_URI',
-      );
-
-    if (
-      !clientId ||
-      !clientSecret ||
-      !redirectUri
-    ) {
-      throw new Error(
-        'Google OAuth is not configured on the server.',
+    if (clientId && clientSecret && redirectUri) {
+      this.oauth2Client = new google.auth.OAuth2(
+        clientId,
+        clientSecret,
+        redirectUri,
       );
     }
-
-    return new google.auth.OAuth2(
-      clientId,
-      clientSecret,
-      redirectUri,
-    );
   }
 
-  private ensureConfigured(): void {
+  getAuthUrl(employeeId: string): string {
     if (!this.oauth2Client) {
       throw new Error(
         'Google OAuth is not configured. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_REDIRECT_URI.',
       );
     }
-  }
 
-  // ============================================================
-  // EMPLOYEE GMAIL
-  // ============================================================
+    const scopes =
+      this.configService.get<string>('GMAIL_SCOPES') ||
+      'https://www.googleapis.com/auth/gmail.send,https://www.googleapis.com/auth/gmail.readonly';
 
-  getAuthUrl(
-    employeeId: string,
-  ): string {
-    this.ensureConfigured();
-
-    const stateToken =
-      this.jwtService.sign(
-        {
-          sub: employeeId,
-          type: 'employee',
-        },
-        {
-          expiresIn: '15m',
-        },
-      );
-
-    return this.oauth2Client!.generateAuthUrl(
-      {
-        access_type: 'offline',
-        scope: this.getScopes(),
-        prompt: 'consent',
-        state: stateToken,
-      },
+    const stateToken = this.jwtService.sign(
+      { sub: employeeId },
+      { expiresIn: '15m' },
     );
+
+    return this.oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: scopes
+        .split(',')
+        .map((scope) => scope.trim())
+        .filter(Boolean),
+      prompt: 'consent',
+      state: stateToken,
+    });
   }
-
-  // ============================================================
-  // ADMIN GMAIL
-  // ============================================================
-
-  getAdminAuthUrl(
-    adminId: string,
-  ): string {
-    this.ensureConfigured();
-
-    const stateToken =
-      this.jwtService.sign(
-        {
-          sub: adminId,
-          type: 'admin',
-        },
-        {
-          expiresIn: '15m',
-        },
-      );
-
-    return this.oauth2Client!.generateAuthUrl(
-      {
-        access_type: 'offline',
-        scope: this.getScopes(),
-        prompt: 'consent',
-        state: stateToken,
-      },
-    );
-  }
-
-  // ============================================================
-  // SHARED CALLBACK
-  // ============================================================
 
   async handleCallback(
     code: string,
     stateToken: string,
-  ): Promise<{
-    gmailAddress: string;
-    accountType: 'employee' | 'admin';
-  }> {
-    this.ensureConfigured();
+  ): Promise<{ gmailAddress: string }> {
+    if (!this.oauth2Client) {
+      throw new Error('Google OAuth is not configured.');
+    }
 
-    let decoded: any;
+    let employeeId: string;
 
     try {
-      decoded =
-        this.jwtService.verify(
-          stateToken,
-        );
+      const decoded = this.jwtService.verify(stateToken);
+      employeeId = decoded.sub;
+
+      if (!employeeId) {
+        throw new Error('Employee ID missing from OAuth state.');
+      }
     } catch {
       throw new Error(
         'Invalid or expired OAuth state parameter. Please restart the connection process.',
       );
     }
 
-    const userId =
-      decoded?.sub;
+    const { tokens } = await this.oauth2Client.getToken(code);
 
-    const accountType =
-      decoded?.type === 'admin'
-        ? 'admin'
-        : 'employee';
-
-    if (!userId) {
-      throw new Error(
-        'Invalid OAuth state. Account ID is missing.',
-      );
-    }
-
-    const { tokens } =
-      await this.oauth2Client!.getToken(
-        code,
-      );
-
-    if (
-      !tokens.access_token ||
-      !tokens.refresh_token
-    ) {
+    if (!tokens.access_token || !tokens.refresh_token) {
       throw new Error(
         'Failed to obtain OAuth tokens. Please try connecting again.',
       );
     }
 
-    const callbackClient =
-      this.createOAuthClient();
-
-    callbackClient.setCredentials(
-      tokens,
-    );
-
-    const oauth2 =
-      google.oauth2({
-        version: 'v2',
-        auth: callbackClient,
-      });
-
-    const profile =
-      await oauth2.userinfo.get();
-
-    const gmailAddress =
-      profile.data.email;
+    this.oauth2Client.setCredentials(tokens);
+    const oauth2 = google.oauth2({ version: 'v2', auth: this.oauth2Client });
+    const profile = await oauth2.userinfo.get();
+    const gmailAddress = profile.data.email;
 
     if (!gmailAddress) {
-      throw new Error(
-        'Could not retrieve Gmail address from Google.',
-      );
+      throw new Error('Could not retrieve Gmail address from Google.');
     }
 
-    const tokenExpiry =
-      tokens.expiry_date
-        ? new Date(
-            tokens.expiry_date,
-          )
-        : new Date(
-            Date.now() +
-              3600 * 1000,
-          );
+    const tokenExpiry = tokens.expiry_date
+      ? new Date(tokens.expiry_date)
+      : new Date(Date.now() + 3600 * 1000);
 
     const scopes =
       tokens.scope ||
-      this.getScopes().join(',');
+      this.configService.get<string>('GMAIL_SCOPES') ||
+      'https://www.googleapis.com/auth/gmail.send,https://www.googleapis.com/auth/gmail.readonly';
 
-    if (
-      accountType === 'admin'
-    ) {
-      const admin =
-        await this.prisma.admin.findUnique(
-          {
-            where: {
-              id: userId,
-            },
-          },
-        );
-
-      if (!admin) {
-        throw new Error(
-          'Admin account not found.',
-        );
-      }
-
-      await this.prisma.adminGmailConnection.upsert(
-        {
-          where: {
-            adminId: userId,
-          },
-          update: {
-            gmailAddress,
-            accessToken:
-              tokens.access_token,
-            refreshToken:
-              tokens.refresh_token,
-            tokenExpiry,
-            scopes,
-            isActive: true,
-            historyId: null,
-            lastSyncedAt: null,
-          },
-          create: {
-            adminId: userId,
-            gmailAddress,
-            accessToken:
-              tokens.access_token,
-            refreshToken:
-              tokens.refresh_token,
-            tokenExpiry,
-            scopes,
-            isActive: true,
-          },
-        },
-      );
-
-      this.logger.log(
-        `Admin Gmail connected: ${userId} -> ${gmailAddress}`,
-      );
-
-      return {
-        gmailAddress,
-        accountType: 'admin',
-      };
-    }
-
-    const employee =
-      await this.prisma.employee.findUnique(
-        {
-          where: {
-            id: userId,
-          },
-        },
-      );
-
-    if (!employee) {
-      throw new Error(
-        'Employee account not found.',
-      );
-    }
-
-    await this.prisma.gmailConnection.upsert(
-      {
-        where: {
-          employeeId: userId,
-        },
-        update: {
-          gmailAddress,
-          accessToken:
-            tokens.access_token,
-          refreshToken:
-            tokens.refresh_token,
-          tokenExpiry,
-          scopes,
-          isActive: true,
-          historyId: null,
-          lastSyncedAt: null,
-        },
-        create: {
-          employeeId: userId,
-          gmailAddress,
-          accessToken:
-            tokens.access_token,
-          refreshToken:
-            tokens.refresh_token,
-          tokenExpiry,
-          scopes,
-          isActive: true,
-        },
+    await this.prisma.gmailConnection.upsert({
+      where: {
+        employeeId,
       },
-    );
+      update: {
+        gmailAddress,
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        tokenExpiry,
+        scopes,
+        isActive: true,
+        historyId: null,
+        lastSyncedAt: null,
+      },
+      create: {
+        employeeId,
+        gmailAddress,
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        tokenExpiry,
+        scopes,
+        isActive: true,
+      },
+    });
 
     this.logger.log(
-      `Employee Gmail connected: ${userId} -> ${gmailAddress}`,
+      `Gmail connected for employee ${employeeId}: ${gmailAddress}`,
     );
 
     return {
       gmailAddress,
-      accountType: 'employee',
     };
   }
 
-  // ============================================================
-  // EMPLOYEE STATUS
-  // ============================================================
+  async getConnectionStatus(employeeId: string): Promise<{
+    connected: boolean;
+    gmailAddress?: string;
+    connectedAt?: Date;
+    lastSyncedAt?: Date;
+  }> {
+    const connection = await this.prisma.gmailConnection.findUnique({
+      where: {
+        employeeId,
+      },
+      select: {
+        gmailAddress: true,
+        isActive: true,
+        connectedAt: true,
+        lastSyncedAt: true,
+      },
+    });
 
-  async getConnectionStatus(
-    employeeId: string,
-  ) {
-    const connection =
-      await this.prisma.gmailConnection.findUnique(
-        {
-          where: {
-            employeeId,
-          },
-          select: {
-            gmailAddress: true,
-            isActive: true,
-            connectedAt: true,
-            lastSyncedAt: true,
-          },
-        },
-      );
-
-    if (
-      !connection ||
-      !connection.isActive
-    ) {
+    if (!connection || !connection.isActive) {
       return {
         connected: false,
       };
@@ -967,372 +410,130 @@ export class GmailOAuthService {
 
     return {
       connected: true,
-      gmailAddress:
-        connection.gmailAddress,
-      connectedAt:
-        connection.connectedAt,
-      lastSyncedAt:
-        connection.lastSyncedAt ??
-        undefined,
+      gmailAddress: connection.gmailAddress,
+      connectedAt: connection.connectedAt,
+      lastSyncedAt: connection.lastSyncedAt ?? undefined,
     };
   }
 
-  async disconnect(
-    employeeId: string,
-  ): Promise<void> {
-    const connection =
-      await this.prisma.gmailConnection.findUnique(
-        {
-          where: {
-            employeeId,
-          },
-        },
-      );
+  async disconnect(employeeId: string): Promise<void> {
+    const connection = await this.prisma.gmailConnection.findUnique({
+      where: {
+        employeeId,
+      },
+    });
 
     if (!connection) {
       return;
     }
 
     try {
-      const client =
-        this.createOAuthClient();
-
-      if (connection.accessToken) {
-        await client.revokeToken(
-          connection.accessToken,
-        );
+      if (this.oauth2Client && connection.accessToken) {
+        await this.oauth2Client.revokeToken(connection.accessToken);
       }
     } catch (error) {
       this.logger.warn(
-        `Employee Gmail token revoke failed: ${error?.message || error}`,
+        `Token revocation failed for employee ${employeeId}: ${error?.message || error
+        }`,
       );
     }
 
-    await this.prisma.gmailConnection.update(
-      {
-        where: {
-          employeeId,
-        },
-        data: {
-          isActive: false,
-          historyId: null,
-          lastSyncedAt: null,
-        },
+    await this.prisma.gmailConnection.update({
+      where: {
+        employeeId,
       },
-    );
+      data: {
+        isActive: false,
+        historyId: null,
+        lastSyncedAt: null,
+      },
+    });
+
+    this.logger.log(`Gmail disconnected for employee ${employeeId}`);
   }
 
-  async getAuthenticatedClient(
-    employeeId: string,
-  ): Promise<{
+  async getAuthenticatedClient(employeeId: string): Promise<{
     client: Auth.OAuth2Client;
     gmailAddress: string;
   }> {
-    const connection =
-      await this.prisma.gmailConnection.findUnique(
-        {
-          where: {
-            employeeId,
-          },
-        },
-      );
+    const connection = await this.prisma.gmailConnection.findUnique({
+      where: {
+        employeeId,
+      },
+    });
 
-    if (
-      !connection ||
-      !connection.isActive
-    ) {
+    if (!connection || !connection.isActive) {
       throw new Error(
         'Gmail is not connected. Please connect your Gmail account first.',
       );
     }
 
-    const client =
-      await this.refreshEmployeeTokenIfNeeded(
-        connection,
-      );
+    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    const clientSecret =
+      this.configService.get<string>('GOOGLE_CLIENT_SECRET');
+    const redirectUri =
+      this.configService.get<string>('GOOGLE_REDIRECT_URI');
 
-    return {
-      client,
-      gmailAddress:
-        connection.gmailAddress,
-    };
-  }
-
-  // ============================================================
-  // ADMIN STATUS
-  // ============================================================
-
-  async getAdminConnectionStatus(
-    adminId: string,
-  ) {
-    const connection =
-      await this.prisma.adminGmailConnection.findUnique(
-        {
-          where: {
-            adminId,
-          },
-          select: {
-            gmailAddress: true,
-            isActive: true,
-            connectedAt: true,
-            lastSyncedAt: true,
-          },
-        },
-      );
-
-    if (
-      !connection ||
-      !connection.isActive
-    ) {
-      return {
-        connected: false,
-      };
+    if (!clientId || !clientSecret || !redirectUri) {
+      throw new Error('Google OAuth is not configured on the server.');
     }
 
-    return {
-      connected: true,
-      gmailAddress:
-        connection.gmailAddress,
-      connectedAt:
-        connection.connectedAt,
-      lastSyncedAt:
-        connection.lastSyncedAt ??
-        undefined,
-    };
-  }
-
-  async disconnectAdmin(
-    adminId: string,
-  ): Promise<void> {
-    const connection =
-      await this.prisma.adminGmailConnection.findUnique(
-        {
-          where: {
-            adminId,
-          },
-        },
-      );
-
-    if (!connection) {
-      return;
-    }
-
-    try {
-      const client =
-        this.createOAuthClient();
-
-      if (connection.accessToken) {
-        await client.revokeToken(
-          connection.accessToken,
-        );
-      }
-    } catch (error) {
-      this.logger.warn(
-        `Admin Gmail token revoke failed: ${error?.message || error}`,
-      );
-    }
-
-    await this.prisma.adminGmailConnection.update(
-      {
-        where: {
-          adminId,
-        },
-        data: {
-          isActive: false,
-          historyId: null,
-          lastSyncedAt: null,
-        },
-      },
+    const client = new google.auth.OAuth2(
+      clientId,
+      clientSecret,
+      redirectUri,
     );
-  }
 
-  async getAdminAuthenticatedClient(
-    adminId: string,
-  ): Promise<{
-    client: Auth.OAuth2Client;
-    gmailAddress: string;
-  }> {
-    const connection =
-      await this.prisma.adminGmailConnection.findUnique(
-        {
+    client.setCredentials({
+      access_token: connection.accessToken,
+      refresh_token: connection.refreshToken,
+      expiry_date: connection.tokenExpiry.getTime(),
+    });
+
+    const now = Date.now();
+    const expiryBuffer = 5 * 60 * 1000;
+
+    if (connection.tokenExpiry.getTime() - now < expiryBuffer) {
+      try {
+        const { credentials } = await client.refreshAccessToken();
+
+        await this.prisma.gmailConnection.update({
           where: {
-            adminId,
+            employeeId,
           },
-        },
-      );
-
-    if (
-      !connection ||
-      !connection.isActive
-    ) {
-      throw new Error(
-        'Admin Gmail is not connected.',
-      );
-    }
-
-    const client =
-      this.createOAuthClient();
-
-    client.setCredentials({
-      access_token:
-        connection.accessToken,
-      refresh_token:
-        connection.refreshToken,
-      expiry_date:
-        connection.tokenExpiry.getTime(),
-    });
-
-    const now =
-      Date.now();
-
-    const expiryBuffer =
-      5 * 60 * 1000;
-
-    if (
-      connection.tokenExpiry.getTime() -
-        now <
-      expiryBuffer
-    ) {
-      try {
-        const { credentials } =
-          await client.refreshAccessToken();
-
-        await this.prisma.adminGmailConnection.update(
-          {
-            where: {
-              adminId,
-            },
-            data: {
-              accessToken:
-                credentials.access_token ||
-                connection.accessToken,
-              tokenExpiry:
-                credentials.expiry_date
-                  ? new Date(
-                      credentials.expiry_date,
-                    )
-                  : new Date(
-                      now +
-                        3600 *
-                          1000,
-                    ),
-              ...(credentials.refresh_token
-                ? {
-                    refreshToken:
-                      credentials.refresh_token,
-                  }
-                : {}),
-            },
+          data: {
+            accessToken:
+              credentials.access_token || connection.accessToken,
+            tokenExpiry: credentials.expiry_date
+              ? new Date(credentials.expiry_date)
+              : new Date(now + 3600 * 1000),
+            ...(credentials.refresh_token
+              ? {
+                refreshToken: credentials.refresh_token,
+              }
+              : {}),
           },
-        );
+        });
 
-        client.setCredentials(
-          credentials,
+        client.setCredentials(credentials);
+
+        this.logger.log(
+          `Gmail token refreshed for employee ${employeeId}`,
         );
       } catch (error) {
-        await this.prisma.adminGmailConnection.update(
-          {
-            where: {
-              adminId,
-            },
-            data: {
-              isActive: false,
-            },
+        this.logger.error(
+          `Token refresh failed for employee ${employeeId}: ${error?.message || error
+          }`,
+        );
+
+        await this.prisma.gmailConnection.update({
+          where: {
+            employeeId,
           },
-        );
-
-        throw new Error(
-          'Admin Gmail authorization has expired or been revoked. Please reconnect Gmail.',
-        );
-      }
-    }
-
-    return {
-      client,
-      gmailAddress:
-        connection.gmailAddress,
-    };
-  }
-
-  // ============================================================
-  // TOKEN REFRESH
-  // ============================================================
-
-  private async refreshEmployeeTokenIfNeeded(
-    connection: any,
-  ): Promise<Auth.OAuth2Client> {
-    const client =
-      this.createOAuthClient();
-
-    client.setCredentials({
-      access_token:
-        connection.accessToken,
-      refresh_token:
-        connection.refreshToken,
-      expiry_date:
-        connection.tokenExpiry.getTime(),
-    });
-
-    const now =
-      Date.now();
-
-    const expiryBuffer =
-      5 * 60 * 1000;
-
-    if (
-      connection.tokenExpiry.getTime() -
-        now <
-      expiryBuffer
-    ) {
-      try {
-        const { credentials } =
-          await client.refreshAccessToken();
-
-        await this.prisma.gmailConnection.update(
-          {
-            where: {
-              employeeId:
-                connection.employeeId,
-            },
-            data: {
-              accessToken:
-                credentials.access_token ||
-                connection.accessToken,
-              tokenExpiry:
-                credentials.expiry_date
-                  ? new Date(
-                      credentials.expiry_date,
-                    )
-                  : new Date(
-                      now +
-                        3600 *
-                          1000,
-                    ),
-              ...(credentials.refresh_token
-                ? {
-                    refreshToken:
-                      credentials.refresh_token,
-                  }
-                : {}),
-            },
+          data: {
+            isActive: false,
           },
-        );
-
-        client.setCredentials(
-          credentials,
-        );
-      } catch (error) {
-        await this.prisma.gmailConnection.update(
-          {
-            where: {
-              employeeId:
-                connection.employeeId,
-            },
-            data: {
-              isActive: false,
-            },
-          },
-        );
+        });
 
         throw new Error(
           'Gmail authorization has expired or been revoked. Please reconnect your Gmail account.',
@@ -1340,6 +541,9 @@ export class GmailOAuthService {
       }
     }
 
-    return client;
+    return {
+      client,
+      gmailAddress: connection.gmailAddress,
+    };
   }
 }

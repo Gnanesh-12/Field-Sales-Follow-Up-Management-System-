@@ -275,8 +275,6 @@ import { RolesGuard } from '../auth/roles.guard';
 import { EmailService } from './email.service';
 import { GmailOAuthService } from './gmail-oauth.service';
 import { GmailSyncService } from './gmail-sync.service';
-import { PrismaService } from '../prisma/prisma.service';
-
 
 import {
   SendEmailDto,
@@ -300,107 +298,11 @@ export class EmailController {
     private readonly gmailOAuthService: GmailOAuthService,
     private readonly gmailSyncService: GmailSyncService,
     private readonly configService: ConfigService,
-    private readonly prisma: PrismaService,
   ) {}
 
   // ============================================================
   // GMAIL OAUTH
   // ============================================================
-  @Get('reminders')
-  @UseGuards(
-    JwtAuthGuard,
-    RolesGuard,
-  )
-  @Roles(
-    'employee-role',
-    'EMPLOYEE',
-  )
-  async getEmailReminders(
-    @Req() req: any,
-  ) {
-    const employeeId =
-      req.user.sub ||
-      req.user.employeeId;
-
-    const now =
-      new Date();
-
-    const sevenDaysFromNow =
-      new Date(
-        now.getTime() +
-          7 * 24 * 60 * 60 * 1000,
-      );
-
-    const reminders =
-      await this.prisma.followUp.findMany(
-        {
-          where: {
-            status: 'pending',
-
-            dueDate: {
-              lte:
-                sevenDaysFromNow,
-            },
-
-            visit: {
-              employeeId,
-            },
-          },
-
-          include: {
-            visit: {
-              include: {
-                site: true,
-              },
-            },
-          },
-
-          orderBy: {
-            dueDate: 'asc',
-          },
-        },
-      );
-
-    return reminders.map(
-      (reminder: any) => ({
-        id:
-          reminder.id,
-
-        dueDate:
-          reminder.dueDate,
-
-        status:
-          reminder.status,
-
-        notes:
-          reminder.notes,
-
-        fieldVisitId:
-          reminder.fieldVisitId,
-
-        customerSite:
-          reminder.visit?.site
-            ? {
-                id:
-                  reminder.visit
-                    .site.id,
-                name:
-                  reminder.visit
-                    .site.name,
-                email:
-                  reminder.visit
-                    .site.email,
-              }
-            : null,
-
-        overdue:
-          new Date(
-            reminder.dueDate,
-          ).getTime() <
-          now.getTime(),
-      }),
-    );
-  }
 
   @Get('gmail/auth-url')
   @UseGuards(
