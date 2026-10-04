@@ -115,9 +115,9 @@ import {
   EmployeeActivityPage,
 } from './pages/EmployeeActivityPage';
 
-import {
-  EmailPage,
-} from './pages/EmailPage';
+// import {
+//   EmailPage,
+// } from './pages/EmailPage';
 
 import {
   AuthPage,
@@ -149,8 +149,8 @@ export default function App() {
   ] = useState<
     'employees' |
     'entries' |
-    'activity' |
-    'email'
+    'activity' 
+    // 'email'
   >('activity');
 
   const [
@@ -299,10 +299,10 @@ export default function App() {
             <EmployeeActivityPage />
           )}
 
-          {activeTab ===
+          {/* {activeTab ===
             'email' && (
             <EmailPage />
-          )}
+          )} */}
         </div>
       </main>
     </div>
