@@ -264,19 +264,7 @@ class _EmailThreadPageState
 
                         decoration:
                             BoxDecoration(
-                          color:
-                              isOutbound
-                                  ? Theme.of(
-                                      context,
-                                    )
-                                      .colorScheme
-                                      .primaryContainer
-                                  : Theme.of(
-                                      context,
-                                    )
-                                      .colorScheme
-                                      .surfaceContainerHighest,
-
+                          color:Colors.white,
                           borderRadius:
                               BorderRadius.circular(
                             14,
