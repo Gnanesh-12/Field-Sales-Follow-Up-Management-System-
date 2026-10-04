@@ -1,196 +1,3 @@
-// import 'dart:convert';
-// import 'dart:io';
-// import 'package:http/http.dart' as http;
-// import 'package:flutter/foundation.dart';
-// import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-// import 'models/email_models.dart';
-
-// String get _baseUrl {
-//   if (const bool.hasEnvironment('API_URL')) {
-//     return const String.fromEnvironment('API_URL');
-//   }
-//   if (kDebugMode) {
-//     if (!kIsWeb && Platform.isAndroid) {
-//       return 'http://10.0.2.2:3000';
-//     }
-//     return 'http://localhost:3000';
-//   }
-//   throw Exception('API_URL is not configured for production environment');
-// }
-
-// /// Repository for all email-related API calls.
-// /// Follows the same pattern as ApiRepository.
-// class EmailRepository {
-//   final http.Client client;
-//   final FlutterSecureStorage storage;
-
-//   EmailRepository({http.Client? client, FlutterSecureStorage? storage})
-//       : client = client ?? http.Client(),
-//         storage = storage ?? const FlutterSecureStorage();
-
-//   Future<Map<String, String>> _getHeaders() async {
-//     final token = await storage.read(key: 'jwt_token');
-//     return {
-//       'Content-Type': 'application/json',
-//       if (token != null) 'Authorization': 'Bearer $token',
-//     };
-//   }
-
-//   // ─── Gmail Connection ────────────────────────────────────────
-
-//   /// Get the Gmail OAuth authorization URL.
-//   /// The employee should be redirected to this URL to connect their Gmail.
-//   Future<String> getGmailAuthUrl() async {
-//     final response = await client.get(
-//       Uri.parse('$_baseUrl/email/gmail/auth-url'),
-//       headers: await _getHeaders(),
-//     );
-
-//     if (response.statusCode == 200) {
-//       final data = jsonDecode(response.body);
-//       return data['authUrl'] as String;
-//     } else {
-//       final body = _parseError(response);
-//       throw Exception(body);
-//     }
-//   }
-
-//   /// Get the current Gmail connection status.
-//   Future<GmailConnectionStatus> getGmailStatus() async {
-//     final response = await client.get(
-//       Uri.parse('$_baseUrl/email/gmail/status'),
-//       headers: await _getHeaders(),
-//     );
-
-//     if (response.statusCode == 200) {
-//       return GmailConnectionStatus.fromJson(jsonDecode(response.body));
-//     } else {
-//       throw Exception('Failed to get Gmail status');
-//     }
-//   }
-
-//   /// Disconnect Gmail account.
-//   Future<void> disconnectGmail() async {
-//     final response = await client.delete(
-//       Uri.parse('$_baseUrl/email/gmail/disconnect'),
-//       headers: await _getHeaders(),
-//     );
-
-//     if (response.statusCode != 200 && response.statusCode != 204) {
-//       throw Exception('Failed to disconnect Gmail');
-//     }
-//   }
-
-//   // ─── Email Sending ───────────────────────────────────────────
-
-//   /// Send an email to a customer.
-//   Future<SendEmailResult> sendEmail({
-//     required String to,
-//     List<String>? cc,
-//     required String subject,
-//     required String body,
-//     String? customerSiteId,
-//     List<String>? attachmentUrls,
-//   }) async {
-//     final response = await client.post(
-//       Uri.parse('$_baseUrl/email/send'),
-//       headers: await _getHeaders(),
-//       body: jsonEncode({
-//         'to': to,
-//         if (cc != null && cc.isNotEmpty) 'cc': cc,
-//         'subject': subject,
-//         'body': body,
-//         if (customerSiteId != null) 'customerSiteId': customerSiteId,
-//         if (attachmentUrls != null && attachmentUrls.isNotEmpty)
-//           'attachmentUrls': attachmentUrls,
-//       }),
-//     );
-
-//     if (response.statusCode == 200 || response.statusCode == 201) {
-//       return SendEmailResult.fromJson(jsonDecode(response.body));
-//     } else {
-//       final msg = _parseError(response);
-//       throw Exception(msg);
-//     }
-//   }
-
-//   /// Send a field visit report email.
-//   Future<SendEmailResult> sendVisitReport({
-//     required String fieldVisitId,
-//     required String recipientEmail,
-//     List<String>? cc,
-//     String? additionalNotes,
-//     bool includePhotos = true,
-//   }) async {
-//     final response = await client.post(
-//       Uri.parse('$_baseUrl/email/send-visit-report'),
-//       headers: await _getHeaders(),
-//       body: jsonEncode({
-//         'fieldVisitId': fieldVisitId,
-//         'recipientEmail': recipientEmail,
-//         if (cc != null && cc.isNotEmpty) 'cc': cc,
-//         if (additionalNotes != null) 'additionalNotes': additionalNotes,
-//         'includePhotos': includePhotos,
-//       }),
-//     );
-
-//     if (response.statusCode == 200 || response.statusCode == 201) {
-//       return SendEmailResult.fromJson(jsonDecode(response.body));
-//     } else {
-//       final msg = _parseError(response);
-//       throw Exception(msg);
-//     }
-//   }
-
-//   // ─── Email History ───────────────────────────────────────────
-
-//   /// Get the employee's sent email history.
-//   Future<Map<String, dynamic>> getEmailHistory({int page = 1, int limit = 20}) async {
-//     final response = await client.get(
-//       Uri.parse('$_baseUrl/email/history?page=$page&limit=$limit'),
-//       headers: await _getHeaders(),
-//     );
-
-//     if (response.statusCode == 200) {
-//       final data = jsonDecode(response.body);
-//       return {
-//         'emails': (data['emails'] as List)
-//             .map((e) => EmailLogEntry.fromJson(e))
-//             .toList(),
-//         'total': data['total'],
-//       };
-//     } else {
-//       throw Exception('Failed to load email history');
-//     }
-//   }
-
-//   /// Get a single email detail.
-//   Future<EmailDetail> getEmailDetail(String emailId) async {
-//     final response = await client.get(
-//       Uri.parse('$_baseUrl/email/history/$emailId'),
-//       headers: await _getHeaders(),
-//     );
-
-//     if (response.statusCode == 200) {
-//       return EmailDetail.fromJson(jsonDecode(response.body));
-//     } else {
-//       throw Exception('Failed to load email detail');
-//     }
-//   }
-
-//   // ─── Helper ──────────────────────────────────────────────────
-
-//   String _parseError(http.Response response) {
-//     try {
-//       final body = jsonDecode(response.body);
-//       return body['message'] ?? 'Request failed (${response.statusCode})';
-//     } catch (_) {
-//       return 'Request failed (${response.statusCode})';
-//     }
-//   }
-// }
-
-
 import 'dart:convert';
 import 'dart:io';
 
@@ -227,12 +34,13 @@ class EmailRepository {
   EmailRepository({
     http.Client? client,
     FlutterSecureStorage? storage,
-  })  : client = client ?? http.Client(),
+  })  : client =
+            client ?? http.Client(),
         storage =
-            storage ?? const FlutterSecureStorage();
+            storage ??
+                const FlutterSecureStorage();
 
-  Future<Map<String, String>>
-      _getHeaders() async {
+  Future<Map<String, String>> _getHeaders() async {
     final token =
         await storage.read(
       key: 'jwt_token',
@@ -241,6 +49,7 @@ class EmailRepository {
     return {
       'Content-Type':
           'application/json',
+
       if (token != null)
         'Authorization':
             'Bearer $token',
@@ -257,12 +66,15 @@ class EmailRepository {
           await _getHeaders(),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode ==
+        200) {
       final data =
-          jsonDecode(response.body);
+          jsonDecode(
+        response.body,
+      );
 
       return data['authUrl']
-          as String;
+          .toString();
     }
 
     throw Exception(
@@ -281,11 +93,14 @@ class EmailRepository {
           await _getHeaders(),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode ==
+        200) {
       return GmailConnectionStatus
           .fromJson(
-        jsonDecode(
-          response.body,
+        Map<String, dynamic>.from(
+          jsonDecode(
+            response.body,
+          ),
         ),
       );
     }
@@ -295,8 +110,7 @@ class EmailRepository {
     );
   }
 
-  Future<void>
-      disconnectGmail() async {
+  Future<void> disconnectGmail() async {
     final response =
         await client.delete(
       Uri.parse(
@@ -316,8 +130,7 @@ class EmailRepository {
     }
   }
 
-  Future<SendEmailResult>
-      sendEmail({
+  Future<SendEmailResult> sendEmail({
     required String to,
     List<String>? cc,
     required String subject,
@@ -333,16 +146,25 @@ class EmailRepository {
       headers:
           await _getHeaders(),
       body: jsonEncode({
-        'to': to,
+        'to':
+            to,
+
         if (cc != null &&
             cc.isNotEmpty)
-          'cc': cc,
-        'subject': subject,
-        'body': body,
+          'cc':
+              cc,
+
+        'subject':
+            subject,
+
+        'body':
+            body,
+
         if (customerSiteId !=
             null)
           'customerSiteId':
               customerSiteId,
+
         if (attachmentUrls !=
                 null &&
             attachmentUrls
@@ -356,10 +178,14 @@ class EmailRepository {
             200 ||
         response.statusCode ==
             201) {
-      return SendEmailResult
-          .fromJson(
-        jsonDecode(
-          response.body,
+      final data =
+          jsonDecode(
+        response.body,
+      );
+
+      return SendEmailResult.fromJson(
+        Map<String, dynamic>.from(
+          data,
         ),
       );
     }
@@ -371,14 +197,11 @@ class EmailRepository {
 
   Future<SendEmailResult>
       sendVisitReport({
-    required String
-        fieldVisitId,
-    required String
-        recipientEmail,
+    required String fieldVisitId,
+    required String recipientEmail,
     List<String>? cc,
     String? additionalNotes,
-    bool includePhotos =
-        true,
+    bool includePhotos = true,
   }) async {
     final response =
         await client.post(
@@ -390,15 +213,20 @@ class EmailRepository {
       body: jsonEncode({
         'fieldVisitId':
             fieldVisitId,
+
         'recipientEmail':
             recipientEmail,
+
         if (cc != null &&
             cc.isNotEmpty)
-          'cc': cc,
+          'cc':
+              cc,
+
         if (additionalNotes !=
             null)
           'additionalNotes':
               additionalNotes,
+
         'includePhotos':
             includePhotos,
       }),
@@ -408,11 +236,78 @@ class EmailRepository {
             200 ||
         response.statusCode ==
             201) {
-      return SendEmailResult
-          .fromJson(
-        jsonDecode(
-          response.body,
+      final data =
+          jsonDecode(
+        response.body,
+      );
+
+      return SendEmailResult.fromJson(
+        Map<String, dynamic>.from(
+          data,
         ),
+      );
+    }
+
+    throw Exception(
+      _parseError(response),
+    );
+  }
+
+  /**
+   * Upload a generic email attachment.
+   */
+  Future<Map<String, dynamic>>
+      uploadAttachment({
+    required String filename,
+    required List<int> bytes,
+  }) async {
+    final token =
+        await storage.read(
+      key: 'jwt_token',
+    );
+
+    final request =
+        http.MultipartRequest(
+      'POST',
+      Uri.parse(
+        '$_baseUrl/uploads/attachment',
+      ),
+    );
+
+    if (token != null) {
+      request.headers[
+          'Authorization'] =
+          'Bearer $token';
+    }
+
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename:
+            filename,
+      ),
+    );
+
+    final streamed =
+        await request.send();
+
+    final response =
+        await http.Response.fromStream(
+      streamed,
+    );
+
+    if (response.statusCode ==
+            200 ||
+        response.statusCode ==
+            201) {
+      final decoded =
+          jsonDecode(
+        response.body,
+      );
+
+      return Map<String, dynamic>.from(
+        decoded,
       );
     }
 
@@ -438,22 +333,29 @@ class EmailRepository {
     if (response.statusCode ==
         200) {
       final data =
-          jsonDecode(
-        response.body,
+          Map<String, dynamic>.from(
+        jsonDecode(
+          response.body,
+        ),
       );
 
       return {
         'emails':
             (data['emails']
-                    as List)
+                    as List? ??
+                [])
                 .map(
                   (e) =>
                       EmailLogEntry
                           .fromJson(
-                    e,
+                    Map<String,
+                        dynamic>.from(
+                      e,
+                    ),
                   ),
                 )
                 .toList(),
+
         'total':
             data['total'],
       };
@@ -480,8 +382,10 @@ class EmailRepository {
     if (response.statusCode ==
         200) {
       return EmailDetail.fromJson(
-        jsonDecode(
-          response.body,
+        Map<String, dynamic>.from(
+          jsonDecode(
+            response.body,
+          ),
         ),
       );
     }
@@ -526,15 +430,20 @@ class EmailRepository {
   }) async {
     final query =
         <String, String>{
-      'page': page.toString(),
-      'limit': limit.toString(),
+      'page':
+          page.toString(),
+
+      'limit':
+          limit.toString(),
+
       if (customerSiteId !=
           null)
         'customerSiteId':
             customerSiteId,
     };
 
-    final uri = Uri.parse(
+    final uri =
+        Uri.parse(
       '$_baseUrl/email/inbox',
     ).replace(
       queryParameters:
@@ -551,26 +460,35 @@ class EmailRepository {
     if (response.statusCode ==
         200) {
       final data =
-          jsonDecode(
-        response.body,
+          Map<String, dynamic>.from(
+        jsonDecode(
+          response.body,
+        ),
       );
 
       return {
         'threads':
             (data['threads']
-                    as List)
+                    as List? ??
+                [])
                 .map(
                   (item) =>
                       EmailThreadModel
                           .fromJson(
-                    item,
+                    Map<String,
+                        dynamic>.from(
+                      item,
+                    ),
                   ),
                 )
                 .toList(),
+
         'total':
             data['total'],
+
         'page':
             data['page'],
+
         'limit':
             data['limit'],
       };
@@ -598,8 +516,10 @@ class EmailRepository {
         200) {
       return EmailConversation
           .fromJson(
-        jsonDecode(
-          response.body,
+        Map<String, dynamic>.from(
+          jsonDecode(
+            response.body,
+          ),
         ),
       );
     }
@@ -609,8 +529,7 @@ class EmailRepository {
     );
   }
 
-  Future<void>
-      markThreadRead(
+  Future<void> markThreadRead(
     String threadId,
   ) async {
     final response =
@@ -632,8 +551,7 @@ class EmailRepository {
 
   Future<SendEmailResult>
       replyToThread({
-    required String
-        threadId,
+    required String threadId,
     required String body,
   }) async {
     final response =
@@ -644,7 +562,8 @@ class EmailRepository {
       headers:
           await _getHeaders(),
       body: jsonEncode({
-        'body': body,
+        'body':
+            body,
       }),
     );
 
@@ -652,10 +571,14 @@ class EmailRepository {
             200 ||
         response.statusCode ==
             201) {
-      return SendEmailResult
-          .fromJson(
-        jsonDecode(
-          response.body,
+      final data =
+          jsonDecode(
+        response.body,
+      );
+
+      return SendEmailResult.fromJson(
+        Map<String, dynamic>.from(
+          data,
         ),
       );
     }
@@ -667,8 +590,7 @@ class EmailRepository {
 
   Future<SendEmailResult>
       forwardMessage({
-    required String
-        messageId,
+    required String messageId,
     required String to,
     required String body,
   }) async {
@@ -680,8 +602,11 @@ class EmailRepository {
       headers:
           await _getHeaders(),
       body: jsonEncode({
-        'to': to,
-        'body': body,
+        'to':
+            to,
+
+        'body':
+            body,
       }),
     );
 
@@ -689,10 +614,14 @@ class EmailRepository {
             200 ||
         response.statusCode ==
             201) {
-      return SendEmailResult
-          .fromJson(
-        jsonDecode(
-          response.body,
+      final data =
+          jsonDecode(
+        response.body,
+      );
+
+      return SendEmailResult.fromJson(
+        Map<String, dynamic>.from(
+          data,
         ),
       );
     }
@@ -725,7 +654,10 @@ class EmailRepository {
             (item) =>
                 EmailReminder
                     .fromJson(
-              item,
+              Map<String,
+                  dynamic>.from(
+                item,
+              ),
             ),
           )
           .toList();
@@ -752,7 +684,9 @@ class EmailRepository {
             is List) {
           return (body['message']
                   as List)
-              .join(', ');
+              .join(
+                ', ',
+              );
         }
 
         return body['message']

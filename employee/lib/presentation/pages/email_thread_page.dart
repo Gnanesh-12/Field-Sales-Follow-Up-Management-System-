@@ -19,39 +19,44 @@ class EmailThreadPage
 }
 
 class _EmailThreadPageState
-    extends ConsumerState<EmailThreadPage> {
+    extends ConsumerState<
+        EmailThreadPage> {
   final TextEditingController
       _replyController =
       TextEditingController();
 
-  bool _sending = false;
+  bool _sending =
+      false;
 
   @override
   void initState() {
     super.initState();
 
-    Future.microtask(() async {
-      try {
-        await ref
-            .read(
-              emailRepositoryProvider,
-            )
-            .markThreadRead(
-              widget.threadId,
-            );
+    Future.microtask(
+      () async {
+        try {
+          await ref
+              .read(
+                emailRepositoryProvider,
+              )
+              .markThreadRead(
+                widget.threadId,
+              );
 
-        ref.invalidate(
-          emailThreadProvider(
-            widget.threadId,
-          ),
-        );
-      } catch (_) {}
-    });
+          ref.invalidate(
+            emailThreadProvider(
+              widget.threadId,
+            ),
+          );
+        } catch (_) {}
+      },
+    );
   }
 
   @override
   void dispose() {
     _replyController.dispose();
+
     super.dispose();
   }
 
@@ -64,19 +69,23 @@ class _EmailThreadPageState
     }
 
     setState(() {
-      _sending = true;
+      _sending =
+          true;
     });
 
     try {
-      await ref
-          .read(
-            emailRepositoryProvider,
-          )
-          .replyToThread(
-            threadId:
-                widget.threadId,
-            body: body,
-          );
+      final result =
+          await ref
+              .read(
+                emailRepositoryProvider,
+              )
+              .replyToThread(
+                threadId:
+                    widget.threadId,
+
+                body:
+                    body,
+              );
 
       _replyController.clear();
 
@@ -90,9 +99,13 @@ class _EmailThreadPageState
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Reply sent',
+          SnackBar(
+            content:
+                Text(
+              result.status ==
+                      'SENT'
+                  ? 'Reply sent'
+                  : 'Reply queued',
             ),
           ),
         );
@@ -104,14 +117,17 @@ class _EmailThreadPageState
         ).showSnackBar(
           SnackBar(
             content:
-                Text(error.toString()),
+                Text(
+              error.toString(),
+            ),
           ),
         );
       }
     } finally {
       if (mounted) {
         setState(() {
-          _sending = false;
+          _sending =
+              false;
         });
       }
     }
@@ -129,62 +145,88 @@ class _EmailThreadPageState
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: provider.when(
-          loading: () =>
-              const Text(
+      appBar:
+          AppBar(
+        title:
+            provider.when(
+          loading:
+              () => const Text(
             'Conversation',
           ),
-          error: (_, __) =>
-              const Text(
+
+          error:
+              (_, _) =>
+                  const Text(
             'Conversation',
           ),
-          data: (conversation) =>
-              Text(
+
+          data:
+              (conversation) =>
+                  Text(
             conversation.subject ??
                 '(No subject)',
-            maxLines: 1,
+
+            maxLines:
+                1,
+
             overflow:
                 TextOverflow.ellipsis,
           ),
         ),
       ),
-      body: provider.when(
-        loading: () =>
-            const Center(
+
+      body:
+          provider.when(
+        loading:
+            () => const Center(
           child:
               CircularProgressIndicator(),
         ),
-        error: (error, stack) =>
-            Center(
-          child: Text(
+
+        error:
+            (error, stack) =>
+                Center(
+          child:
+              Text(
             error.toString(),
           ),
         ),
-        data: (conversation) {
+
+        data:
+            (conversation) {
+          final canReply =
+              conversation.messages.any(
+            (message) =>
+                message.direction ==
+                'INBOUND',
+          );
+
           return Column(
             children: [
               Expanded(
                 child:
                     ListView.builder(
                   padding:
-                      const EdgeInsets
-                          .all(
+                      const EdgeInsets.all(
                     12,
                   ),
+
                   itemCount:
                       conversation
                           .messages
                           .length,
+
                   itemBuilder:
-                      (context, index) {
+                      (
+                    context,
+                    index,
+                  ) {
                     final message =
                         conversation
                             .messages[index];
 
                     final isOutbound =
-                        message
-                                .direction ==
+                        message.direction ==
                             'OUTBOUND';
 
                     return Align(
@@ -194,6 +236,7 @@ class _EmailThreadPageState
                                   .centerRight
                               : Alignment
                                   .centerLeft,
+
                       child:
                           Container(
                         constraints:
@@ -206,74 +249,86 @@ class _EmailThreadPageState
                                       .width *
                                   0.88,
                         ),
+
                         margin:
                             const EdgeInsets
                                 .only(
-                          bottom: 12,
+                          bottom:
+                              12,
                         ),
+
                         padding:
-                            const EdgeInsets
-                                .all(
+                            const EdgeInsets.all(
                           14,
                         ),
+
                         decoration:
                             BoxDecoration(
-                          color: isOutbound
-                              ? Theme.of(
-                                  context,
-                                )
-                                  .colorScheme
-                                  .primaryContainer
-                              : Theme.of(
-                                  context,
-                                )
-                                  .colorScheme
-                                  .surfaceContainerHighest,
+                          color:
+                              isOutbound
+                                  ? Theme.of(
+                                      context,
+                                    )
+                                      .colorScheme
+                                      .primaryContainer
+                                  : Theme.of(
+                                      context,
+                                    )
+                                      .colorScheme
+                                      .surfaceContainerHighest,
+
                           borderRadius:
-                              BorderRadius
-                                  .circular(
+                              BorderRadius.circular(
                             14,
                           ),
                         ),
+
                         child:
                             Column(
                           crossAxisAlignment:
                               CrossAxisAlignment
                                   .start,
+
                           children: [
                             Text(
-                              message
-                                  .fromEmail,
+                              message.fromEmail,
+
                               style:
                                   const TextStyle(
                                 fontWeight:
                                     FontWeight.bold,
+
                                 fontSize:
                                     12,
                               ),
                             ),
+
                             const SizedBox(
-                              height: 8,
+                              height:
+                                  8,
                             ),
+
                             Text(
-                              message
-                                      .bodyText
-                                      ?.isNotEmpty ==
-                                  true
+                              message.bodyText
+                                          ?.isNotEmpty ==
+                                      true
                                   ? message
                                       .bodyText!
                                   : message
-                                      .snippet ??
+                                          .snippet ??
                                       '',
                             ),
+
                             const SizedBox(
-                              height: 8,
+                              height:
+                                  8,
                             ),
+
                             Text(
                               _formatDate(
-                                message
-                                    .sentAt,
+                                message.sentAt,
                               ),
+
                               style:
                                   Theme.of(
                                 context,
@@ -288,63 +343,90 @@ class _EmailThreadPageState
                   },
                 ),
               ),
+
               SafeArea(
                 child:
                     Padding(
                   padding:
-                      const EdgeInsets
-                          .all(
+                      const EdgeInsets.all(
                     10,
                   ),
-                  child: Row(
-                    crossAxisAlignment:
-                        CrossAxisAlignment
-                            .end,
-                    children: [
-                      Expanded(
-                        child:
-                            TextField(
-                          controller:
-                              _replyController,
-                          maxLines:
-                              5,
-                          minLines:
-                              1,
-                          decoration:
-                              const InputDecoration(
-                            hintText:
-                                'Write a reply...',
-                            border:
-                                OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 8,
-                      ),
-                      IconButton(
-                        onPressed:
-                            _sending
-                                ? null
-                                : _reply,
-                        icon: _sending
-                            ? const SizedBox(
-                                width:
-                                    22,
-                                height:
-                                    22,
-                                child:
-                                    CircularProgressIndicator(
-                                  strokeWidth:
-                                      2,
+
+                  child:
+                      canReply
+                          ? Row(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.end,
+
+                              children: [
+                                Expanded(
+                                  child:
+                                      TextField(
+                                    controller:
+                                        _replyController,
+
+                                    maxLines:
+                                        5,
+
+                                    minLines:
+                                        1,
+
+                                    decoration:
+                                        const InputDecoration(
+                                      hintText:
+                                          'Write a reply...',
+
+                                      border:
+                                          OutlineInputBorder(),
+                                    ),
+                                  ),
                                 ),
-                              )
-                            : const Icon(
-                                Icons.send,
+
+                                const SizedBox(
+                                  width:
+                                      8,
+                                ),
+
+                                IconButton(
+                                  onPressed:
+                                      _sending
+                                          ? null
+                                          : _reply,
+
+                                  icon:
+                                      _sending
+                                          ? const SizedBox(
+                                              width:
+                                                  22,
+
+                                              height:
+                                                  22,
+
+                                              child:
+                                                  CircularProgressIndicator(
+                                                strokeWidth:
+                                                    2,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons.send,
+                                            ),
+                                ),
+                              ],
+                            )
+                          : const Padding(
+                              padding:
+                                  EdgeInsets.all(
+                                12,
                               ),
-                      ),
-                    ],
-                  ),
+
+                              child:
+                                  Text(
+                                'Reply will be available when the customer responds.',
+                                textAlign:
+                                    TextAlign.center,
+                              ),
+                            ),
                 ),
               ),
             ],

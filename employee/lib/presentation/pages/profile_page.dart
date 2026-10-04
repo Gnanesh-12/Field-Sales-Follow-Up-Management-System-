@@ -276,7 +276,7 @@ class ProfilePage extends ConsumerWidget {
                           ),
                         ),
                         loading: () => const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
-                        error: (_, __) => Icon(Icons.error_outline, size: 16, color: context.textMutedColor),
+                        error: (_, _) => Icon(Icons.error_outline, size: 16, color: context.textMutedColor),
                       );
                     },
                   ),

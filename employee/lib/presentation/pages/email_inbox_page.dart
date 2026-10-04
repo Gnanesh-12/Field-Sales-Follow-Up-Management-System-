@@ -101,9 +101,8 @@ class EmailInboxPage extends ConsumerWidget {
 
           return RefreshIndicator(
             onRefresh: () async {
-              await ref.refresh(
-                emailInboxProvider(1)
-                    .future,
+              ref.invalidate(
+                emailInboxProvider
               );
             },
             child: ListView.separated(
@@ -114,7 +113,7 @@ class EmailInboxPage extends ConsumerWidget {
               itemCount:
                   threads.length,
               separatorBuilder:
-                  (_, __) =>
+                  (_, _) =>
                       const Divider(
                 height: 1,
               ),

@@ -1,147 +1,3 @@
-// /// Models for the Phase 1 Email Integration feature.
-
-// class GmailConnectionStatus {
-//   final bool connected;
-//   final String? gmailAddress;
-//   final DateTime? connectedAt;
-
-//   GmailConnectionStatus({
-//     required this.connected,
-//     this.gmailAddress,
-//     this.connectedAt,
-//   });
-
-//   factory GmailConnectionStatus.fromJson(Map<String, dynamic> json) {
-//     return GmailConnectionStatus(
-//       connected: json['connected'] ?? false,
-//       gmailAddress: json['gmailAddress'],
-//       connectedAt: json['connectedAt'] != null
-//           ? DateTime.parse(json['connectedAt']).toLocal()
-//           : null,
-//     );
-//   }
-// }
-
-// class EmailLogEntry {
-//   final String id;
-//   final String recipientEmail;
-//   final String subject;
-//   final String status; // QUEUED, SENT, FAILED
-//   final DateTime? sentAt;
-//   final DateTime createdAt;
-//   final bool isVisitReport;
-//   final int attachmentCount;
-//   final String? customerSiteName;
-//   final String? customerSiteId;
-//   final String? fieldVisitId;
-
-//   EmailLogEntry({
-//     required this.id,
-//     required this.recipientEmail,
-//     required this.subject,
-//     required this.status,
-//     this.sentAt,
-//     required this.createdAt,
-//     required this.isVisitReport,
-//     required this.attachmentCount,
-//     this.customerSiteName,
-//     this.customerSiteId,
-//     this.fieldVisitId,
-//   });
-
-//   factory EmailLogEntry.fromJson(Map<String, dynamic> json) {
-//     return EmailLogEntry(
-//       id: json['id'],
-//       recipientEmail: json['recipientEmail'],
-//       subject: json['subject'],
-//       status: json['status'],
-//       sentAt: json['sentAt'] != null ? DateTime.parse(json['sentAt']).toLocal() : null,
-//       createdAt: DateTime.parse(json['createdAt']).toLocal(),
-//       isVisitReport: json['isVisitReport'] ?? false,
-//       attachmentCount: json['attachmentCount'] ?? 0,
-//       customerSiteName: json['customerSite']?['name'],
-//       customerSiteId: json['customerSite']?['id'],
-//       fieldVisitId: json['fieldVisitId'],
-//     );
-//   }
-// }
-
-// class EmailDetail {
-//   final String id;
-//   final String senderEmail;
-//   final String recipientEmail;
-//   final List<String> ccEmails;
-//   final String subject;
-//   final String? bodyPreview;
-//   final String status;
-//   final String? errorMessage;
-//   final int attachmentCount;
-//   final bool isVisitReport;
-//   final String? fieldVisitId;
-//   final String? customerSiteName;
-//   final DateTime? sentAt;
-//   final DateTime createdAt;
-
-//   EmailDetail({
-//     required this.id,
-//     required this.senderEmail,
-//     required this.recipientEmail,
-//     required this.ccEmails,
-//     required this.subject,
-//     this.bodyPreview,
-//     required this.status,
-//     this.errorMessage,
-//     required this.attachmentCount,
-//     required this.isVisitReport,
-//     this.fieldVisitId,
-//     this.customerSiteName,
-//     this.sentAt,
-//     required this.createdAt,
-//   });
-
-//   factory EmailDetail.fromJson(Map<String, dynamic> json) {
-//     return EmailDetail(
-//       id: json['id'],
-//       senderEmail: json['senderEmail'],
-//       recipientEmail: json['recipientEmail'],
-//       ccEmails: json['ccEmails'] != null
-//           ? List<String>.from(json['ccEmails'])
-//           : [],
-//       subject: json['subject'],
-//       bodyPreview: json['bodyPreview'],
-//       status: json['status'],
-//       errorMessage: json['errorMessage'],
-//       attachmentCount: json['attachmentCount'] ?? 0,
-//       isVisitReport: json['isVisitReport'] ?? false,
-//       fieldVisitId: json['fieldVisitId'],
-//       customerSiteName: json['customerSite']?['name'],
-//       sentAt: json['sentAt'] != null ? DateTime.parse(json['sentAt']).toLocal() : null,
-//       createdAt: DateTime.parse(json['createdAt']).toLocal(),
-//     );
-//   }
-// }
-
-// class SendEmailResult {
-//   final String id;
-//   final String status;
-//   final String? gmailMessageId;
-
-//   SendEmailResult({
-//     required this.id,
-//     required this.status,
-//     this.gmailMessageId,
-//   });
-
-//   factory SendEmailResult.fromJson(Map<String, dynamic> json) {
-//     return SendEmailResult(
-//       id: json['id'],
-//       status: json['status'],
-//       gmailMessageId: json['gmailMessageId'],
-//     );
-//   }
-// }
-
-
 class GmailConnectionStatus {
   final bool connected;
   final String? gmailAddress;
@@ -159,14 +15,22 @@ class GmailConnectionStatus {
     Map<String, dynamic> json,
   ) {
     return GmailConnectionStatus(
-      connected: json['connected'] ?? false,
-      gmailAddress: json['gmailAddress'],
-      connectedAt: json['connectedAt'] != null
-          ? DateTime.parse(json['connectedAt']).toLocal()
-          : null,
-      lastSyncedAt: json['lastSyncedAt'] != null
-          ? DateTime.parse(json['lastSyncedAt']).toLocal()
-          : null,
+      connected:
+          json['connected'] ?? false,
+      gmailAddress:
+          json['gmailAddress'],
+      connectedAt:
+          json['connectedAt'] != null
+              ? DateTime.parse(
+                  json['connectedAt'],
+                ).toLocal()
+              : null,
+      lastSyncedAt:
+          json['lastSyncedAt'] != null
+              ? DateTime.parse(
+                  json['lastSyncedAt'],
+                ).toLocal()
+              : null,
     );
   }
 }
@@ -202,37 +66,61 @@ class EmailLogEntry {
     Map<String, dynamic> json,
   ) {
     return EmailLogEntry(
-      id: json['id'],
-      recipientEmail: json['recipientEmail'],
-      subject: json['subject'],
-      status: json['status'],
-      sentAt: json['sentAt'] != null
-          ? DateTime.parse(json['sentAt']).toLocal()
-          : null,
-      createdAt: DateTime.parse(
-        json['createdAt'],
-      ).toLocal(),
-      // isVisitReport:
-      //     json['isVisitReport'] ?? false,
-      // attachmentCount:
-      //     json['attachmentCount'] ?? 0,
-      // customerSiteName:
-      //     json['customerSite']?['name'],
-      // customerSiteId:
-      //     json['customerSite']?['id'],
-      // fieldVisitId:
-      //     json['fieldVisitId'],
+      id:
+          json['id']?.toString() ??
+              '',
+
+      recipientEmail:
+          json['recipientEmail']
+                  ?.toString() ??
+              '',
+
+      subject:
+          json['subject']?.toString() ??
+              '',
+
+      status:
+          json['status']?.toString() ??
+              'UNKNOWN',
+
+      sentAt:
+          json['sentAt'] != null
+              ? DateTime.parse(
+                  json['sentAt'].toString(),
+                ).toLocal()
+              : null,
+
+      createdAt:
+          DateTime.parse(
+            json['createdAt'].toString(),
+          ).toLocal(),
+
       isVisitReport:
-          json['isVisitReport'] ?? false,
-      attachmentCount: json['attachmentCount'] is String
-          ? int.tryParse(json['attachmentCount']) ?? 0
-          : (json['attachmentCount'] as int? ?? 0),
+          json['isVisitReport'] ??
+              false,
+
+      attachmentCount:
+          _parseInt(
+        json['attachmentCount'],
+      ),
+
       customerSiteName:
-          json['customerSite']?['name'],
+          json['customerSite']
+              is Map
+          ? json['customerSite']
+              ['name']
+          : null,
+
       customerSiteId:
-          json['customerSite']?['id'],
+          json['customerSite']
+              is Map
+          ? json['customerSite']
+              ['id']
+          : null,
+
       fieldVisitId:
-          json['fieldVisitId'],
+          json['fieldVisitId']
+              ?.toString(),
     );
   }
 }
@@ -273,65 +161,157 @@ class EmailDetail {
   factory EmailDetail.fromJson(
     Map<String, dynamic> json,
   ) {
+    final customerSite =
+        json['customerSite'];
+
     return EmailDetail(
-      id: json['id'],
-      senderEmail: json['senderEmail'],
+      id:
+          json['id']?.toString() ??
+              '',
+
+      senderEmail:
+          json['senderEmail']
+                  ?.toString() ??
+              '',
+
       recipientEmail:
-          json['recipientEmail'],
-      ccEmails: json['ccEmails'] != null
-          ? List<String>.from(
-              json['ccEmails'],
-            )
-          : [],
-      subject: json['subject'],
+          json['recipientEmail']
+                  ?.toString() ??
+              '',
+
+      ccEmails:
+          json['ccEmails'] is List
+              ? List<String>.from(
+                  json['ccEmails'].map(
+                    (item) =>
+                        item.toString(),
+                  ),
+                )
+              : [],
+
+      subject:
+          json['subject']?.toString() ??
+              '',
+
       bodyPreview:
-          json['bodyPreview'],
-      status: json['status'],
+          json['bodyPreview']
+              ?.toString(),
+
+      status:
+          json['status']?.toString() ??
+              'UNKNOWN',
+
       errorMessage:
-          json['errorMessage'],
-      // attachmentCount:
-      //     json['attachmentCount'] ?? 0,
-      // isVisitReport:
-      attachmentCount: json['attachmentCount'] is String
-          ? int.tryParse(json['attachmentCount']) ?? 0
-          : (json['attachmentCount'] as int? ?? 0),
+          json['errorMessage']
+              ?.toString(),
+
+      attachmentCount:
+          _parseInt(
+        json['attachmentCount'],
+      ),
+
       isVisitReport:
-          json['isVisitReport'] ?? false,
+          json['isVisitReport'] ??
+              false,
+
       fieldVisitId:
-          json['fieldVisitId'],
+          json['fieldVisitId']
+              ?.toString(),
+
       customerSiteName:
-          json['customerSite']?['name'],
-      sentAt: json['sentAt'] != null
-          ? DateTime.parse(
-              json['sentAt'],
-            ).toLocal()
-          : null,
-      createdAt: DateTime.parse(
-        json['createdAt'],
-      ).toLocal(),
+          customerSite is Map
+              ? customerSite[
+                  'name']
+              : null,
+
+      sentAt:
+          json['sentAt'] != null
+              ? DateTime.parse(
+                  json['sentAt']
+                      .toString(),
+                ).toLocal()
+              : null,
+
+      createdAt:
+          DateTime.parse(
+            json['createdAt']
+                .toString(),
+          ).toLocal(),
     );
   }
 }
 
+/**
+ * Safe response model for send/reply/forward.
+ *
+ * The backend now returns these fields at the top level.
+ *
+ * It also understands the old:
+ *
+ * {
+ *   "success": true,
+ *   "message": {...}
+ * }
+ *
+ * shape so an older backend won't crash the Flutter client.
+ */
 class SendEmailResult {
   final String id;
   final String status;
   final String? gmailMessageId;
+  final String? threadId;
 
   SendEmailResult({
     required this.id,
     required this.status,
     this.gmailMessageId,
+    this.threadId,
   });
 
   factory SendEmailResult.fromJson(
     Map<String, dynamic> json,
   ) {
+    final message =
+        json['message'] is Map
+            ? Map<String, dynamic>.from(
+                json['message'],
+              )
+            : null;
+
+    final idValue =
+        json['id'] ??
+            message?['id'] ??
+            '';
+
+    final statusValue =
+        json['status'] ??
+            (json['success'] == true
+                ? 'SENT'
+                : 'FAILED');
+
+    final gmailMessageId =
+        json['gmailMessageId'] ??
+            message?[
+                'gmailMessageId'];
+
+    final threadId =
+        json['threadId'] ??
+            message?[
+                'gmailThreadId'];
+
     return SendEmailResult(
-      id: json['id'],
-      status: json['status'],
+      id:
+          idValue.toString(),
+
+      status:
+          statusValue.toString(),
+
       gmailMessageId:
-          json['gmailMessageId'],
+          gmailMessageId
+              ?.toString(),
+
+      threadId:
+          threadId?.toString(),
     );
   }
 }
@@ -365,39 +345,73 @@ class EmailThreadModel {
     Map<String, dynamic> json,
   ) {
     final messages =
-        json['messages'] as List?;
+        json['messages'] is List
+            ? json['messages']
+                as List
+            : <dynamic>[];
 
     return EmailThreadModel(
-      id: json['id'],
+      id:
+          json['id']?.toString() ??
+              '',
+
       gmailThreadId:
-          json['gmailThreadId'],
+          json['gmailThreadId']
+                  ?.toString() ??
+              '',
+
       customerSiteId:
-          json['customerSiteId'],
-      subject: json['subject'],
+          json['customerSiteId']
+              ?.toString(),
+
+      subject:
+          json['subject']
+              ?.toString(),
+
       participants:
-          List<String>.from(
-        json['participants'] ?? [],
-      ),
+          json['participants'] is List
+              ? List<String>.from(
+                  json['participants'].map(
+                    (item) =>
+                        item.toString(),
+                  ),
+                )
+              : [],
+
       lastMessageAt:
-          json['lastMessageAt'] != null
+          json['lastMessageAt'] !=
+                  null
               ? DateTime.parse(
-                  json['lastMessageAt'],
+                  json['lastMessageAt']
+                      .toString(),
                 ).toLocal()
               : null,
-      // unreadCount:
-      //     json['unreadCount'] ?? 0,
-      unreadCount: json['unreadCount'] is String
-          ? int.tryParse(json['unreadCount']) ?? 0
-          : (json['unreadCount'] as int? ?? 0),
+
+      unreadCount:
+          _parseInt(
+        json['unreadCount'],
+      ),
+
       customerSiteName:
-          json['customerSite']?['name'],
+          json['customerSite'] is Map
+              ? json['customerSite']
+                  ['name']
+              : null,
+
       customerSiteEmail:
-          json['customerSite']?['email'],
+          json['customerSite'] is Map
+              ? json['customerSite']
+                  ['email']
+              : null,
+
       latestMessage:
-          messages != null &&
-                  messages.isNotEmpty
-              ? EmailMessageModel.fromJson(
-                  messages.first,
+          messages.isNotEmpty
+              ? EmailMessageModel
+                  .fromJson(
+                  Map<String,
+                      dynamic>.from(
+                    messages.first,
+                  ),
                 )
               : null,
     );
@@ -445,42 +459,87 @@ class EmailMessageModel {
     Map<String, dynamic> json,
   ) {
     return EmailMessageModel(
-      id: json['id'],
+      id:
+          json['id']?.toString() ??
+              '',
+
       gmailMessageId:
-          json['gmailMessageId'],
+          json['gmailMessageId']
+                  ?.toString() ??
+              '',
+
       gmailThreadId:
-          json['gmailThreadId'],
+          json['gmailThreadId']
+                  ?.toString() ??
+              '',
+
       direction:
-          json['direction'],
+          json['direction']
+                  ?.toString() ??
+              'UNKNOWN',
+
       fromEmail:
-          json['fromEmail'],
+          json['fromEmail']
+                  ?.toString() ??
+              '',
+
       toEmails:
-          List<String>.from(
-        json['toEmails'] ?? [],
-      ),
+          json['toEmails'] is List
+              ? List<String>.from(
+                  json['toEmails'].map(
+                    (item) =>
+                        item.toString(),
+                  ),
+                )
+              : [],
+
       ccEmails:
-          List<String>.from(
-        json['ccEmails'] ?? [],
-      ),
+          json['ccEmails'] is List
+              ? List<String>.from(
+                  json['ccEmails'].map(
+                    (item) =>
+                        item.toString(),
+                  ),
+                )
+              : [],
+
       subject:
-          json['subject'],
+          json['subject']
+              ?.toString(),
+
       bodyText:
-          json['bodyText'],
+          json['bodyText']
+              ?.toString(),
+
       bodyHtml:
-          json['bodyHtml'],
+          json['bodyHtml']
+              ?.toString(),
+
       snippet:
-          json['snippet'],
+          json['snippet']
+              ?.toString(),
+
       messageId:
-          json['messageId'],
+          json['messageId']
+              ?.toString(),
+
       inReplyTo:
-          json['inReplyTo'],
+          json['inReplyTo']
+              ?.toString(),
+
       references:
-          json['references'],
+          json['references']
+              ?.toString(),
+
       isRead:
-          json['isRead'] ?? false,
-      sentAt: DateTime.parse(
-        json['sentAt'],
-      ).toLocal(),
+          json['isRead'] ??
+              false,
+
+      sentAt:
+          DateTime.parse(
+            json['sentAt']
+                .toString(),
+          ).toLocal(),
     );
   }
 }
@@ -508,23 +567,48 @@ class EmailConversation {
     Map<String, dynamic> json,
   ) {
     return EmailConversation(
-      id: json['id'],
+      id:
+          json['id']?.toString() ??
+              '',
+
       gmailThreadId:
-          json['gmailThreadId'],
+          json['gmailThreadId']
+                  ?.toString() ??
+              '',
+
       customerSiteId:
-          json['customerSiteId'],
+          json['customerSiteId']
+              ?.toString(),
+
       customerSiteName:
-          json['customerSite']?['name'],
+          json['customerSite'] is Map
+              ? json['customerSite']
+                  ['name']
+              : null,
+
       customerSiteEmail:
-          json['customerSite']?['email'],
+          json['customerSite'] is Map
+              ? json['customerSite']
+                  ['email']
+              : null,
+
       subject:
-          json['subject'],
+          json['subject']
+              ?.toString(),
+
       messages:
-          (json['messages'] as List? ?? [])
+          (json['messages'] is List
+                  ? json['messages']
+                      as List
+                  : <dynamic>[])
               .map(
                 (item) =>
-                    EmailMessageModel.fromJson(
-                  item,
+                    EmailMessageModel
+                        .fromJson(
+                  Map<String,
+                      dynamic>.from(
+                    item,
+                  ),
                 ),
               )
               .toList(),
@@ -557,21 +641,62 @@ class EmailReminder {
     Map<String, dynamic> json,
   ) {
     return EmailReminder(
-      id: json['id'],
-      dueDate: DateTime.parse(
-        json['dueDate'],
-      ).toLocal(),
+      id:
+          json['id']?.toString() ??
+              '',
+
+      dueDate:
+          DateTime.parse(
+            json['dueDate']
+                .toString(),
+          ).toLocal(),
+
       status:
-          json['status'] ?? 'pending',
-      notes: json['notes'],
+          json['status']?.toString() ??
+              'pending',
+
+      notes:
+          json['notes']
+              ?.toString(),
+
       fieldVisitId:
-          json['fieldVisitId'],
+          json['fieldVisitId']
+                  ?.toString() ??
+              '',
+
       customerSiteName:
-          json['customerSite']?['name'],
+          json['customerSite'] is Map
+              ? json['customerSite']
+                  ['name']
+              : null,
+
       customerSiteEmail:
-          json['customerSite']?['email'],
+          json['customerSite'] is Map
+              ? json['customerSite']
+                  ['email']
+              : null,
+
       overdue:
-          json['overdue'] ?? false,
+          json['overdue'] ??
+              false,
     );
   }
+}
+
+int _parseInt(
+  dynamic value,
+) {
+  if (value is int) {
+    return value;
+  }
+
+  if (value is num) {
+    return value.toInt();
+  }
+
+  return int.tryParse(
+        value?.toString() ??
+            '',
+      ) ??
+      0;
 }
